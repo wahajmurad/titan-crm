@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { verifyPassword, createSession, getSession, destroySession, getTokenCookieOptions } from '@/lib/auth'
+import { verifyPassword } from '@/lib/types'
+import { createSession, getSession, destroySession, getTokenCookieOptions } from '@/lib/auth'
 
 export async function POST(req: NextRequest) {
   try {
