@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Export hashPassword doesn't exist in target module",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1782769535,
+  "id": "202606300545296d78390cea0f4d24",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "202606300545296d78390cea0f4d24",
+  "usage": {
+    "completion_tokens": 12,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 6064,
+    "prompt_tokens_details": {
+      "cached_tokens": 5
+    },
+    "total_tokens": 6076
+  }
+}
