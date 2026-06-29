@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("TEAM") // OWNER or TEAM
+  avatar    String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  permissions Permission[]
+  activities  Activity[]
+  assignedLeads Lead[] @relation("AssignedTo")
+}
+
+model Permission {
+  id        String   @id @default(cuid())
+  userId    String
+  module    String   // dashboard, leads, outreach, meetings, team, settings
+  canView   Boolean  @default(false)
+  canCreate Boolean  @default(false)
+  canEdit   Boolean  @default(false)
+  canDelete Boolean  @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, module])
+}
+
+model Business {
+  id              String   @id @default(cuid())
+  name            String
+  website         String?
+  industry        String?
+  city            String?
+  country         String?
+  phone           String?
+  email           String?
+  socialProfiles  String?  // JSON string
+  companySize     String?
+  businessCategory String?
+  source          String?
+  discoveredAt    DateTime @default(now())
+
+  lead Lead?
+}
+
+model Lead {
+  id                   String   @id @default(cuid())
+  businessId           String   @unique
+  stage                String   @default("DISCOVERED")
+  score                Int      @default(0)
+  aiAnalysis           String?  // JSON string with audit results
+  problems             String?  // JSON array of identified problems
+  recommendedSolution  String?
+  decisionMaker        String?
+  decisionMakerRole    String?
+  decisionMakerEmail   String?
+  notes                String?
+  assignedToId         String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  business        Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  assignedTo      User?    @relation("AssignedTo", fields: [assignedToId], references: [id])
+  outreaches      Outreach[]
+  meetings        Meeting[]
+  activities      Activity[]
+}
+
+model Outreach {
+  id             String    @id @default(cuid())
+  leadId         String
+  subject        String
+  body           String
+  status         String    @default("DRAFT") // DRAFT, SENT, OPENED, REPLIED, BOUNCED, FAILED
+  type           String    @default("INITIAL") // INITIAL, FOLLOW_UP, REPLY
+  followUpNumber Int       @default(0)
+  sentAt         DateTime?
+  openedAt       DateTime?
+  repliedAt      DateTime?
+  scheduledFor   DateTime?
+  createdAt      DateTime  @default(now())
+
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+}
+
+model Meeting {
+  id          String    @id @default(cuid())
+  leadId      String
+  title       String
+  description String?
+  date        DateTime
+  duration    Int       @default(30) // minutes
+  status      String    @default("SCHEDULED") // SCHEDULED, COMPLETED, CANCELLED, NO_SHOW
+  location    String?
+  meetingLink String?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  userId    String?
+  leadId    String?
+  action    String
+  details   String?
+  createdAt DateTime @default(now())
+
+  user User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  lead Lead?  @relation(fields: [leadId], references: [id], onDelete: SetNull)
+}
+
+model AppSetting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+  updatedAt DateTime @updatedAt
+}
