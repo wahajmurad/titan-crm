@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getSession, hashPassword } from '@/lib/auth'
+import { getSession } from '@/lib/auth'
+import { hashPassword } from '@/lib/types'
 import { MODULES } from '@/lib/types'
 
 export async function GET() {
