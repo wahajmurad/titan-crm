@@ -62,7 +62,7 @@ export function LeadsView() {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">Leads</h1>
+          <h1 className="text-xl font-semibold text-gray-900">Leads</h1>
           <p className="text-sm text-gray-400 mt-0.5">{leads.length} leads in pipeline</p>
         </div>
         <div className="flex items-center gap-2">
@@ -118,7 +118,7 @@ export function LeadsView() {
                   ) : leads.map(lead => (
                     <tr key={lead.id} className="border-b border-slate-50 hover:bg-slate-50/50 cursor-pointer transition-colors" onClick={() => setView('lead-detail', lead.id)}>
                       <td className="px-4 py-3">
-                        <div className="font-medium text-slate-900">{lead.business.name}</div>
+                        <div className="font-medium text-gray-900">{lead.business.name}</div>
                         {lead.business.city && <div className="text-xs text-gray-500 mt-0.5">{lead.business.city}{lead.business.country ? `, ${lead.business.country}` : ''}</div>}
                       </td>
                       <td className="px-4 py-3 text-gray-300">{lead.business.industry || '—'}</td>
@@ -163,7 +163,7 @@ export function LeadsView() {
                       onClick={() => setView('lead-detail', lead.id)}
                     >
                       <CardContent className="p-3">
-                        <p className="text-sm font-medium text-slate-900 truncate">{lead.business.name}</p>
+                        <p className="text-sm font-medium text-gray-900 truncate">{lead.business.name}</p>
                         {lead.business.industry && <p className="text-xs text-gray-500 mt-1">{lead.business.industry}</p>}
                         {lead.decisionMaker && <p className="text-xs text-gray-400 mt-1.5">{lead.decisionMaker}</p>}
                         <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-50">

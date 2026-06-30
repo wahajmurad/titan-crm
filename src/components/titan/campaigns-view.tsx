@@ -395,7 +395,7 @@ export function CampaignsView() {
                   </div>
 
                   {/* Row 2: Stats */}
-                  <div className="flex items-center gap-4 mt-4 pt-3 border-t border-slate-800/60">
+                  <div className="flex items-center gap-4 mt-4 pt-3 border-t border-gray-200">
                     {STAT_ITEMS.map(s => (
                       <div key={s.key} className="flex items-center gap-1.5">
                         <s.icon className={cn('w-3 h-3', s.color)} />
@@ -818,7 +818,7 @@ function CampaignDetailDialog({ open, onOpenChange, campaign, leads, leadsLoadin
           </div>
 
           {campaign.notes && (
-            <div className="bg-slate-800/30 rounded-lg p-3 mb-5">
+            <div className="bg-gray-50 rounded-lg p-3 mb-5">
               <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-1">Notes</p>
               <p className="text-sm text-gray-600">{campaign.notes}</p>
             </div>
@@ -829,7 +829,7 @@ function CampaignDetailDialog({ open, onOpenChange, campaign, leads, leadsLoadin
             <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Outreach Performance</h4>
             <div className="grid grid-cols-5 gap-2">
               {STAT_ITEMS.map(s => (
-                <div key={s.key} className="bg-slate-800/40 rounded-lg p-3 text-center">
+                <div key={s.key} className="bg-gray-50 rounded-lg p-3 text-center">
                   <s.icon className={cn('w-4 h-4 mx-auto mb-1.5', s.color)} />
                   <p className="text-lg font-bold text-gray-900">{campaign[s.key]}</p>
                   <p className="text-[10px] text-gray-400">{s.label}</p>
@@ -875,7 +875,7 @@ function CampaignDetailDialog({ open, onOpenChange, campaign, leads, leadsLoadin
                 {leads.map(lead => (
                   <div
                     key={lead.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 hover:bg-gray-100 cursor-pointer transition-colors group"
+                    className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors group"
                     onClick={() => { onNavigateLead(lead.id); onOpenChange(false) }}
                   >
                     <div className="min-w-0 flex-1">

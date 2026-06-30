@@ -53,7 +53,7 @@ export function MeetingsView() {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">Meetings</h1>
+          <h1 className="text-xl font-semibold text-gray-900">Meetings</h1>
           <p className="text-sm text-gray-400 mt-0.5">{upcoming.length} upcoming · {past.length} past</p>
         </div>
         <BookMeetingDialog open={addOpen} onOpenChange={setAddOpen} leads={leads} onCreated={refresh} />
@@ -108,10 +108,10 @@ function MeetingCard({ meeting, onUpdate }: { meeting: MeetingItem; onUpdate: ()
           <div className="flex items-start gap-3">
             <div className="w-12 h-12 bg-slate-50 rounded-xl flex flex-col items-center justify-center shrink-0">
               <span className="text-xs font-medium text-gray-400">{format(d, 'MMM')}</span>
-              <span className="text-lg font-bold text-slate-900 leading-tight">{format(d, 'd')}</span>
+              <span className="text-lg font-bold text-gray-900 leading-tight">{format(d, 'd')}</span>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-slate-900">{meeting.title}</h3>
+              <h3 className="text-sm font-medium text-gray-900">{meeting.title}</h3>
               <p className="text-xs text-gray-400 mt-0.5">{meeting.lead?.business?.name}</p>
               <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500">
                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{format(d, 'h:mm a')} · {meeting.duration}min</span>

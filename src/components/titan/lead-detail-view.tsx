@@ -100,7 +100,7 @@ export function LeadDetailView() {
         </Button>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-semibold text-slate-900">{b.name}</h1>
+            <h1 className="text-xl font-semibold text-gray-900">{b.name}</h1>
             {b.industry && <Badge variant="outline" className="text-xs">{b.industry}</Badge>}
           </div>
           {b.city && <p className="text-sm text-gray-400 mt-0.5 flex items-center gap-1"><MapPin className="w-3 h-3" />{b.city}{b.country ? `, ${b.country}` : ''}</p>}
@@ -133,7 +133,7 @@ export function LeadDetailView() {
                       {lead.decisionMaker.slice(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-slate-900">{lead.decisionMaker}</p>
+                      <p className="text-sm font-medium text-gray-900">{lead.decisionMaker}</p>
                       {lead.decisionMakerRole && <p className="text-xs text-gray-400">{lead.decisionMakerRole}</p>}
                     </div>
                   </div>
@@ -158,7 +158,7 @@ export function LeadDetailView() {
                   {lead.outreaches.map(o => (
                     <div key={o.id} className="border-l-2 border-slate-200 pl-3 py-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-slate-900">{o.subject}</span>
+                        <span className="text-xs font-medium text-gray-900">{o.subject}</span>
                         <Badge variant="outline" className="text-xs">{o.status}</Badge>
                       </div>
                       <p className="text-xs text-gray-400 mt-1 line-clamp-2">{o.body}</p>
@@ -178,7 +178,7 @@ export function LeadDetailView() {
                   {lead.meetings.map(m => (
                     <div key={m.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
                       <div>
-                        <p className="text-sm font-medium text-slate-900">{m.title}</p>
+                        <p className="text-sm font-medium text-gray-900">{m.title}</p>
                         <p className="text-xs text-gray-400">{format(new Date(m.date), 'MMM d, yyyy')} · {m.duration}min</p>
                       </div>
                       <Badge variant="outline" className="text-xs">{m.status}</Badge>
@@ -213,7 +213,7 @@ export function LeadDetailView() {
           <Card className="border-slate-200">
             <CardContent className="p-4">
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Score</p>
-              <p className="text-2xl font-bold text-slate-900">{lead.score}<span className="text-sm text-gray-500 font-normal">/100</span></p>
+              <p className="text-2xl font-bold text-gray-900">{lead.score}<span className="text-sm text-gray-500 font-normal">/100</span></p>
             </CardContent>
           </Card>
 

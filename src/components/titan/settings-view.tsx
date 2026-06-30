@@ -61,7 +61,7 @@ export function SettingsView() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-xl font-semibold text-slate-900">Settings</h1>
+        <h1 className="text-xl font-semibold text-gray-900">Settings</h1>
         <p className="text-sm text-gray-400 mt-0.5">Manage your profile and system configuration</p>
       </div>
 

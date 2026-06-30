@@ -66,7 +66,7 @@ export function OutreachView() {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">Outreach</h1>
+          <h1 className="text-xl font-semibold text-gray-900">Outreach</h1>
           <p className="text-sm text-gray-400 mt-0.5">Track and manage your email campaigns</p>
         </div>
         <div className="flex items-center gap-2">
@@ -94,7 +94,7 @@ export function OutreachView() {
           <Card key={s.label} className="border-slate-200">
             <CardContent className="p-4">
               <p className="text-xs text-gray-400">{s.label}</p>
-              <p className="text-xl font-semibold text-slate-900 mt-0.5">{s.value}</p>
+              <p className="text-xl font-semibold text-gray-900 mt-0.5">{s.value}</p>
             </CardContent>
           </Card>
         ))}
@@ -122,7 +122,7 @@ export function OutreachView() {
                   ) : outreaches.map(o => (
                     <tr key={o.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
                       <td className="px-4 py-3">
-                        <p className="font-medium text-slate-900 truncate max-w-xs">{o.subject}</p>
+                        <p className="font-medium text-gray-900 truncate max-w-xs">{o.subject}</p>
                         <p className="text-xs text-gray-500 truncate max-w-xs mt-0.5">{o.body.slice(0, 80)}...</p>
                       </td>
                       <td className="px-4 py-3 text-gray-300">{o.lead?.business?.name || '—'}</td>

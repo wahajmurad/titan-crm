@@ -385,7 +385,7 @@ export function DashboardView({ userName }: { userName?: string }) {
           return (
             <Card
               key={card.label}
-              className="bg-white border-slate-800/60 hover:border-gray-300/60 transition-all duration-200 group relative overflow-hidden"
+              className="bg-white border-gray-200 hover:border-gray-300/60 transition-all duration-200 group relative overflow-hidden"
             >
               <div className={`absolute inset-0 bg-gradient-to-br ${card.accent} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
               <CardContent className="p-4 relative">
@@ -411,7 +411,7 @@ export function DashboardView({ userName }: { userName?: string }) {
 
                 {/* Hot/Warm/Cold breakdown for Qualified card */}
                 {card.trend === 'hotwarmcold' && (
-                  <div className="mt-2.5 pt-2.5 border-t border-slate-800/60">
+                  <div className="mt-2.5 pt-2.5 border-t border-gray-200">
                     <div className="flex items-center gap-3">
                       <span className="flex items-center gap-1 text-[10px]">
                         <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
@@ -444,7 +444,7 @@ export function DashboardView({ userName }: { userName?: string }) {
       </div>
 
       {/* ─── 3. Lead Pipeline ──────────────────────────────────────── */}
-      <Card className="bg-white border-slate-800/60">
+      <Card className="bg-white border-gray-200">
         <CardHeader className="pb-3 px-5 pt-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold text-gray-900 flex items-center gap-2">
@@ -509,7 +509,7 @@ export function DashboardView({ userName }: { userName?: string }) {
       {/* ─── 4. Two-Column Section ──────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left: Campaign Performance Table */}
-        <Card className="bg-white border-slate-800/60">
+        <Card className="bg-white border-gray-200">
           <CardHeader className="pb-3 px-5 pt-4">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-semibold text-gray-900 flex items-center gap-2">
@@ -540,7 +540,7 @@ export function DashboardView({ userName }: { userName?: string }) {
                 <ScrollArea className="max-h-[340px]">
                   <Table>
                     <TableHeader>
-                      <TableRow className="border-slate-800/60 hover:bg-transparent">
+                      <TableRow className="border-gray-200 hover:bg-transparent">
                         <TableHead className="text-[10px] font-medium text-gray-400 uppercase tracking-wider h-8">
                           Campaign
                         </TableHead>
@@ -559,7 +559,7 @@ export function DashboardView({ userName }: { userName?: string }) {
                       {topCampaigns.map((c, i) => (
                         <TableRow
                           key={c.id}
-                          className="border-slate-800/40 hover:bg-gray-100/40"
+                          className="border-gray-100 hover:bg-gray-100/40"
                         >
                           <TableCell className="py-2.5">
                             <div className="flex items-center gap-2">
@@ -606,7 +606,7 @@ export function DashboardView({ userName }: { userName?: string }) {
         </Card>
 
         {/* Right: Recent Activity Feed */}
-        <Card className="bg-white border-slate-800/60">
+        <Card className="bg-white border-gray-200">
           <CardHeader className="pb-3 px-5 pt-4">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-semibold text-gray-900 flex items-center gap-2">
@@ -644,7 +644,7 @@ export function DashboardView({ userName }: { userName?: string }) {
                     return (
                       <div
                         key={a.id}
-                        className={`flex items-start gap-3 py-2.5 ${i < data.recentActivities.length - 1 ? 'border-b border-slate-800/40' : ''}`}
+                        className={`flex items-start gap-3 py-2.5 ${i < data.recentActivities.length - 1 ? 'border-b border-gray-100' : ''}`}
                       >
                         <div
                           className={`w-8 h-8 rounded-lg ${actionColor} flex items-center justify-center shrink-0 mt-0.5`}

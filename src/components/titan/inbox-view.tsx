@@ -297,7 +297,7 @@ export function InboxView() {
                   'hover:border-gray-200',
                   cfg.borderColor,
                   isExpanded && 'ring-1 ring-slate-700/50',
-                  !item.isRead && 'bg-slate-900/80',
+                  !item.isRead && 'bg-violet-50',
                   // Visual distinction: positive gets a subtle emerald tint
                   isPositive && !isExpanded && 'bg-emerald-500/[0.03]',
                   // OOO gets a subtle desaturated look
@@ -366,7 +366,7 @@ export function InboxView() {
                         {/* Full Email Body */}
                         <div>
                           <p className="text-[10px] uppercase tracking-wider text-gray-400 font-medium mb-2">Full Message</p>
-                          <div className="bg-slate-800/40 rounded-lg p-4 max-h-64 overflow-y-auto">
+                          <div className="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto">
                             <pre className="text-sm text-gray-600 whitespace-pre-wrap font-sans leading-relaxed">
                               {item.body}
                             </pre>
@@ -377,11 +377,11 @@ export function InboxView() {
                         <div>
                           <p className="text-[10px] uppercase tracking-wider text-gray-400 font-medium mb-2">Lead Details</p>
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-                            <div className="bg-slate-800/40 rounded-lg p-3">
+                            <div className="bg-gray-50 rounded-lg p-3">
                               <p className="text-[10px] text-gray-400 uppercase">Company</p>
                               <p className="text-sm text-gray-900 mt-0.5 font-medium">{item.lead.business.name}</p>
                             </div>
-                            <div className="bg-slate-800/40 rounded-lg p-3">
+                            <div className="bg-gray-50 rounded-lg p-3">
                               <p className="text-[10px] text-gray-400 uppercase">Contact</p>
                               <p className="text-sm text-gray-900 mt-0.5">
                                 {item.lead.decisionMaker || '—'}
@@ -390,11 +390,11 @@ export function InboxView() {
                                 )}
                               </p>
                             </div>
-                            <div className="bg-slate-800/40 rounded-lg p-3">
+                            <div className="bg-gray-50 rounded-lg p-3">
                               <p className="text-[10px] text-gray-400 uppercase">Stage</p>
                               <p className="text-sm text-gray-900 mt-0.5">{item.lead.stage.replace(/_/g, ' ')}</p>
                             </div>
-                            <div className="bg-slate-800/40 rounded-lg p-3">
+                            <div className="bg-gray-50 rounded-lg p-3">
                               <p className="text-[10px] text-gray-400 uppercase">Temperature</p>
                               <p className={cn('text-sm mt-0.5 font-medium', {
                                 'text-red-400': item.lead.temperature === 'HOT',
@@ -534,7 +534,7 @@ function ReplyDialog({ open, onOpenChange, item, onSent }: {
           <DialogTitle className="text-gray-900">Reply to {item.lead.business.name}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 mt-2">
-          <div className="bg-slate-800/40 rounded-lg p-3">
+          <div className="bg-gray-50 rounded-lg p-3">
             <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-1">Original Message</p>
             <p className="text-xs text-gray-500 line-clamp-3">{item.body.slice(0, 200)}...</p>
           </div>
@@ -666,7 +666,7 @@ function ScheduleMeetingDialog({ open, onOpenChange, item, onScheduled }: {
           </div>
 
           {/* Lead info summary */}
-          <div className="bg-slate-800/40 rounded-lg p-3">
+          <div className="bg-gray-50 rounded-lg p-3">
             <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-1.5">Lead</p>
             <div className="flex items-center gap-2 text-sm text-gray-900">
               <Building2 className="w-3.5 h-3.5 text-gray-500" />

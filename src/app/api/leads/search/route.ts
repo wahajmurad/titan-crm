@@ -176,7 +176,7 @@ async function searchWebScraping(query: string, location: string): Promise<Disco
     const leads: DiscoveredLead[] = []
 
     // Extract results from DuckDuckGo HTML
-    const resultRegex = /<a rel="nofollow" class="result__a" href="([^"]+)"[^>]*>(.*?)<\/a>.*?<a class="result__snippet" href="[^"]+">(.*?)<\/a>/gs
+    const resultRegex = /<a rel="nofollow" class="result__a" href="([^"]+)"[^>]*>([\s\S]*?)<\/a>[\s\S]*?<a class="result__snippet" href="[^"]+">([\s\S]*?)<\/a>/g
     let match: RegExpExecArray | null
 
     while ((match = resultRegex.exec(html)) !== null && leads.length < 15) {

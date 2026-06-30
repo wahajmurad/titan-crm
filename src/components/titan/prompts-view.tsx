@@ -141,7 +141,7 @@ function PromptCard({
 
   return (
     <Card
-      className={`border-gray-200 bg-slate-900/80 hover:bg-white transition-all duration-200 group ${
+      className={`border-gray-200 bg-gray-50 hover:bg-white transition-all duration-200 group ${
         prompt.isDefault ? 'ring-1 ring-violet-500/30' : ''
       }`}
     >
@@ -185,7 +185,7 @@ function PromptCard({
           </div>
         </div>
 
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-800/60">
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200">
           <div className="flex items-center gap-1.5">
             {prompt.isDefault && (
               <Badge className="bg-violet-500/15 text-violet-400 border-violet-500/25 text-[10px] px-1.5 py-0">
@@ -531,7 +531,7 @@ export function PromptsView() {
         <div className="flex gap-4 min-h-[calc(100vh-10rem)]">
           {/* Category sidebar */}
           <div className="w-56 shrink-0 hidden md:block">
-            <Card className="border-gray-200 bg-slate-900/80 sticky top-0">
+            <Card className="border-gray-200 bg-gray-50 sticky top-0">
               <CardContent className="p-2">
                 <div className="px-3 py-2 mb-1">
                   <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Categories</p>
@@ -617,7 +617,7 @@ export function PromptsView() {
             {loading ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <Card key={i} className="border-gray-200 bg-slate-900/80">
+                  <Card key={i} className="border-gray-200 bg-gray-50">
                     <CardContent className="p-4 space-y-3">
                       <div className="flex items-center gap-2">
                         <Skeleton className="h-6 w-6 rounded-md bg-gray-100" />

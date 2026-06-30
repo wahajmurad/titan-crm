@@ -50,7 +50,7 @@ export function TeamView() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">Team</h1>
+          <h1 className="text-xl font-semibold text-gray-900">Team</h1>
           <p className="text-sm text-gray-400 mt-0.5">Manage team members and their permissions</p>
         </div>
         <AddMemberDialog open={addOpen} onOpenChange={setAddOpen} onAdded={refresh} />
@@ -84,7 +84,7 @@ export function TeamView() {
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium text-slate-900">{user.name}</p>
+                          <p className="text-sm font-medium text-gray-900">{user.name}</p>
                           {!user.isActive && <Badge variant="outline" className="text-xs text-red-500">Inactive</Badge>}
                         </div>
                         <p className="text-xs text-gray-400">{user.email}</p>
