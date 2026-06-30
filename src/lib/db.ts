@@ -6,15 +6,27 @@ const globalForPrisma = globalThis as unknown as {
 
 function createPrismaClient() {
   const dbUrl = process.env.DATABASE_URL || ''
-  const separator = dbUrl.includes('?') ? '&' : '?'
-  const url = `${dbUrl}${separator}connection_limit=5&pool_timeout=10`
+
+  // Supabase free tier: max 15 connections via PgBouncer (port 6543)
+  // Vercel serverless: multiple cold instances each create their own pool
+  // connection_limit=3 ensures even 5 concurrent functions stay under 15
+  let url = dbUrl
+  const hasParams = dbUrl.includes('?')
+  const sep = hasParams ? '&' : '?'
+  url = `${url}${sep}connection_limit=3&pool_timeout=15`
+
+  // Ensure pgbouncer mode is enabled
+  if (!url.includes('pgbouncer')) {
+    url += '&pgbouncer=true'
+  }
 
   return new PrismaClient({
     datasourceUrl: url,
-    log: process.env.NODE_ENV === 'development' ? ['error'] : [],
+    log: [],
   })
 }
 
 export const db = globalForPrisma.prisma ?? createPrismaClient()
 
+// In development, reuse the client across HMR cycles
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = db
