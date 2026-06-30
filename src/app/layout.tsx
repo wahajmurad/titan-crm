@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TITAN - AI Client Acquisition Platform",
+  title: "TITAN — AI Growth Operating System",
   description: "AI-powered client acquisition platform for B2B sales automation",
   icons: {
     icon: "/logo.svg",
@@ -26,9 +26,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-950 text-white`}
       >
         {children}
       </body>

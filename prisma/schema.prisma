@@ -3,12 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
 }
 
 model User {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   email     String   @unique
   password  String
   name      String
@@ -18,15 +18,19 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  permissions Permission[]
-  activities  Activity[]
-  assignedLeads Lead[] @relation("AssignedTo")
+  permissions    Permission[]
+  activities     Activity[]
+  assignedLeads  Lead[] @relation("AssignedTo")
+  campaigns      Campaign[]
+
+  @@index([email])
+  @@index([role])
 }
 
 model Permission {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   userId    String
-  module    String   // dashboard, leads, outreach, meetings, team, settings
+  module    String
   canView   Boolean  @default(false)
   canCreate Boolean  @default(false)
   canEdit   Boolean  @default(false)
@@ -35,56 +39,72 @@ model Permission {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, module])
+  @@index([userId])
 }
 
 model Business {
-  id              String   @id @default(cuid())
-  name            String
-  website         String?
-  industry        String?
-  city            String?
-  country         String?
-  phone           String?
-  email           String?
-  socialProfiles  String?  // JSON string
-  companySize     String?
+  id               String   @id @default(uuid())
+  name             String
+  website          String?
+  industry         String?
+  city             String?
+  country          String?
+  phone            String?
+  email            String?
+  socialProfiles   String?
+  companySize      String?
   businessCategory String?
-  source          String?
-  discoveredAt    DateTime @default(now())
+  source           String?
+  discoveredAt     DateTime @default(now())
 
-  lead Lead?
+  lead   Lead?
+  audit  WebsiteAudit?
+
+  @@index([industry])
+  @@index([country])
 }
 
 model Lead {
-  id                   String   @id @default(cuid())
+  id                   String   @id @default(uuid())
   businessId           String   @unique
   stage                String   @default("DISCOVERED")
   score                Int      @default(0)
-  aiAnalysis           String?  // JSON string with audit results
-  problems             String?  // JSON array of identified problems
+  qualificationScore   Int      @default(0)
+  temperature          String   @default("COLD") // HOT, WARM, COLD
+  aiAnalysis           String?
+  problems             String?
   recommendedSolution  String?
   decisionMaker        String?
   decisionMakerRole    String?
   decisionMakerEmail   String?
   notes                String?
   assignedToId         String?
+  campaignId           String?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
-  business        Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  assignedTo      User?    @relation("AssignedTo", fields: [assignedToId], references: [id])
-  outreaches      Outreach[]
-  meetings        Meeting[]
-  activities      Activity[]
+  business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  assignedTo User?    @relation("AssignedTo", fields: [assignedToId], references: [id])
+  campaign   Campaign? @relation(fields: [campaignId], references: [id])
+  outreaches Outreach[]
+  meetings   Meeting[]
+  activities Activity[]
+
+  @@index([stage])
+  @@index([assignedToId])
+  @@index([businessId])
+  @@index([campaignId])
+  @@index([temperature])
 }
 
 model Outreach {
-  id             String    @id @default(cuid())
+  id             String    @id @default(uuid())
   leadId         String
+  campaignId     String?
   subject        String
   body           String
-  status         String    @default("DRAFT") // DRAFT, SENT, OPENED, REPLIED, BOUNCED, FAILED
-  type           String    @default("INITIAL") // INITIAL, FOLLOW_UP, REPLY
+  status         String    @default("DRAFT")
+  type           String    @default("INITIAL")
   followUpNumber Int       @default(0)
   sentAt         DateTime?
   openedAt       DateTime?
@@ -92,17 +112,22 @@ model Outreach {
   scheduledFor   DateTime?
   createdAt      DateTime  @default(now())
 
-  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  lead     Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  campaign Campaign? @relation(fields: [campaignId], references: [id])
+
+  @@index([leadId])
+  @@index([status])
+  @@index([campaignId])
 }
 
 model Meeting {
-  id          String    @id @default(cuid())
+  id          String    @id @default(uuid())
   leadId      String
   title       String
   description String?
   date        DateTime
-  duration    Int       @default(30) // minutes
-  status      String    @default("SCHEDULED") // SCHEDULED, COMPLETED, CANCELLED, NO_SHOW
+  duration    Int       @default(30)
+  status      String    @default("SCHEDULED")
   location    String?
   meetingLink String?
   notes       String?
@@ -110,23 +135,96 @@ model Meeting {
   updatedAt   DateTime  @updatedAt
 
   lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([date])
+  @@index([status])
 }
 
 model Activity {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   userId    String?
   leadId    String?
   action    String
   details   String?
   createdAt DateTime @default(now())
 
-  user User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
-  lead Lead?  @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  lead Lead? @relation(fields: [leadId], references: [id], onDelete: SetNull)
 }
 
 model AppSetting {
-  id    String @id @default(cuid())
-  key   String @unique
-  value String
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
   updatedAt DateTime @updatedAt
+}
+
+// --- NEW MODELS ---
+
+model Campaign {
+  id              String   @id @default(uuid())
+  name            String
+  industry        String?
+  targetLocation  String?
+  targetCity      String?
+  targetSize      String?
+  serviceOffering String?
+  dailyLimit      Int      @default(20)
+  aiModel         String   @default("default")
+  notes           String?
+  status          String   @default("ACTIVE") // ACTIVE, PAUSED, COMPLETED
+  leadCount       Int      @default(0)
+  sentCount       Int      @default(0)
+  replyCount      Int      @default(0)
+  meetingCount    Int      @default(0)
+  wonCount        Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  owner     User     @relation(fields: [ownerId], references: [id])
+  ownerId   String
+  leads     Lead[]
+  outreaches Outreach[]
+
+  @@index([ownerId])
+  @@index([status])
+  @@index([industry])
+}
+
+model WebsiteAudit {
+  id                String   @id @default(uuid())
+  businessId        String   @unique
+  url               String
+  designScore       Int      @default(0)
+  technicalScore    Int      @default(0)
+  businessScore     Int      @default(0)
+  automationScore   Int      @default(0)
+  overallScore      Int      @default(0)
+  designDetails     String?
+  technicalDetails  String?
+  businessDetails   String?
+  automationDetails String?
+  opportunities     String?
+  recommendations   String?
+  talkingPoints     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([overallScore])
+}
+
+model PromptTemplate {
+  id        String   @id @default(uuid())
+  name      String
+  category  String   // website_audit, industry_research, lead_qualification, email_generation, sales_strategy, proposal_writing, campaign_analysis
+  prompt    String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
 }

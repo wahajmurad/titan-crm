@@ -16,6 +16,8 @@ export async function GET() {
       meetingStats,
       recentActivities,
       leadsByIndustry,
+      temperatureCounts,
+      activeCampaignsCount,
     ] = await Promise.all([
       db.lead.count({ where }),
       db.lead.groupBy({
@@ -32,7 +34,7 @@ export async function GET() {
         _count: { status: true },
       }),
       db.activity.findMany({
-        take: 15,
+        take: 10,
         orderBy: { createdAt: 'desc' },
         include: {
           user: { select: { name: true } },
@@ -46,6 +48,12 @@ export async function GET() {
         orderBy: { _count: { industry: 'desc' } },
         take: 10,
       }),
+      db.lead.groupBy({
+        by: ['temperature'],
+        where,
+        _count: { temperature: true },
+      }),
+      db.campaign.count({ where: { status: 'ACTIVE' } }),
     ])
 
     const stageMap: Record<string, number> = {}
@@ -63,8 +71,13 @@ export async function GET() {
       meetingMap[m.status] = m._count.status
     }
 
+    const tempMap: Record<string, number> = {}
+    for (const t of temperatureCounts) {
+      tempMap[t.temperature] = t._count.temperature
+    }
+
     const totalSent = outreachMap['SENT'] || 0
-    const totalReplied = (outreachMap['REPLIED'] || 0) + (outreachMap['OPENED'] || 0)
+    const totalReplied = outreachMap['REPLIED'] || 0
     const replyRate = totalSent > 0 ? Math.round((totalReplied / totalSent) * 100) : 0
 
     return NextResponse.json({
@@ -75,9 +88,12 @@ export async function GET() {
       replyRate,
       recentActivities,
       leadsByIndustry,
+      temperature: tempMap,
       wonCount: stageMap['WON'] || 0,
-      meetingBooked: meetingMap['SCHEDULED'] || 0,
+      meetingBooked: stageMap['MEETING_BOOKED'] || 0,
       outreachSent: totalSent,
+      qualifiedCount: stageMap['QUALIFIED'] || 0,
+      activeCampaigns: activeCampaignsCount,
     })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Unknown error'

@@ -12,7 +12,7 @@ export function generateToken(): string {
   return randomBytes(32).toString('hex')
 }
 
-export const MODULES = ['dashboard', 'leads', 'outreach', 'meetings', 'team', 'settings'] as const
+export const MODULES = ['dashboard', 'discovery', 'audit', 'leads', 'campaigns', 'email-center', 'inbox', 'meetings', 'ai-assistant', 'prompts', 'team', 'settings'] as const
 export type Module = typeof MODULES[number]
 
 export interface UserSession {
@@ -32,19 +32,11 @@ export interface PermissionMap {
   }
 }
 
-export const LEAD_STAGES = [
-  'DISCOVERED',
-  'AUDITED',
-  'QUALIFIED',
-  'OUTREACH_SENT',
-  'REPLIED',
-  'MEETING_BOOKED',
-  'PROPOSAL_SENT',
-  'WON',
-  'LOST',
-] as const
-
+export const LEAD_STAGES = ['DISCOVERED', 'AUDITED', 'QUALIFIED', 'OUTREACH_SENT', 'REPLIED', 'MEETING_BOOKED', 'PROPOSAL_SENT', 'WON', 'LOST'] as const
 export type LeadStage = typeof LEAD_STAGES[number]
+
+export const LEAD_TEMPERATURE = ['HOT', 'WARM', 'COLD'] as const
+export type LeadTemperature = typeof LEAD_TEMPERATURE[number]
 
 export const OUTREACH_STATUS = ['DRAFT', 'SENT', 'OPENED', 'REPLIED', 'BOUNCED', 'FAILED'] as const
 export type OutreachStatus = typeof OUTREACH_STATUS[number]
@@ -54,6 +46,9 @@ export type OutreachType = typeof OUTREACH_TYPE[number]
 
 export const MEETING_STATUS = ['SCHEDULED', 'COMPLETED', 'CANCELLED', 'NO_SHOW'] as const
 export type MeetingStatus = typeof MEETING_STATUS[number]
+
+export const CAMPAIGN_STATUS = ['ACTIVE', 'PAUSED', 'COMPLETED'] as const
+export type CampaignStatus = typeof CAMPAIGN_STATUS[number]
 
 export const STAGE_COLORS: Record<string, string> = {
   DISCOVERED: 'bg-slate-100 text-slate-700 border-slate-200',
@@ -78,3 +73,35 @@ export const STAGE_DOT_COLORS: Record<string, string> = {
   WON: 'bg-green-600',
   LOST: 'bg-red-500',
 }
+
+export const TEMP_COLORS: Record<string, string> = {
+  HOT: 'bg-red-100 text-red-800 border-red-300',
+  WARM: 'bg-amber-100 text-amber-800 border-amber-300',
+  COLD: 'bg-blue-50 text-blue-700 border-blue-200',
+}
+
+export interface AuditScores {
+  design: number
+  technical: number
+  business: number
+  automation: number
+  overall: number
+}
+
+export interface AuditDetails {
+  design: string
+  technical: string
+  business: string
+  automation: string
+}
+
+export const PROMPT_CATEGORIES = [
+  'website_audit',
+  'industry_research',
+  'lead_qualification',
+  'email_generation',
+  'sales_strategy',
+  'proposal_writing',
+  'campaign_analysis',
+] as const
+export type PromptCategory = typeof PROMPT_CATEGORIES[number]
