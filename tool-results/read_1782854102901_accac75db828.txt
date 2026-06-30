@@ -1,0 +1,648 @@
+     1→     1→'use client'
+     2→     2→
+     3→     3→import { useEffect, useState, useCallback } from 'react'
+     4→     4→import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+     5→     5→import { Button } from '@/components/ui/button'
+     6→     6→import { Input } from '@/components/ui/input'
+     7→     7→import { Label } from '@/components/ui/label'
+     8→     8→import { Separator } from '@/components/ui/separator'
+     9→     9→import { Badge } from '@/components/ui/badge'
+    10→    10→import { Switch } from '@/components/ui/switch'
+    11→    11→import { Textarea } from '@/components/ui/textarea'
+    12→    12→import {
+    13→    13→  Select,
+    14→    14→  SelectContent,
+    15→    15→  SelectItem,
+    16→    16→  SelectTrigger,
+    17→    17→  SelectValue,
+    18→    18→} from '@/components/ui/select'
+    19→    19→import {
+    20→    20→  Dialog,
+    21→    21→  DialogContent,
+    22→    22→  DialogDescription,
+    23→    23→  DialogFooter,
+    24→    24→  DialogHeader,
+    25→    25→  DialogTitle,
+    26→    26→} from '@/components/ui/dialog'
+    27→    27→import { Save, CheckCircle, Plus, Trash2, Globe, Key, Settings, Shield, ExternalLink } from 'lucide-react'
+    28→    28→
+    29→    29→// ── Lead Provider Types ──────────────────────────────────────────────
+    30→    30→
+    31→    31→interface LeadProvider {
+    32→    32→  id: string
+    33→    33→  name: string
+    34→    34→  type: 'SERPER' | 'CUSTOM'
+    35→    35→  baseUrl: string
+    36→    36→  authMethod: 'bearer' | 'api-key' | 'header' | 'none'
+    37→    37→  apiKey: string
+    38→    38→  authHeader?: string
+    39→    39→  headers: Record<string, string>
+    40→    40→  requestParams: Record<string, string>
+    41→    41→  isActive: boolean
+    42→    42→}
+    43→    43→
+    44→    44→const SERPER_DEFAULT: Omit<LeadProvider, 'id'> = {
+    45→    45→  name: 'Serper (Google Search)',
+    46→    46→  type: 'SERPER',
+    47→    47→  baseUrl: 'https://google.serper.dev',
+    48→    48→  authMethod: 'api-key',
+    49→    49→  apiKey: '',
+    50→    50→  authHeader: 'X-API-KEY',
+    51→    51→  headers: {},
+    52→    52→  requestParams: {},
+    53→    53→  isActive: true,
+    54→    54→}
+    55→    55→
+    56→    56→const AUTH_METHOD_LABELS: Record<LeadProvider['authMethod'], string> = {
+    57→    57→  bearer: 'Bearer Token',
+    58→    58→  'api-key': 'API Key in Header',
+    59→    59→  header: 'Custom Header',
+    60→    60→  none: 'None',
+    61→    61→}
+    62→    62→
+    63→    63→const TYPE_LABELS: Record<LeadProvider['type'], string> = {
+    64→    64→  SERPER: 'Serper',
+    65→    65→  CUSTOM: 'Custom',
+    66→    66→}
+    67→    67→
+    68→    68→function generateId() {
+    69→    69→  return crypto.randomUUID()
+    70→    70→}
+    71→    71→
+    72→    72→// ── Component ────────────────────────────────────────────────────────
+    73→    73→
+    74→    74→export function SettingsView() {
+    75→    75→  // ── Existing settings state ──
+    76→    76→  const [settings, setSettings] = useState<Record<string, string>>({})
+    77→    77→  const [name, setName] = useState('')
+    78→    78→  const [currentPass, setCurrentPass] = useState('')
+    79→    79→  const [newPass, setNewPass] = useState('')
+    80→    80→  const [loading, setLoading] = useState(false)
+    81→    81→  const [saved, setSaved] = useState(false)
+    82→    82→
+    83→    83→  // ── Lead provider state ──
+    84→    84→  const [providers, setProviders] = useState<LeadProvider[]>([])
+    85→    85→  const [providersLoaded, setProvidersLoaded] = useState(false)
+    86→    86→  const [dialogOpen, setDialogOpen] = useState(false)
+    87→    87→  const [editingProvider, setEditingProvider] = useState<LeadProvider | null>(null)
+    88→    88→  const [savingProviders, setSavingProviders] = useState(false)
+    89→    89→
+    90→    90→  // Form state
+    91→    91→  const [formName, setFormName] = useState('')
+    92→    92→  const [formType, setFormType] = useState<LeadProvider['type']>('SERPER')
+    93→    93→  const [formBaseUrl, setFormBaseUrl] = useState('')
+    94→    94→  const [formAuthMethod, setFormAuthMethod] = useState<LeadProvider['authMethod']>('api-key')
+    95→    95→  const [formApiKey, setFormApiKey] = useState('')
+    96→    96→  const [formAuthHeader, setFormAuthHeader] = useState('')
+    97→    97→  const [formHeaders, setFormHeaders] = useState('')
+    98→    98→  const [formParams, setFormParams] = useState('')
+    99→    99→  const [formActive, setFormActive] = useState(true)
+   100→   100→
+   101→   101→  // ── Load all settings (existing + providers) ──
+   102→   102→  useEffect(() => {
+   103→   103→    Promise.all([fetch('/api/settings'), fetch('/api/auth')])
+   104→   104→      .then(([sRes, uRes]) => Promise.all([sRes.json(), uRes.json()]))
+   105→   105→      .then(([sData, uData]) => {
+   106→   106→        if (uData.user) setName(uData.user.name)
+   107→   107→        setSettings(sData.settings || {})
+   108→   108→
+   109→   109→        // Parse lead providers from settings
+   110→   110→        const raw = sData.settings?.lead_providers
+   111→   111→        if (raw) {
+   112→   112→          try {
+   113→   113→            setProviders(JSON.parse(raw))
+   114→   114→          } catch {
+   115→   115→            setProviders([])
+   116→   116→          }
+   117→   117→        }
+   118→   118→        setProvidersLoaded(true)
+   119→   119→      })
+   120→   120→      .catch(() => {
+   121→   121→        setProvidersLoaded(true)
+   122→   122→      })
+   123→   123→  }, [])
+   124→   124→
+   125→   125→  // ── Existing helpers ──
+   126→   126→  const updateSetting = (key: string, value: string) => {
+   127→   127→    setSettings(s => ({ ...s, [key]: value }))
+   128→   128→  }
+   129→   129→
+   130→   130→  const saveSettings = async () => {
+   131→   131→    setLoading(true)
+   132→   132→    try {
+   133→   133→      await fetch('/api/settings', {
+   134→   134→        method: 'POST',
+   135→   135→        headers: { 'Content-Type': 'application/json' },
+   136→   136→        body: JSON.stringify({ settings }),
+   137→   137→      })
+   138→   138→      setSaved(true)
+   139→   139→      setTimeout(() => setSaved(false), 2000)
+   140→   140→    } catch {}
+   141→   141→    setLoading(false)
+   142→   142→  }
+   143→   143→
+   144→   144→  const updateProfile = async () => {
+   145→   145→    if (!name) return
+   146→   146→    setLoading(true)
+   147→   147→    try {
+   148→   148→      const payload: Record<string, string> = { name }
+   149→   149→      if (currentPass && newPass) { payload.currentPassword = currentPass; payload.newPassword = newPass }
+   150→   150→      await fetch('/api/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+   151→   151→      setSaved(true)
+   152→   152→      setCurrentPass(''); setNewPass('')
+   153→   153→      setTimeout(() => setSaved(false), 2000)
+   154→   154→    } catch {}
+   155→   155→    setLoading(false)
+   156→   156→  }
+   157→   157→
+   158→   158→  // ── Lead Provider helpers ──
+   159→   159→
+   160→   160→  const resetForm = () => {
+   161→   161→    setFormName('')
+   162→   162→    setFormType('SERPER')
+   163→   163→    setFormBaseUrl('')
+   164→   164→    setFormAuthMethod('api-key')
+   165→   165→    setFormApiKey('')
+   166→   166→    setFormAuthHeader('')
+   167→   167→    setFormHeaders('')
+   168→   168→    setFormParams('')
+   169→   169→    setFormActive(true)
+   170→   170→    setEditingProvider(null)
+   171→   171→  }
+   172→   172→
+   173→   173→  const openAddDialog = () => {
+   174→   174→    resetForm()
+   175→   175→    setDialogOpen(true)
+   176→   176→  }
+   177→   177→
+   178→   178→  const openEditDialog = (provider: LeadProvider) => {
+   179→   179→    setEditingProvider(provider)
+   180→   180→    setFormName(provider.name)
+   181→   181→    setFormType(provider.type)
+   182→   182→    setFormBaseUrl(provider.baseUrl)
+   183→   183→    setFormAuthMethod(provider.authMethod)
+   184→   184→    setFormApiKey(provider.apiKey)
+   185→   185→    setFormAuthHeader(provider.authHeader || '')
+   186→   186→    setFormHeaders(JSON.stringify(provider.headers || {}, null, 2))
+   187→   187→    setFormParams(JSON.stringify(provider.requestParams || {}, null, 2))
+   188→   188→    setFormActive(provider.isActive)
+   189→   189→    setDialogOpen(true)
+   190→   190→  }
+   191→   191→
+   192→   192→  const handleQuickAddSerper = () => {
+   193→   193→    const newProvider: LeadProvider = {
+   194→   194→      ...SERPER_DEFAULT,
+   195→   195→      id: generateId(),
+   196→   196→    }
+   197→   197→    setEditingProvider(newProvider)
+   198→   198→    setFormName(newProvider.name)
+   199→   199→    setFormType(newProvider.type)
+   200→   200→    setFormBaseUrl(newProvider.baseUrl)
+   201→   201→    setFormAuthMethod(newProvider.authMethod)
+   202→   202→    setFormApiKey('')
+   203→   203→    setFormAuthHeader(newProvider.authHeader || '')
+   204→   204→    setFormHeaders('')
+   205→   205→    setFormParams('')
+   206→   206→    setFormActive(newProvider.isActive)
+   207→   207→    setDialogOpen(true)
+   208→   208→  }
+   209→   209→
+   210→   210→  const saveProviders = async (updatedProviders: LeadProvider[]) => {
+   211→   211→    setSavingProviders(true)
+   212→   212→    try {
+   213→   213→      await fetch('/api/settings', {
+   214→   214→        method: 'POST',
+   215→   215→        headers: { 'Content-Type': 'application/json' },
+   216→   216→        body: JSON.stringify({
+   217→   217→          settings: { lead_providers: JSON.stringify(updatedProviders) },
+   218→   218→        }),
+   219→   219→      })
+   220→   220→      setProviders(updatedProviders)
+   221→   221→    } catch {}
+   222→   222→    setSavingProviders(false)
+   223→   223→  }
+   224→   224→
+   225→   225→  const handleSaveProvider = async () => {
+   226→   226→    let parsedHeaders: Record<string, string> = {}
+   227→   227→    let parsedParams: Record<string, string> = {}
+   228→   228→
+   229→   229→    if (formHeaders.trim()) {
+   230→   230→      try {
+   231→   231→        parsedHeaders = JSON.parse(formHeaders)
+   232→   232→      } catch {
+   233→   233→        return
+   234→   234→      }
+   235→   235→    }
+   236→   236→
+   237→   237→    if (formParams.trim()) {
+   238→   238→      try {
+   239→   239→        parsedParams = JSON.parse(formParams)
+   240→   240→      } catch {
+   241→   241→        return
+   242→   242→      }
+   243→   243→    }
+   244→   244→
+   245→   245→    const providerData: LeadProvider = {
+   246→   246→      id: editingProvider?.id || generateId(),
+   247→   247→      name: formName.trim(),
+   248→   248→      type: formType,
+   249→   249→      baseUrl: formBaseUrl.trim(),
+   250→   250→      authMethod: formAuthMethod,
+   251→   251→      apiKey: formApiKey,
+   252→   252→      authHeader: formAuthHeader.trim() || undefined,
+   253→   253→      headers: parsedHeaders,
+   254→   254→      requestParams: parsedParams,
+   255→   255→      isActive: formActive,
+   256→   256→    }
+   257→   257→
+   258→   258→    let updatedProviders: LeadProvider[]
+   259→   259→    if (editingProvider) {
+   260→   260→      updatedProviders = providers.map(p => (p.id === editingProvider.id ? providerData : p))
+   261→   261→    } else {
+   262→   262→      updatedProviders = [...providers, providerData]
+   263→   263→    }
+   264→   264→
+   265→   265→    await saveProviders(updatedProviders)
+   266→   266→    setDialogOpen(false)
+   267→   267→    resetForm()
+   268→   268→  }
+   269→   269→
+   270→   270→  const handleDeleteProvider = async (id: string) => {
+   271→   271→    const updatedProviders = providers.filter(p => p.id !== id)
+   272→   272→    await saveProviders(updatedProviders)
+   273→   273→  }
+   274→   274→
+   275→   275→  const handleToggleActive = async (id: string) => {
+   276→   276→    const updatedProviders = providers.map(p =>
+   277→   277→      p.id === id ? { ...p, isActive: !p.isActive } : p
+   278→   278→    )
+   279→   279→    await saveProviders(updatedProviders)
+   280→   280→  }
+   281→   281→
+   282→   282→  // ── Render ──
+   283→   283→
+   284→   284→  return (
+   285→   285→    <div className="space-y-6 max-w-2xl">
+   286→   286→      <div>
+   287→   287→        <h1 className="text-xl font-semibold text-gray-900">Settings</h1>
+   288→   288→        <p className="text-sm text-gray-400 mt-0.5">Manage your profile and system configuration</p>
+   289→   289→      </div>
+   290→   290→
+   291→   291→      {/* ── Lead Providers ── */}
+   292→   292→      <Card className="border-slate-200">
+   293→   293→        <CardHeader className="pb-3">
+   294→   294→          <div className="flex items-center justify-between">
+   295→   295→            <div className="flex items-center gap-2">
+   296→   296→              <Globe className="w-4 h-4 text-blue-600" />
+   297→   297→              <CardTitle className="text-sm font-semibold">Lead Providers</CardTitle>
+   298→   298→            </div>
+   299→   299→            <Button
+   300→   300→              size="sm"
+   301→   301→              className="bg-blue-600 hover:bg-blue-700 text-white"
+   302→   302→              onClick={openAddDialog}
+   303→   303→            >
+   304→   304→              <Plus className="w-3.5 h-3.5 mr-1" />
+   305→   305→              Add Provider
+   306→   306→            </Button>
+   307→   307→          </div>
+   308→   308→          <p className="text-xs text-gray-500">
+   309→   309→            Configure data sources for lead discovery and enrichment
+   310→   310→          </p>
+   311→   311→        </CardHeader>
+   312→   312→        <CardContent>
+   313→   313→          {!providersLoaded ? (
+   314→   314→            <div className="flex items-center justify-center py-8 text-sm text-gray-400">
+   315→   315→              <Settings className="w-4 h-4 mr-2 animate-spin" />
+   316→   316→              Loading providers...
+   317→   317→            </div>
+   318→   318→          ) : providers.length === 0 ? (
+   319→   319→            <div className="text-center py-8">
+   320→   320→              <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-50 mb-3">
+   321→   321→                <Globe className="w-5 h-5 text-blue-600" />
+   322→   322→              </div>
+   323→   323→              <p className="text-sm font-medium text-gray-700">No lead providers configured</p>
+   324→   324→              <p className="text-xs text-gray-400 mt-1 mb-4">
+   325→   325→                Add a data source to start discovering leads. We recommend starting with Serper.dev for Google Search results.
+   326→   326→              </p>
+   327→   327→              <Button
+   328→   328→                size="sm"
+   329→   329→                variant="outline"
+   330→   330→                className="border-blue-200 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+   331→   331→                onClick={handleQuickAddSerper}
+   332→   332→              >
+   333→   333→                <Plus className="w-3.5 h-3.5 mr-1" />
+   334→   334→                Quick Add Serper.dev
+   335→   335→              </Button>
+   336→   336→            </div>
+   337→   337→          ) : (
+   338→   338→            <div className="space-y-3">
+   339→   339→              {providers.map(provider => (
+   340→   340→                <div
+   341→   341→                  key={provider.id}
+   342→   342→                  className="group flex items-start justify-between p-3 rounded-lg border border-slate-100 hover:border-slate-200 bg-slate-50/50 transition-colors"
+   343→   343→                >
+   344→   344→                  <div className="flex-1 min-w-0">
+   345→   345→                    <div className="flex items-center gap-2 mb-1">
+   346→   346→                      <button
+   347→   347→                        onClick={() => openEditDialog(provider)}
+   348→   348→                        className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors truncate"
+   349→   349→                      >
+   350→   350→                        {provider.name}
+   351→   351→                      </button>
+   352→   352→                      <Badge
+   353→   353→                        variant={provider.isActive ? 'default' : 'secondary'}
+   354→   354→                        className={
+   355→   355→                          provider.isActive
+   356→   356→                            ? 'bg-blue-600 text-white text-[10px] px-1.5 py-0'
+   357→   357→                            : 'text-[10px] px-1.5 py-0'
+   358→   358→                        }
+   359→   359→                      >
+   360→   360→                        {TYPE_LABELS[provider.type]}
+   361→   361→                      </Badge>
+   362→   362→                    </div>
+   363→   363→                    <div className="flex items-center gap-3 text-xs text-gray-400">
+   364→   364→                      <span className="flex items-center gap-1 truncate">
+   365→   365→                        <ExternalLink className="w-3 h-3 shrink-0" />
+   366→   366→                        {provider.baseUrl}
+   367→   367→                      </span>
+   368→   368→                      <span className="flex items-center gap-1">
+   369→   369→                        <Shield className="w-3 h-3 shrink-0" />
+   370→   370→                        {AUTH_METHOD_LABELS[provider.authMethod]}
+   371→   371→                      </span>
+   372→   372→                      {provider.apiKey && (
+   373→   373→                        <span className="flex items-center gap-1">
+   374→   374→                          <Key className="w-3 h-3 shrink-0" />
+   375→   375→                          Configured
+   376→   376→                        </span>
+   377→   377→                      )}
+   378→   378→                    </div>
+   379→   379→                  </div>
+   380→   380→                  <div className="flex items-center gap-3 ml-4 shrink-0">
+   381→   381→                    <div className="flex items-center gap-1.5">
+   382→   382→                      <span className="text-[10px] text-gray-400">
+   383→   383→                        {provider.isActive ? 'Active' : 'Inactive'}
+   384→   384→                      </span>
+   385→   385→                      <Switch
+   386→   386→                        checked={provider.isActive}
+   387→   387→                        onCheckedChange={() => handleToggleActive(provider.id)}
+   388→   388→                        className="data-[state=checked]:bg-blue-600"
+   389→   389→                      />
+   390→   390→                    </div>
+   391→   391→                    <Separator orientation="vertical" className="h-6" />
+   392→   392→                    <Button
+   393→   393→                      variant="ghost"
+   394→   394→                      size="sm"
+   395→   395→                      className="h-7 w-7 p-0 text-gray-400 hover:text-red-500 hover:bg-red-50"
+   396→   396→                      onClick={() => handleDeleteProvider(provider.id)}
+   397→   397→                    >
+   398→   398→                      <Trash2 className="w-3.5 h-3.5" />
+   399→   399→                    </Button>
+   400→   400→                  </div>
+   401→   401→                </div>
+   402→   402→              ))}
+   403→   403→            </div>
+   404→   404→          )}
+   405→   405→        </CardContent>
+   406→   406→      </Card>
+   407→   407→
+   408→   408→      {/* ── Provider Add/Edit Dialog ── */}
+   409→   409→      <Dialog open={dialogOpen} onOpenChange={open => {
+   410→   410→        setDialogOpen(open)
+   411→   411→        if (!open) resetForm()
+   412→   412→      }}>
+   413→   413→        <DialogContent className="sm:max-w-lg">
+   414→   414→          <DialogHeader>
+   415→   415→            <DialogTitle>{editingProvider ? 'Edit Provider' : 'Add Lead Provider'}</DialogTitle>
+   416→   416→            <DialogDescription>
+   417→   417→              {editingProvider
+   418→   418→                ? 'Update the configuration for this lead data provider.'
+   419→   419→                : 'Configure a new lead data source for discovery and enrichment.'}
+   420→   420→            </DialogDescription>
+   421→   421→          </DialogHeader>
+   422→   422→
+   423→   423→          <div className="space-y-4 py-2">
+   424→   424→            {/* Provider Name */}
+   425→   425→            <div className="space-y-1.5">
+   426→   426→              <Label className="text-xs">Provider Name</Label>
+   427→   427→              <Input
+   428→   428→                placeholder="e.g. Serper (Google Search)"
+   429→   429→                value={formName}
+   430→   430→                onChange={e => setFormName(e.target.value)}
+   431→   431→              />
+   432→   432→            </div>
+   433→   433→
+   434→   434→            {/* Type */}
+   435→   435→            <div className="space-y-1.5">
+   436→   436→              <Label className="text-xs">Type</Label>
+   437→   437→              <Select value={formType} onValueChange={v => {
+   438→   438→                setFormType(v as LeadProvider['type'])
+   439→   439→                if (v === 'SERPER') {
+   440→   440→                  setFormBaseUrl('https://google.serper.dev')
+   441→   441→                  setFormAuthMethod('api-key')
+   442→   442→                  setFormAuthHeader('X-API-KEY')
+   443→   443→                }
+   444→   444→              }}>
+   445→   445→                <SelectTrigger className="w-full">
+   446→   446→                  <SelectValue placeholder="Select type" />
+   447→   447→                </SelectTrigger>
+   448→   448→                <SelectContent>
+   449→   449→                  <SelectItem value="SERPER">Serper</SelectItem>
+   450→   450→                  <SelectItem value="CUSTOM">Custom</SelectItem>
+   451→   451→                </SelectContent>
+   452→   452→              </Select>
+   453→   453→            </div>
+   454→   454→
+   455→   455→            {/* Base URL */}
+   456→   456→            <div className="space-y-1.5">
+   457→   457→              <Label className="text-xs">Base URL</Label>
+   458→   458→              <Input
+   459→   459→                placeholder="https://api.example.com"
+   460→   460→                value={formBaseUrl}
+   461→   461→                onChange={e => setFormBaseUrl(e.target.value)}
+   462→   462→              />
+   463→   463→            </div>
+   464→   464→
+   465→   465→            {/* Auth Method */}
+   466→   466→            <div className="space-y-1.5">
+   467→   467→              <Label className="text-xs">Auth Method</Label>
+   468→   468→              <Select value={formAuthMethod} onValueChange={v => setFormAuthMethod(v as LeadProvider['authMethod'])}>
+   469→   469→                <SelectTrigger className="w-full">
+   470→   470→                  <SelectValue placeholder="Select auth method" />
+   471→   471→                </SelectTrigger>
+   472→   472→                <SelectContent>
+   473→   473→                  <SelectItem value="bearer">Bearer Token</SelectItem>
+   474→   474→                  <SelectItem value="api-key">API Key in Header</SelectItem>
+   475→   475→                  <SelectItem value="header">Custom Header</SelectItem>
+   476→   476→                  <SelectItem value="none">None</SelectItem>
+   477→   477→                </SelectContent>
+   478→   478→              </Select>
+   479→   479→            </div>
+   480→   480→
+   481→   481→            {/* API Key (hidden when auth is none) */}
+   482→   482→            {formAuthMethod !== 'none' && (
+   483→   483→              <div className="space-y-1.5">
+   484→   484→                <Label className="text-xs">API Key</Label>
+   485→   485→                <Input
+   486→   486→                  type="password"
+   487→   487→                  placeholder={formAuthMethod === 'bearer' ? 'Bearer token...' : 'Enter your API key...'}
+   488→   488→                  value={formApiKey}
+   489→   489→                  onChange={e => setFormApiKey(e.target.value)}
+   490→   490→                />
+   491→   491→              </div>
+   492→   492→            )}
+   493→   493→
+   494→   494→            {/* Auth Header (only for api-key type) */}
+   495→   495→            {formAuthMethod === 'api-key' && (
+   496→   496→              <div className="space-y-1.5">
+   497→   497→                <Label className="text-xs">Auth Header Name</Label>
+   498→   498→                <Input
+   499→   499→                  placeholder="X-API-KEY"
+   500→   500→                  value={formAuthHeader}
+   501→   501→                  onChange={e => setFormAuthHeader(e.target.value)}
+   502→   502→                />
+   503→   503→              </div>
+   504→   504→            )}
+   505→   505→
+   506→   506→            {/* Custom Headers */}
+   507→   507→            <div className="space-y-1.5">
+   508→   508→              <Label className="text-xs">Custom Headers <span className="text-gray-400">(JSON)</span></Label>
+   509→   509→              <Textarea
+   510→   510→                placeholder={'{\n  "X-Custom-Header": "value"\n}'}
+   511→   511→                value={formHeaders}
+   512→   512→                onChange={e => setFormHeaders(e.target.value)}
+   513→   513→                className="min-h-[72px] font-mono text-xs"
+   514→   514→              />
+   515→   515→            </div>
+   516→   516→
+   517→   517→            {/* Custom Request Params */}
+   518→   518→            <div className="space-y-1.5">
+   519→   519→              <Label className="text-xs">Custom Request Params <span className="text-gray-400">(JSON)</span></Label>
+   520→   520→              <Textarea
+   521→   521→                placeholder={'{\n  "gl": "us",\n  "hl": "en"\n}'}
+   522→   522→                value={formParams}
+   523→   523→                onChange={e => setFormParams(e.target.value)}
+   524→   524→                className="min-h-[72px] font-mono text-xs"
+   525→   525→              />
+   526→   526→            </div>
+   527→   527→
+   528→   528→            {/* Active toggle */}
+   529→   529→            <div className="flex items-center justify-between py-1">
+   530→   530→              <Label className="text-xs">Active</Label>
+   531→   531→              <Switch
+   532→   532→                checked={formActive}
+   533→   533→                onCheckedChange={setFormActive}
+   534→   534→                className="data-[state=checked]:bg-blue-600"
+   535→   535→              />
+   536→   536→            </div>
+   537→   537→          </div>
+   538→   538→
+   539→   539→          <DialogFooter>
+   540→   540→            <Button
+   541→   541→              variant="outline"
+   542→   542→              size="sm"
+   543→   543→              onClick={() => {
+   544→   544→                setDialogOpen(false)
+   545→   545→                resetForm()
+   546→   546→              }}
+   547→   547→            >
+   548→   548→              Cancel
+   549→   549→            </Button>
+   550→   550→            <Button
+   551→   551→              size="sm"
+   552→   552→              className="bg-blue-600 hover:bg-blue-700 text-white"
+   553→   553→              disabled={savingProviders || !formName.trim() || !formBaseUrl.trim()}
+   554→   554→              onClick={handleSaveProvider}
+   555→   555→            >
+   556→   556→              {savingProviders ? (
+   557→   557→                <>
+   558→   558→                  <Settings className="w-3.5 h-3.5 mr-1 animate-spin" />
+   559→   559→                  Saving...
+   560→   560→                </>
+   561→   561→              ) : (
+   562→   562→                <>
+   563→   563→                  <CheckCircle className="w-3.5 h-3.5 mr-1" />
+   564→   564→                  Save Provider
+   565→   565→                </>
+   566→   566→              )}
+   567→   567→            </Button>
+   568→   568→          </DialogFooter>
+   569→   569→        </DialogContent>
+   570→   570→      </Dialog>
+   571→   571→
+   572→   572→      {/* Profile */}
+   573→   573→      <Card className="border-slate-200">
+   574→   574→        <CardHeader className="pb-3"><CardTitle className="text-sm font-semibold">Profile</CardTitle></CardHeader>
+   575→   575→        <CardContent className="space-y-3">
+   576→   576→          <div><Label>Display Name</Label><Input className="mt-1" value={name} onChange={e => setName(e.target.value)} /></div>
+   577→   577→          <Button size="sm" onClick={updateProfile} disabled={loading || !name}>
+   578→   578→            {saved ? <><CheckCircle className="w-3.5 h-3.5 mr-1" />Saved</> : <><Save className="w-3.5 h-3.5 mr-1" />Update Profile</>}
+   579→   579→          </Button>
+   580→   580→        </CardContent>
+   581→   581→      </Card>
+   582→   582→
+   583→   583→      {/* Password */}
+   584→   584→      <Card className="border-slate-200">
+   585→   585→        <CardHeader className="pb-3"><CardTitle className="text-sm font-semibold">Change Password</CardTitle></CardHeader>
+   586→   586→        <CardContent className="space-y-3">
+   587→   587→          <div><Label>Current Password</Label><Input type="password" className="mt-1" value={currentPass} onChange={e => setCurrentPass(e.target.value)} /></div>
+   588→   588→          <div><Label>New Password</Label><Input type="password" className="mt-1" value={newPass} onChange={e => setNewPass(e.target.value)} /></div>
+   589→   589→          <Button size="sm" onClick={updateProfile} disabled={loading || !currentPass || !newPass}>Update Password</Button>
+   590→   590→        </CardContent>
+   591→   591→      </Card>
+   592→   592→
+   593→   593→      {/* SMTP */}
+   594→   594→      <Card className="border-slate-200">
+   595→   595→        <CardHeader className="pb-3">
+   596→   596→          <CardTitle className="text-sm font-semibold">Email (SMTP)</CardTitle>
+   597→   597→          <p className="text-xs text-gray-500">Configure your outgoing email server</p>
+   598→   598→        </CardHeader>
+   599→   599→        <CardContent className="space-y-3">
+   600→   600→          <div className="grid grid-cols-2 gap-3">
+   601→   601→            <div><Label>Host</Label><Input className="mt-1" value={settings.smtp_host || ''} onChange={e => updateSetting('smtp_host', e.target.value)} placeholder="smtp.gmail.com" /></div>
+   602→   602→            <div><Label>Port</Label><Input className="mt-1" value={settings.smtp_port || ''} onChange={e => updateSetting('smtp_port', e.target.value)} placeholder="587" /></div>
+   603→   603→          </div>
+   604→   604→          <div><Label>Email Address</Label><Input className="mt-1" value={settings.smtp_email || ''} onChange={e => updateSetting('smtp_email', e.target.value)} placeholder="outreach@company.com" /></div>
+   605→   605→          <div><Label>Password</Label><Input type="password" className="mt-1" value={settings.smtp_password || ''} onChange={e => updateSetting('smtp_password', e.target.value)} placeholder="App password" /></div>
+   606→   606→          <Button size="sm" onClick={saveSettings} disabled={loading}>
+   607→   607→            {saved ? <><CheckCircle className="w-3.5 h-3.5 mr-1" />Saved</> : <><Save className="w-3.5 h-3.5 mr-1" />Save SMTP Settings</>}
+   608→   608→          </Button>
+   609→   609→        </CardContent>
+   610→   610→      </Card>
+   611→   611→
+   612→   612→      {/* AI Configuration */}
+   613→   613→      <Card className="border-slate-200">
+   614→   614→        <CardHeader className="pb-3">
+   615→   615→          <CardTitle className="text-sm font-semibold">AI Configuration</CardTitle>
+   616→   616→          <p className="text-xs text-gray-500">API keys for AI-powered features</p>
+   617→   617→        </CardHeader>
+   618→   618→        <CardContent className="space-y-3">
+   619→   619→          <div><Label>OpenAI API Key</Label><Input type="password" className="mt-1" value={settings.openai_key || ''} onChange={e => updateSetting('openai_key', e.target.value)} placeholder="sk-..." /></div>
+   620→   620→          <div><Label>Gemini API Key</Label><Input type="password" className="mt-1" value={settings.gemini_key || ''} onChange={e => updateSetting('gemini_key', e.target.value)} placeholder="AIza..." /></div>
+   621→   621→          <div><Label>Claude API Key</Label><Input type="password" className="mt-1" value={settings.claude_key || ''} onChange={e => updateSetting('claude_key', e.target.value)} placeholder="sk-ant-..." /></div>
+   622→   622→          <Button size="sm" onClick={saveSettings} disabled={loading}>
+   623→   623→            {saved ? <><CheckCircle className="w-3.5 h-3.5 mr-1" />Saved</> : <><Save className="w-3.5 h-3.5 mr-1" />Save AI Settings</>}
+   624→   624→          </Button>
+   625→   625→        </CardContent>
+   626→   626→      </Card>
+   627→   627→
+   628→   628→      {/* Follow-up Configuration */}
+   629→   629→      <Card className="border-slate-200">
+   630→   630→        <CardHeader className="pb-3">
+   631→   631→          <CardTitle className="text-sm font-semibold">Follow-up Schedule</CardTitle>
+   632→   632→          <p className="text-xs text-gray-500">Configure automated follow-up timing (days)</p>
+   633→   633→        </CardHeader>
+   634→   634→        <CardContent className="space-y-3">
+   635→   635→          <div className="grid grid-cols-4 gap-3">
+   636→   636→            <div><Label>Follow-up 1</Label><Input type="number" className="mt-1" value={settings.followup_1 || '4'} onChange={e => updateSetting('followup_1', e.target.value)} /></div>
+   637→   637→            <div><Label>Follow-up 2</Label><Input type="number" className="mt-1" value={settings.followup_2 || '8'} onChange={e => updateSetting('followup_2', e.target.value)} /></div>
+   638→   638→            <div><Label>Follow-up 3</Label><Input type="number" className="mt-1" value={settings.followup_3 || '14'} onChange={e => updateSetting('followup_3', e.target.value)} /></div>
+   639→   639→            <div><Label>Final (days)</Label><Input type="number" className="mt-1" value={settings.followup_final || '21'} onChange={e => updateSetting('followup_final', e.target.value)} /></div>
+   640→   640→          </div>
+   641→   641→          <Button size="sm" onClick={saveSettings} disabled={loading}>
+   642→   642→            {saved ? <><CheckCircle className="w-3.5 h-3.5 mr-1" />Saved</> : <><Save className="w-3.5 h-3.5 mr-1" />Save Schedule</>}
+   643→   643→          </Button>
+   644→   644→        </CardContent>
+   645→   645→      </Card>
+   646→   646→    </div>
+   647→   647→  )
+   648→   648→}
