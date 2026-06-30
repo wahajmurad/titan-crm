@@ -10,7 +10,7 @@ const AI_MODEL = process.env.AI_MODEL || 'glm-4-flash'
 
 async function aiChatCompletions(messages: { role: string; content: string }[]): Promise<string> {
   if (!AI_API_KEY) {
-    return JSON.stringify({ error: 'AI not configured. Set AI_API_KEY in Vercel environment variables.', note: 'Get your key from open.bigmodel.cn' })
+    throw new Error('AI not configured. Set AI_API_KEY in Vercel environment variables.')
   }
 
   const res = await fetch(`${AI_BASE_URL}/chat/completions`, {

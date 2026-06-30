@@ -51,15 +51,15 @@ export const CAMPAIGN_STATUS = ['ACTIVE', 'PAUSED', 'COMPLETED'] as const
 export type CampaignStatus = typeof CAMPAIGN_STATUS[number]
 
 export const STAGE_COLORS: Record<string, string> = {
-  DISCOVERED: 'bg-slate-100 text-slate-700 border-slate-200',
-  AUDITED: 'bg-sky-50 text-sky-700 border-sky-200',
-  QUALIFIED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  OUTREACH_SENT: 'bg-amber-50 text-amber-700 border-amber-200',
-  REPLIED: 'bg-violet-50 text-violet-700 border-violet-200',
-  MEETING_BOOKED: 'bg-blue-50 text-blue-700 border-blue-200',
-  PROPOSAL_SENT: 'bg-orange-50 text-orange-700 border-orange-200',
-  WON: 'bg-green-100 text-green-800 border-green-200',
-  LOST: 'bg-red-50 text-red-700 border-red-200',
+  DISCOVERED: 'bg-slate-800 text-slate-300 border-slate-700',
+  AUDITED: 'bg-sky-500/10 text-sky-400 border-sky-500/30',
+  QUALIFIED: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
+  OUTREACH_SENT: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
+  REPLIED: 'bg-violet-500/10 text-violet-400 border-violet-500/30',
+  MEETING_BOOKED: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
+  PROPOSAL_SENT: 'bg-orange-500/10 text-orange-400 border-orange-500/30',
+  WON: 'bg-green-500/15 text-green-400 border-green-500/30',
+  LOST: 'bg-red-500/10 text-red-400 border-red-500/30',
 }
 
 export const STAGE_DOT_COLORS: Record<string, string> = {
@@ -75,9 +75,9 @@ export const STAGE_DOT_COLORS: Record<string, string> = {
 }
 
 export const TEMP_COLORS: Record<string, string> = {
-  HOT: 'bg-red-100 text-red-800 border-red-300',
-  WARM: 'bg-amber-100 text-amber-800 border-amber-300',
-  COLD: 'bg-blue-50 text-blue-700 border-blue-200',
+  HOT: 'bg-red-500/15 text-red-400 border-red-500/30',
+  WARM: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+  COLD: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
 }
 
 export interface AuditScores {

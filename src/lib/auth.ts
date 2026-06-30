@@ -66,8 +66,8 @@ export async function destroySession(token: string): Promise<void> {
 export function getTokenCookieOptions() {
   return {
     httpOnly: true,
-    secure: false,
-    sameName: 'lax' as const,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax' as const,
     path: '/',
     maxAge: 60 * 60 * 24 * 30, // 30 days
   }
