@@ -11,12 +11,41 @@ function clampScore(value: unknown): number {
   return Math.max(0, Math.min(100, Math.round(n)))
 }
 
+// Normalize any value (string, array of strings, array of objects) to a clean string array
+function normalizeList(val: unknown): string[] {
+  if (!val) return []
+  // Already an array
+  if (Array.isArray(val)) {
+    return val
+      .map((item) => {
+        if (typeof item === 'string') return item.trim()
+        if (typeof item === 'object' && item !== null) {
+          // Extract text from objects — try common keys
+          const obj = item as Record<string, unknown>
+          return String(obj.title || obj.text || obj.description || obj.point || obj.name || obj.content || JSON.stringify(obj)).trim()
+        }
+        return String(item).trim()
+      })
+      .filter((s) => s.length > 0 && !s.startsWith('[object'))
+  }
+  // String — try JSON parse first, then split by newlines
+  if (typeof val === 'string') {
+    try {
+      const parsed = JSON.parse(val)
+      if (Array.isArray(parsed)) {
+        return normalizeList(parsed)
+      }
+    } catch { /* not JSON, split by lines */ }
+    return val
+      .split('\n')
+      .map((line) => line.replace(/^\d+[\.\)\-]\s*/, '').trim())
+      .filter((line) => line.length > 0 && !line.startsWith('[object'))
+  }
+  return []
+}
+
 function parseList(text: string | null | undefined): string[] {
-  if (!text) return []
-  return text
-    .split('\n')
-    .map((line) => line.replace(/^\d+[\.\)\-]\s*/, '').trim())
-    .filter((line) => line.length > 0)
+  return normalizeList(text)
 }
 
 function extractDomain(url: string): string {
@@ -92,11 +121,11 @@ function buildAuditPrompt(url: string): string {
   "automationDetails": "<detailed analysis>",
   "conversionDetails": "<detailed analysis>",
   "executiveSummary": "<2-3 paragraph executive summary of the website's overall digital presence, key strengths, and critical weaknesses>",
-  "problemsFound": "<detailed numbered list of all specific problems discovered across all 10 categories. Each item must reference the category, describe the specific issue observed, and state the point deduction. Be exhaustive.>",
-  "opportunities": "<6-8 specific, actionable opportunities. Numbered list. Each must include: the current gap observed, the potential solution, and estimated business impact.>",
-  "recommendations": "<8-10 prioritized recommendations. Numbered list. Ordered by business impact. Include specific implementation suggestions.>",
+  "problemsFound": "1. First problem description here.\\n2. Second problem description here.\\n3. Third problem etc. Use numbered list as a SINGLE STRING, not an array.",
+  "opportunities": "1. First opportunity here.\\n2. Second opportunity. Use numbered list as a SINGLE STRING.",
+  "recommendations": "1. First recommendation.\\n2. Second. Use numbered list as a SINGLE STRING.",
   "pitchStrategy": "<A detailed sales pitch strategy paragraph explaining how to position services to this prospect based on the audit findings. Include suggested opener, value props tied to their weaknesses, and a suggested close.>",
-  "talkingPoints": "<10-12 sales conversation talking points. Numbered list. Each must reference a SPECIFIC finding from this audit. Connect each problem to a concrete service. Make them conversational and compelling.>"
+  "talkingPoints": "1. First talking point.\\n2. Second talking point. Use numbered list as a SINGLE STRING."
 }
 
 SCORING METHODOLOGY — CRITICAL:
@@ -191,7 +220,13 @@ CATEGORY ANALYSIS REQUIREMENTS:
     - Conversion funnel indicators
     - Urgency/scarcity elements
 
-Website URL: ${url}`
+Website URL: ${url}
+
+CRITICAL FORMAT RULES:
+- ALL list fields (problemsFound, opportunities, recommendations, talkingPoints) MUST be plain text strings with numbered items separated by \\n — NOT arrays, NOT objects, NOT JSON arrays.
+- ALL score fields MUST be integers between 0-100, NOT strings.
+- ALL detail fields MUST be plain text strings.
+- Return ONLY the JSON object, no markdown fences, no commentary.`
 }
 
 // ── Build DB payload from parsed AI result ─────────────────────────────────
@@ -215,11 +250,12 @@ function buildAuditData(parsed: Record<string, unknown>) {
     overallScore,
     ...details,
     executiveSummary: String(parsed.executiveSummary || ''),
-    problemsFound: String(parsed.problemsFound || ''),
-    opportunities: String(parsed.opportunities || ''),
-    recommendations: String(parsed.recommendations || ''),
+    // Normalize list fields to clean strings before DB storage
+    problemsFound: normalizeList(parsed.problemsFound).join('\n'),
+    opportunities: normalizeList(parsed.opportunities).join('\n'),
+    recommendations: normalizeList(parsed.recommendations).join('\n'),
     pitchStrategy: String(parsed.pitchStrategy || ''),
-    talkingPoints: String(parsed.talkingPoints || ''),
+    talkingPoints: normalizeList(parsed.talkingPoints).join('\n'),
   }
 }
 
@@ -243,13 +279,19 @@ export async function POST(req: NextRequest) {
     const auditPrompt = buildAuditPrompt(normalizedUrl)
     const rawResult = await aiAnalyzeWebsite(normalizedUrl, auditPrompt)
 
-    // Parse AI response
+    // Parse AI response — robust JSON extraction
     let parsed: Record<string, unknown>
     try {
-      const cleaned = rawResult.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+      let cleaned = rawResult.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+      // Try to extract JSON object from response if there's extra text
+      const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        cleaned = jsonMatch[0]
+      }
       parsed = JSON.parse(cleaned)
-    } catch {
-      return NextResponse.json({ error: 'Failed to parse audit results from AI', raw: rawResult }, { status: 500 })
+    } catch (parseErr) {
+      console.error('Audit JSON parse error:', parseErr, 'Raw:', rawResult.substring(0, 500))
+      return NextResponse.json({ error: 'Failed to parse audit results from AI. Please try again.' }, { status: 500 })
     }
 
     const auditData = buildAuditData(parsed)

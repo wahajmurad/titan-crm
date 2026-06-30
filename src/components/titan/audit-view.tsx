@@ -178,14 +178,26 @@ function clampScore(val: unknown): number {
 
 function parseStringList(val: unknown): string[] {
   if (!val) return []
-  if (Array.isArray(val)) return val.filter((v): v is string => typeof v === 'string')
+  // Already an array — handle strings AND objects
+  if (Array.isArray(val)) {
+    return val
+      .map((item) => {
+        if (typeof item === 'string') return item.replace(/^\d+[\.\)\-]\s*/, '').trim()
+        if (typeof item === 'object' && item !== null) {
+          const obj = item as Record<string, unknown>
+          return String(obj.title || obj.text || obj.description || obj.point || obj.content || '').trim()
+        }
+        return String(item).trim()
+      })
+      .filter((s) => s.length > 0 && !s.startsWith('[object'))
+  }
   if (typeof val === 'string') {
     try {
       const parsed = JSON.parse(val)
-      if (Array.isArray(parsed)) return parsed.filter((v): v is string => typeof v === 'string')
+      if (Array.isArray(parsed)) return parseStringList(parsed)
     } catch {
       // split by newlines or commas
-      return val.split(/[\n,]/).map(s => s.trim()).filter(Boolean)
+      return val.split(/[\n]/).map(s => s.replace(/^\d+[\.\)\-]\s*/, '').trim()).filter(Boolean)
     }
   }
   return []
