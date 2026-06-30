@@ -1,25 +1,28 @@
-// AI Integration — uses OpenAI-compatible API
-// Configure: OPENAI_API_KEY, OPENAI_BASE_URL (optional, defaults to https://api.openai.com/v1)
-// Falls back to mock responses if not configured
+// AI Integration — uses GLM-4 Flash (ZhipuAI) via OpenAI-compatible API
+// Configure in Vercel env vars:
+//   AI_API_KEY = your ZhipuAI API key
+//   AI_BASE_URL = https://open.bigmodel.cn/api/paas/v4 (default)
+//   AI_MODEL = glm-4-flash (default)
 
-const OPENAI_BASE_URL = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1'
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY || ''
+const AI_BASE_URL = process.env.AI_BASE_URL || 'https://open.bigmodel.cn/api/paas/v4'
+const AI_API_KEY = process.env.AI_API_KEY || ''
+const AI_MODEL = process.env.AI_MODEL || 'glm-4-flash'
 
 async function aiChatCompletions(messages: { role: string; content: string }[]): Promise<string> {
-  if (!OPENAI_API_KEY) {
-    return JSON.stringify({ error: 'AI not configured. Set OPENAI_API_KEY and optionally OPENAI_BASE_URL in Vercel environment variables.', note: 'This is a demo response. Configure your AI API to enable full AI features.' })
+  if (!AI_API_KEY) {
+    return JSON.stringify({ error: 'AI not configured. Set AI_API_KEY in Vercel environment variables.', note: 'Get your key from open.bigmodel.cn' })
   }
 
-  const res = await fetch(`${OPENAI_BASE_URL}/chat/completions`, {
+  const res = await fetch(`${AI_BASE_URL}/chat/completions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      'Authorization': `Bearer ${AI_API_KEY}`,
     },
     body: JSON.stringify({
-      model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+      model: AI_MODEL,
       messages,
-      max_tokens: 2000,
+      max_tokens: 4000,
       temperature: 0.7,
     }),
   })
