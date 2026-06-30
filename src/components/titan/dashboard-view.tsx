@@ -107,7 +107,7 @@ const PIPELINE_STAGES = LEAD_STAGES.filter((s) => s !== 'LOST')
 // ─── Dark-mode stage dot colors for backgrounds ────────────────────────
 
 const STAGE_BG: Record<string, string> = {
-  DISCOVERED: 'bg-slate-700/40 border-slate-600/50',
+  DISCOVERED: 'bg-slate-700/40 border-gray-300/50',
   AUDITED: 'bg-sky-500/10 border-sky-500/30',
   QUALIFIED: 'bg-emerald-500/10 border-emerald-500/30',
   OUTREACH_SENT: 'bg-amber-500/10 border-amber-500/30',
@@ -295,32 +295,32 @@ export function DashboardView() {
         {/* Welcome skeleton */}
         <div className="flex items-center justify-between">
           <div className="space-y-2">
-            <Skeleton className="h-7 w-64 bg-slate-800" />
-            <Skeleton className="h-4 w-96 bg-slate-800" />
+            <Skeleton className="h-7 w-64 bg-gray-100" />
+            <Skeleton className="h-4 w-96 bg-gray-100" />
           </div>
-          <Skeleton className="h-10 w-32 bg-slate-800 rounded-lg" />
+          <Skeleton className="h-10 w-32 bg-gray-100 rounded-lg" />
         </div>
 
         {/* KPI skeletons */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-28 bg-slate-800/80 rounded-xl" />
+            <Skeleton key={i} className="h-28 bg-gray-100 rounded-xl" />
           ))}
         </div>
 
         {/* Pipeline skeleton */}
-        <Skeleton className="h-32 bg-slate-800/80 rounded-xl" />
+        <Skeleton className="h-32 bg-gray-100 rounded-xl" />
 
         {/* Two-column skeletons */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Skeleton className="h-80 bg-slate-800/80 rounded-xl" />
-          <Skeleton className="h-80 bg-slate-800/80 rounded-xl" />
+          <Skeleton className="h-80 bg-gray-100 rounded-xl" />
+          <Skeleton className="h-80 bg-gray-100 rounded-xl" />
         </div>
 
         {/* Quick actions skeleton */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 bg-slate-800/80 rounded-xl" />
+            <Skeleton key={i} className="h-20 bg-gray-100 rounded-xl" />
           ))}
         </div>
       </div>
@@ -335,11 +335,11 @@ export function DashboardView() {
         <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
           <XCircle className="w-6 h-6 text-red-400" />
         </div>
-        <p className="text-slate-300 font-medium">Failed to load dashboard</p>
-        <p className="text-sm text-slate-500 mt-1">{error}</p>
+        <p className="text-gray-600 font-medium">Failed to load dashboard</p>
+        <p className="text-sm text-gray-400 mt-1">{error}</p>
         <Button
           variant="outline"
-          className="mt-4 border-slate-700 text-slate-300 hover:bg-slate-800"
+          className="mt-4 border-gray-200 text-gray-600 hover:bg-gray-100"
           onClick={() => window.location.reload()}
         >
           Retry
@@ -357,16 +357,16 @@ export function DashboardView() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-500/5 via-transparent to-transparent" />
         <div className="relative flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-white tracking-tight">
+            <h1 className="text-xl font-bold text-gray-900 tracking-tight">
               Welcome back
             </h1>
-            <p className="text-sm text-slate-400 mt-0.5">
+            <p className="text-sm text-gray-500 mt-0.5">
               Here&apos;s your acquisition pipeline overview
             </p>
           </div>
-          <div className="hidden sm:flex items-center gap-2 bg-slate-800/60 rounded-lg px-3 py-1.5 border border-slate-700/50">
+          <div className="hidden sm:flex items-center gap-2 bg-gray-100/80 rounded-lg px-3 py-1.5 border border-gray-200">
             <Activity className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="text-xs text-slate-300 font-medium">Live</span>
+            <span className="text-xs text-gray-600 font-medium">Live</span>
           </div>
         </div>
       </div>
@@ -378,7 +378,7 @@ export function DashboardView() {
           return (
             <Card
               key={card.label}
-              className="bg-slate-900 border-slate-800/60 hover:border-slate-700/60 transition-all duration-200 group relative overflow-hidden"
+              className="bg-white border-slate-800/60 hover:border-gray-300/60 transition-all duration-200 group relative overflow-hidden"
             >
               <div className={`absolute inset-0 bg-gradient-to-br ${card.accent} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
               <CardContent className="p-4 relative">
@@ -391,16 +391,16 @@ export function DashboardView() {
                   {card.trend && card.trend !== 'hotwarmcold' && (
                     <Badge
                       variant="secondary"
-                      className="bg-slate-800 text-slate-300 border-slate-700 text-[10px] px-1.5 py-0"
+                      className="bg-gray-100 text-gray-600 border-gray-200 text-[10px] px-1.5 py-0"
                     >
                       {card.trend}
                     </Badge>
                   )}
                 </div>
-                <p className="text-2xl font-bold text-white tabular-nums">
+                <p className="text-2xl font-bold text-gray-900 tabular-nums">
                   {card.value.toLocaleString()}
                 </p>
-                <p className="text-xs text-slate-500 mt-0.5">{card.label}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{card.label}</p>
 
                 {/* Hot/Warm/Cold breakdown for Qualified card */}
                 {card.trend === 'hotwarmcold' && (
@@ -408,21 +408,21 @@ export function DashboardView() {
                     <div className="flex items-center gap-3">
                       <span className="flex items-center gap-1 text-[10px]">
                         <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                        <span className="text-slate-500">Hot</span>
+                        <span className="text-gray-400">Hot</span>
                         <span className="text-red-400 font-medium">
                           {data.temperature['HOT'] || 0}
                         </span>
                       </span>
                       <span className="flex items-center gap-1 text-[10px]">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                        <span className="text-slate-500">Warm</span>
+                        <span className="text-gray-400">Warm</span>
                         <span className="text-amber-400 font-medium">
                           {data.temperature['WARM'] || 0}
                         </span>
                       </span>
                       <span className="flex items-center gap-1 text-[10px]">
                         <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
-                        <span className="text-slate-500">Cold</span>
+                        <span className="text-gray-400">Cold</span>
                         <span className="text-sky-400 font-medium">
                           {data.temperature['COLD'] || 0}
                         </span>
@@ -437,14 +437,14 @@ export function DashboardView() {
       </div>
 
       {/* ─── 3. Lead Pipeline ──────────────────────────────────────── */}
-      <Card className="bg-slate-900 border-slate-800/60">
+      <Card className="bg-white border-slate-800/60">
         <CardHeader className="pb-3 px-5 pt-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-semibold text-white flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-slate-400" />
+            <CardTitle className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-gray-500" />
               Lead Pipeline
             </CardTitle>
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-gray-400">
               {data.totalLeads} total leads
             </span>
           </div>
@@ -461,27 +461,27 @@ export function DashboardView() {
                 return (
                   <div key={stage} className="flex items-center gap-2.5">
                     <div
-                      className={`flex-shrink-0 w-36 rounded-xl border px-4 py-3.5 transition-all duration-200 hover:scale-[1.02] cursor-default ${STAGE_BG[stage] || 'bg-slate-800 border-slate-700'}`}
+                      className={`flex-shrink-0 w-36 rounded-xl border px-4 py-3.5 transition-all duration-200 hover:scale-[1.02] cursor-default ${STAGE_BG[stage] || 'bg-gray-100 border-gray-200'}`}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-1.5">
                           <span
                             className={`w-2 h-2 rounded-full ${STAGE_DOT_COLORS[stage]}`}
                           />
-                          <span className="text-xs font-medium text-slate-300 truncate">
+                          <span className="text-xs font-medium text-gray-600 truncate">
                             {stage.replace(/_/g, ' ')}
                           </span>
                         </div>
                       </div>
                       <div className="flex items-end justify-between">
-                        <span className="text-lg font-bold text-white tabular-nums">
+                        <span className="text-lg font-bold text-gray-900 tabular-nums">
                           {count}
                         </span>
-                        <span className="text-[10px] text-slate-500 tabular-nums">
+                        <span className="text-[10px] text-gray-400 tabular-nums">
                           {pct.toFixed(0)}%
                         </span>
                       </div>
-                      <div className="mt-2 h-1 bg-slate-800/80 rounded-full overflow-hidden">
+                      <div className="mt-2 h-1 bg-gray-100 rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all duration-700 ${STAGE_DOT_COLORS[stage]}`}
                           style={{ width: `${Math.max(pct, 0)}%` }}
@@ -489,7 +489,7 @@ export function DashboardView() {
                       </div>
                     </div>
                     {idx < PIPELINE_STAGES.length - 1 && (
-                      <ArrowRight className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                      <ArrowRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
                     )}
                   </div>
                 )
@@ -502,11 +502,11 @@ export function DashboardView() {
       {/* ─── 4. Two-Column Section ──────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left: Campaign Performance Table */}
-        <Card className="bg-slate-900 border-slate-800/60">
+        <Card className="bg-white border-slate-800/60">
           <CardHeader className="pb-3 px-5 pt-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-semibold text-white flex items-center gap-2">
-                <Target className="w-4 h-4 text-slate-400" />
+              <CardTitle className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                <Target className="w-4 h-4 text-gray-500" />
                 Campaign Performance
               </CardTitle>
               <Badge
@@ -520,11 +520,11 @@ export function DashboardView() {
           <CardContent className="px-5 pb-4">
             {topCampaigns.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12">
-                <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center mb-3">
-                  <Target className="w-4 h-4 text-slate-600" />
+                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                  <Target className="w-4 h-4 text-gray-300" />
                 </div>
-                <p className="text-sm text-slate-500">No active campaigns yet</p>
-                <p className="text-xs text-slate-600 mt-1">
+                <p className="text-sm text-gray-400">No active campaigns yet</p>
+                <p className="text-xs text-gray-300 mt-1">
                   Create a campaign to start tracking performance
                 </p>
               </div>
@@ -534,16 +534,16 @@ export function DashboardView() {
                   <Table>
                     <TableHeader>
                       <TableRow className="border-slate-800/60 hover:bg-transparent">
-                        <TableHead className="text-[10px] font-medium text-slate-500 uppercase tracking-wider h-8">
+                        <TableHead className="text-[10px] font-medium text-gray-400 uppercase tracking-wider h-8">
                           Campaign
                         </TableHead>
-                        <TableHead className="text-[10px] font-medium text-slate-500 uppercase tracking-wider h-8 text-right">
+                        <TableHead className="text-[10px] font-medium text-gray-400 uppercase tracking-wider h-8 text-right">
                           Sent
                         </TableHead>
-                        <TableHead className="text-[10px] font-medium text-slate-500 uppercase tracking-wider h-8 text-right">
+                        <TableHead className="text-[10px] font-medium text-gray-400 uppercase tracking-wider h-8 text-right">
                           Replies
                         </TableHead>
-                        <TableHead className="text-[10px] font-medium text-slate-500 uppercase tracking-wider h-8 text-right">
+                        <TableHead className="text-[10px] font-medium text-gray-400 uppercase tracking-wider h-8 text-right">
                           Reply Rate
                         </TableHead>
                       </TableRow>
@@ -552,11 +552,11 @@ export function DashboardView() {
                       {topCampaigns.map((c, i) => (
                         <TableRow
                           key={c.id}
-                          className="border-slate-800/40 hover:bg-slate-800/40"
+                          className="border-slate-800/40 hover:bg-gray-100/40"
                         >
                           <TableCell className="py-2.5">
                             <div className="flex items-center gap-2">
-                              <span className="w-5 h-5 rounded-md bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500">
+                              <span className="w-5 h-5 rounded-md bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-400">
                                 {i + 1}
                               </span>
                               <div className="min-w-0">
@@ -564,24 +564,24 @@ export function DashboardView() {
                                   {c.name}
                                 </p>
                                 {c.industry && (
-                                  <p className="text-[10px] text-slate-600 truncate">
+                                  <p className="text-[10px] text-gray-300 truncate">
                                     {c.industry}
                                   </p>
                                 )}
                               </div>
                             </div>
                           </TableCell>
-                          <TableCell className="py-2.5 text-right text-xs text-slate-400 tabular-nums">
+                          <TableCell className="py-2.5 text-right text-xs text-gray-500 tabular-nums">
                             {c.sentCount}
                           </TableCell>
-                          <TableCell className="py-2.5 text-right text-xs text-slate-400 tabular-nums">
+                          <TableCell className="py-2.5 text-right text-xs text-gray-500 tabular-nums">
                             {c.replyCount}
                           </TableCell>
                           <TableCell className="py-2.5 text-right">
                             <div className="flex items-center justify-end gap-1.5">
                               <Progress
                                 value={c.replyRate}
-                                className="w-12 h-1.5 bg-slate-800"
+                                className="w-12 h-1.5 bg-gray-100"
                               />
                               <span className="text-xs font-medium text-emerald-400 tabular-nums w-8 text-right">
                                 {c.replyRate}%
@@ -599,16 +599,16 @@ export function DashboardView() {
         </Card>
 
         {/* Right: Recent Activity Feed */}
-        <Card className="bg-slate-900 border-slate-800/60">
+        <Card className="bg-white border-slate-800/60">
           <CardHeader className="pb-3 px-5 pt-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-semibold text-white flex items-center gap-2">
-                <Activity className="w-4 h-4 text-slate-400" />
+              <CardTitle className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                <Activity className="w-4 h-4 text-gray-500" />
                 Recent Activity
               </CardTitle>
               <Badge
                 variant="secondary"
-                className="bg-slate-800 text-slate-400 border-slate-700 text-[10px]"
+                className="bg-gray-100 text-gray-500 border-gray-200 text-[10px]"
               >
                 Last 10
               </Badge>
@@ -617,11 +617,11 @@ export function DashboardView() {
           <CardContent className="px-5 pb-4">
             {data.recentActivities.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12">
-                <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center mb-3">
-                  <Clock className="w-4 h-4 text-slate-600" />
+                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                  <Clock className="w-4 h-4 text-gray-300" />
                 </div>
-                <p className="text-sm text-slate-500">No activity yet</p>
-                <p className="text-xs text-slate-600 mt-1">
+                <p className="text-sm text-gray-400">No activity yet</p>
+                <p className="text-xs text-gray-300 mt-1">
                   Start by discovering leads
                 </p>
               </div>
@@ -633,7 +633,7 @@ export function DashboardView() {
                       ACTION_ICONS[a.action] || ArrowUpRight
                     const actionColor =
                       ACTION_COLORS[a.action] ||
-                      'bg-slate-700/40 text-slate-400'
+                      'bg-slate-700/40 text-gray-500'
                     return (
                       <div
                         key={a.id}
@@ -645,11 +645,11 @@ export function DashboardView() {
                           <ActionIcon className="w-3.5 h-3.5" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-slate-300 leading-relaxed">
+                          <p className="text-xs text-gray-600 leading-relaxed">
                             {a.details || a.action.replace(/_/g, ' ')}
                           </p>
                           <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="text-[10px] text-slate-600">
+                            <span className="text-[10px] text-gray-300">
                               {a.user?.name || 'System'}
                             </span>
                             {a.lead?.business?.name && (
@@ -657,13 +657,13 @@ export function DashboardView() {
                                 <span className="text-[10px] text-slate-700">
                                   ·
                                 </span>
-                                <span className="text-[10px] text-slate-500 truncate">
+                                <span className="text-[10px] text-gray-400 truncate">
                                   {a.lead.business.name}
                                 </span>
                               </>
                             )}
                             <span className="text-[10px] text-slate-700">·</span>
-                            <span className="text-[10px] text-slate-600">
+                            <span className="text-[10px] text-gray-300">
                               {formatDistanceToNow(new Date(a.createdAt), {
                                 addSuffix: true,
                               })}
@@ -682,7 +682,7 @@ export function DashboardView() {
 
       {/* ─── 5. Quick Actions ─────────────────────────────────────── */}
       <div>
-        <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-3">
+        <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">
           Quick Actions
         </p>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -692,7 +692,7 @@ export function DashboardView() {
               <Button
                 key={action.view}
                 onClick={() => setView(action.view)}
-                className={`h-auto py-3.5 px-4 bg-gradient-to-r ${action.gradient} border-0 shadow-lg text-white justify-start gap-2.5 rounded-xl transition-all duration-200 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]`}
+                className={`h-auto py-3.5 px-4 bg-gradient-to-r ${action.gradient} border-0 shadow-lg text-gray-900 justify-start gap-2.5 rounded-xl transition-all duration-200 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]`}
               >
                 <Icon className="w-4 h-4 opacity-90" />
                 <span className="text-sm font-medium">{action.label}</span>

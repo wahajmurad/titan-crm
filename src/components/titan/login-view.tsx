@@ -33,28 +33,28 @@ export function LoginView({ onLogin }: { onLogin: (user: unknown) => void }) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-900/20 via-transparent to-transparent" />
       <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="mx-auto w-14 h-14 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-4 shadow-2xl shadow-violet-500/30">
-            <Zap className="w-7 h-7 text-white" />
+          <div className="mx-auto w-14 h-14 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-violet-500/15">
+            <Zap className="w-7 h-7 text-gray-900" />
           </div>
-          <h1 className="text-2xl font-bold text-white">Welcome to TITAN</h1>
-          <p className="text-slate-400 mt-1 text-sm">AI-Powered Growth Operating System</p>
+          <h1 className="text-2xl font-bold text-gray-900">Welcome to TITAN</h1>
+          <p className="text-gray-500 mt-1 text-sm">AI-Powered Growth Operating System</p>
         </div>
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+        <div className="bg-white border border-gray-200 rounded-2xl p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 p-3 rounded-lg">{error}</p>}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-slate-300">Email</Label>
-              <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" required className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500" />
+              <Label htmlFor="email" className="text-gray-600">Email</Label>
+              <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.com" required className="bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-slate-300">Password</Label>
-              <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Your password" required className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500" />
+              <Label htmlFor="password" className="text-gray-600">Password</Label>
+              <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Your password" required className="bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400" />
             </div>
-            <Button type="submit" className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg shadow-violet-500/20" disabled={loading}>
+            <Button type="submit" className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-gray-900 shadow-lg shadow-violet-500/10" disabled={loading}>
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>

@@ -62,7 +62,7 @@ export function SettingsView() {
     <div className="space-y-6 max-w-2xl">
       <div>
         <h1 className="text-xl font-semibold text-slate-900">Settings</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Manage your profile and system configuration</p>
+        <p className="text-sm text-gray-400 mt-0.5">Manage your profile and system configuration</p>
       </div>
 
       {/* Profile */}
@@ -90,7 +90,7 @@ export function SettingsView() {
       <Card className="border-slate-200">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold">Email (SMTP)</CardTitle>
-          <p className="text-xs text-slate-400">Configure your outgoing email server</p>
+          <p className="text-xs text-gray-500">Configure your outgoing email server</p>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
@@ -109,7 +109,7 @@ export function SettingsView() {
       <Card className="border-slate-200">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold">AI Configuration</CardTitle>
-          <p className="text-xs text-slate-400">API keys for AI-powered features</p>
+          <p className="text-xs text-gray-500">API keys for AI-powered features</p>
         </CardHeader>
         <CardContent className="space-y-3">
           <div><Label>OpenAI API Key</Label><Input type="password" className="mt-1" value={settings.openai_key || ''} onChange={e => updateSetting('openai_key', e.target.value)} placeholder="sk-..." /></div>
@@ -125,7 +125,7 @@ export function SettingsView() {
       <Card className="border-slate-200">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold">Follow-up Schedule</CardTitle>
-          <p className="text-xs text-slate-400">Configure automated follow-up timing (days)</p>
+          <p className="text-xs text-gray-500">Configure automated follow-up timing (days)</p>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-4 gap-3">

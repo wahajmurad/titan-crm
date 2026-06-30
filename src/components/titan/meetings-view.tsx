@@ -21,7 +21,7 @@ interface MeetingItem {
 const STATUS_CONFIG: Record<string, { color: string; icon: React.ElementType }> = {
   SCHEDULED: { color: 'bg-blue-50 text-blue-700 border-blue-200', icon: Calendar },
   COMPLETED: { color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircle },
-  CANCELLED: { color: 'bg-slate-100 text-slate-500 border-slate-200', icon: XCircle },
+  CANCELLED: { color: 'bg-slate-100 text-gray-400 border-slate-200', icon: XCircle },
   NO_SHOW: { color: 'bg-amber-50 text-amber-700 border-amber-200', icon: AlertTriangle },
 }
 
@@ -54,7 +54,7 @@ export function MeetingsView() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-slate-900">Meetings</h1>
-          <p className="text-sm text-slate-500 mt-0.5">{upcoming.length} upcoming · {past.length} past</p>
+          <p className="text-sm text-gray-400 mt-0.5">{upcoming.length} upcoming · {past.length} past</p>
         </div>
         <BookMeetingDialog open={addOpen} onOpenChange={setAddOpen} leads={leads} onCreated={refresh} />
       </div>
@@ -63,15 +63,15 @@ export function MeetingsView() {
         <Card><CardContent className="p-8"><div className="h-48 bg-slate-100 rounded-lg animate-pulse" /></CardContent></Card>
       ) : meetings.length === 0 ? (
         <Card className="border-slate-200"><CardContent className="py-16 text-center">
-          <Calendar className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-500">No meetings yet</p>
-          <p className="text-sm text-slate-400 mt-1">Book your first meeting from a lead</p>
+          <Calendar className="w-10 h-10 text-gray-600 mx-auto mb-3" />
+          <p className="text-gray-400">No meetings yet</p>
+          <p className="text-sm text-gray-500 mt-1">Book your first meeting from a lead</p>
         </CardContent></Card>
       ) : (
         <div className="space-y-4">
           {upcoming.length > 0 && (
             <div>
-              <h2 className="text-sm font-medium text-slate-500 mb-2">Upcoming</h2>
+              <h2 className="text-sm font-medium text-gray-400 mb-2">Upcoming</h2>
               <div className="grid gap-3">
                 {upcoming.map(m => <MeetingCard key={m.id} meeting={m} onUpdate={refresh} />)}
               </div>
@@ -79,7 +79,7 @@ export function MeetingsView() {
           )}
           {past.length > 0 && (
             <div>
-              <h2 className="text-sm font-medium text-slate-500 mb-2">Past</h2>
+              <h2 className="text-sm font-medium text-gray-400 mb-2">Past</h2>
               <div className="grid gap-3">
                 {past.map(m => <MeetingCard key={m.id} meeting={m} onUpdate={refresh} />)}
               </div>
@@ -107,13 +107,13 @@ function MeetingCard({ meeting, onUpdate }: { meeting: MeetingItem; onUpdate: ()
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
             <div className="w-12 h-12 bg-slate-50 rounded-xl flex flex-col items-center justify-center shrink-0">
-              <span className="text-xs font-medium text-slate-500">{format(d, 'MMM')}</span>
+              <span className="text-xs font-medium text-gray-400">{format(d, 'MMM')}</span>
               <span className="text-lg font-bold text-slate-900 leading-tight">{format(d, 'd')}</span>
             </div>
             <div>
               <h3 className="text-sm font-medium text-slate-900">{meeting.title}</h3>
-              <p className="text-xs text-slate-500 mt-0.5">{meeting.lead?.business?.name}</p>
-              <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-400">
+              <p className="text-xs text-gray-400 mt-0.5">{meeting.lead?.business?.name}</p>
+              <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500">
                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{format(d, 'h:mm a')} · {meeting.duration}min</span>
                 {meeting.meetingLink && <span className="flex items-center gap-1"><Video className="w-3 h-3" />Virtual</span>}
                 {meeting.location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{meeting.location}</span>}

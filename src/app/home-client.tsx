@@ -28,14 +28,14 @@ const SettingsView = dynamic(() => import('@/components/titan/settings-view').th
 function PageSkeleton() {
   return (
     <div className="space-y-4 animate-pulse">
-      <div className="h-6 w-40 bg-slate-800 rounded" />
-      <div className="h-4 w-64 bg-slate-800 rounded" />
+      <div className="h-6 w-40 bg-gray-100 rounded" />
+      <div className="h-4 w-64 bg-gray-100 rounded" />
       <div className="grid grid-cols-4 gap-4 mt-6">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-24 bg-slate-800 rounded-xl" />
+          <div key={i} className="h-24 bg-gray-100 rounded-xl" />
         ))}
       </div>
-      <div className="h-64 bg-slate-800 rounded-xl mt-4" />
+      <div className="h-64 bg-gray-100 rounded-xl mt-4" />
     </div>
   )
 }
@@ -87,12 +87,12 @@ export default function HomeClient() {
 
   if (state === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-violet-500/20">
-            <span className="text-white font-bold text-sm">T</span>
+            <span className="text-gray-900 font-bold text-sm">T</span>
           </div>
-          <span className="text-sm text-slate-400">Loading...</span>
+          <span className="text-sm text-gray-500">Loading...</span>
         </div>
       </div>
     )
@@ -106,7 +106,7 @@ export default function HomeClient() {
     if (!hasPermission(currentView, 'canView') && currentView !== 'dashboard' && currentView !== 'ai-assistant') {
       return (
         <div className="flex items-center justify-center py-24">
-          <p className="text-slate-500">You don&apos;t have access to this section</p>
+          <p className="text-gray-400">You don&apos;t have access to this section</p>
         </div>
       )
     }
@@ -129,7 +129,7 @@ export default function HomeClient() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       <Sidebar userName={user.name} userRole={user.role} onLogout={handleLogout} />
       <main
         className={cn(
@@ -137,13 +137,16 @@ export default function HomeClient() {
           sidebarOpen ? 'ml-60' : 'ml-[68px]'
         )}
       >
-        <header className="h-14 bg-slate-900/50 backdrop-blur-sm border-b border-slate-800/50 flex items-center justify-between px-6 sticky top-0 z-30">
+        <header className="h-14 bg-white/80 backdrop-blur-sm border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-30">
           <div className="flex items-center gap-3">
-            <h1 className="text-sm font-medium text-slate-300 capitalize">{currentView.replace(/-/g, ' ')}</h1>
+            <h1 className="text-sm font-medium text-gray-900 capitalize">{currentView.replace(/-/g, ' ')}</h1>
+            {currentView === 'dashboard' && (
+              <span className="text-sm text-gray-400 hidden sm:inline">Welcome back, {user.name.split(' ')[0]}</span>
+            )}
           </div>
           <div className="flex items-center gap-2">
-            <button className="relative p-2 rounded-lg hover:bg-slate-800 transition-colors">
-              <Bell className="w-4 h-4 text-slate-400" />
+            <button className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
+              <Bell className="w-4 h-4 text-gray-500" />
             </button>
           </div>
         </header>
@@ -152,7 +155,7 @@ export default function HomeClient() {
           {renderView()}
         </div>
       </main>
-      <Toaster position="top-right" theme="dark" />
+      <Toaster position="top-right" />
     </div>
   )
 }

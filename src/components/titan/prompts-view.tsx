@@ -141,7 +141,7 @@ function PromptCard({
 
   return (
     <Card
-      className={`border-slate-800 bg-slate-900/80 hover:bg-slate-900 transition-all duration-200 group ${
+      className={`border-gray-200 bg-slate-900/80 hover:bg-white transition-all duration-200 group ${
         prompt.isDefault ? 'ring-1 ring-violet-500/30' : ''
       }`}
     >
@@ -152,9 +152,9 @@ function PromptCard({
               <div className={`w-6 h-6 rounded-md bg-gradient-to-br ${meta.gradient} flex items-center justify-center shrink-0`}>
                 <Icon className={`w-3 h-3 ${meta.iconColor}`} />
               </div>
-              <h3 className="text-sm font-medium text-white truncate">{prompt.name}</h3>
+              <h3 className="text-sm font-medium text-gray-900 truncate">{prompt.name}</h3>
             </div>
-            <p className="text-xs text-slate-400 leading-relaxed line-clamp-2">
+            <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
               {prompt.prompt.length > 100 ? prompt.prompt.slice(0, 100) + '...' : prompt.prompt}
             </p>
           </div>
@@ -164,23 +164,23 @@ function PromptCard({
               <TooltipTrigger asChild>
                 <button
                   onClick={() => onEdit(prompt)}
-                  className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+                  className="p-1.5 rounded-md hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition-colors"
                 >
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent className="bg-slate-800 text-white border-slate-700">Edit prompt</TooltipContent>
+              <TooltipContent className="bg-gray-100 text-gray-900 border-gray-200">Edit prompt</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
                   onClick={() => onDelete(prompt)}
-                  className="p-1.5 rounded-md hover:bg-red-500/10 text-slate-400 hover:text-red-400 transition-colors"
+                  className="p-1.5 rounded-md hover:bg-red-500/10 text-gray-500 hover:text-red-400 transition-colors"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent className="bg-slate-800 text-white border-slate-700">Delete prompt</TooltipContent>
+              <TooltipContent className="bg-gray-100 text-gray-900 border-gray-200">Delete prompt</TooltipContent>
             </Tooltip>
           </div>
         </div>
@@ -194,7 +194,7 @@ function PromptCard({
               </Badge>
             )}
           </div>
-          <span className="text-[10px] text-slate-600">
+          <span className="text-[10px] text-gray-300">
             {new Date(prompt.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </span>
         </div>
@@ -240,37 +240,37 @@ function PromptFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-900 border-slate-800 sm:max-w-xl">
+      <DialogContent className="bg-white border-gray-200 sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle className="text-white">{isEditing ? 'Edit Prompt' : 'New Prompt'}</DialogTitle>
-          <DialogDescription className="text-slate-400">
+          <DialogTitle className="text-gray-900">{isEditing ? 'Edit Prompt' : 'New Prompt'}</DialogTitle>
+          <DialogDescription className="text-gray-500">
             {isEditing ? 'Update this prompt template.' : 'Create a new prompt template for your AI workflows.'}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 mt-1">
           <div>
-            <Label className="text-slate-300 text-sm">Name</Label>
+            <Label className="text-gray-600 text-sm">Name</Label>
             <Input
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               placeholder="e.g., Cold Outreach - Pain Point Discovery"
-              className="mt-1.5 bg-slate-950 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-violet-500/50"
+              className="mt-1.5 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
             />
           </div>
           <div>
-            <Label className="text-slate-300 text-sm">Category</Label>
+            <Label className="text-gray-600 text-sm">Category</Label>
             <Select
               value={form.category}
               onValueChange={(v) => setForm((f) => ({ ...f, category: v as PromptCategory }))}
             >
-              <SelectTrigger className="mt-1.5 bg-slate-950 border-slate-700 text-white">
+              <SelectTrigger className="mt-1.5 bg-gray-50 border-gray-200 text-gray-900">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
-              <SelectContent className="bg-slate-900 border-slate-700">
+              <SelectContent className="bg-white border-gray-200">
                 {PROMPT_CATEGORIES.map((cat) => {
                   const meta = CATEGORY_META[cat]
                   return (
-                    <SelectItem key={cat} value={cat} className="text-slate-200 focus:bg-slate-800 focus:text-white">
+                    <SelectItem key={cat} value={cat} className="text-slate-200 focus:bg-gray-100 focus:text-gray-900">
                       <div className="flex items-center gap-2">
                         <meta.icon className={`w-3.5 h-3.5 ${meta.iconColor}`} />
                         {meta.label}
@@ -282,16 +282,16 @@ function PromptFormDialog({
             </Select>
           </div>
           <div>
-            <Label className="text-slate-300 text-sm">Prompt</Label>
+            <Label className="text-gray-600 text-sm">Prompt</Label>
             <Textarea
               value={form.prompt}
               onChange={(e) => setForm((f) => ({ ...f, prompt: e.target.value }))}
               placeholder="Write your AI prompt template here. Use {company}, {industry}, {website} as placeholders..."
-              className="mt-1.5 min-h-[200px] bg-slate-950 border-slate-700 text-white placeholder:text-slate-500 text-sm leading-relaxed focus-visible:ring-violet-500/50"
+              className="mt-1.5 min-h-[200px] bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 text-sm leading-relaxed focus-visible:ring-violet-500/30"
             />
           </div>
           <div className="flex items-center justify-between">
-            <Label htmlFor="is-default" className="text-slate-300 text-sm cursor-pointer">
+            <Label htmlFor="is-default" className="text-gray-600 text-sm cursor-pointer">
               Set as default prompt for this category
             </Label>
             <Switch
@@ -305,14 +305,14 @@ function PromptFormDialog({
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white"
+            className="bg-gray-100 border-gray-200 text-gray-600 hover:bg-gray-200 hover:text-gray-900"
           >
             Cancel
           </Button>
           <Button
             onClick={handleSave}
             disabled={saving || !form.name.trim() || !form.prompt.trim()}
-            className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white"
+            className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-gray-900"
           >
             {saving ? (
               <span className="flex items-center gap-2">
@@ -356,22 +356,22 @@ function DeleteConfirmDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="bg-slate-900 border-slate-800">
+      <AlertDialogContent className="bg-white border-gray-200">
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-white">Delete Prompt</AlertDialogTitle>
-          <AlertDialogDescription className="text-slate-400">
-            Are you sure you want to delete <span className="text-white font-medium">{prompt?.name}</span>? This action
+          <AlertDialogTitle className="text-gray-900">Delete Prompt</AlertDialogTitle>
+          <AlertDialogDescription className="text-gray-500">
+            Are you sure you want to delete <span className="text-gray-900 font-medium">{prompt?.name}</span>? This action
             cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white">
+          <AlertDialogCancel className="bg-gray-100 border-gray-200 text-gray-600 hover:bg-gray-200 hover:text-gray-900">
             Cancel
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
             disabled={deleting}
-            className="bg-red-600 hover:bg-red-500 text-white focus:ring-red-500"
+            className="bg-red-600 hover:bg-red-500 text-gray-900 focus:ring-red-500"
           >
             {deleting ? (
               <span className="flex items-center gap-2">
@@ -502,24 +502,24 @@ export function PromptsView() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-xl font-semibold text-white">Prompt Library</h1>
-            <p className="text-sm text-slate-400 mt-0.5">
+            <h1 className="text-xl font-semibold text-gray-900">Prompt Library</h1>
+            <p className="text-sm text-gray-500 mt-0.5">
               Manage AI prompt templates for your workflows
             </p>
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
               <Input
                 placeholder="Search prompts..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-8 w-48 h-8 text-sm bg-slate-900 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-violet-500/50"
+                className="pl-8 w-48 h-8 text-sm bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
               />
             </div>
             <Button
               onClick={handleCreate}
-              className="h-8 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white"
+              className="h-8 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-gray-900"
             >
               <Plus className="w-3.5 h-3.5 mr-1.5" />
               New Prompt
@@ -531,10 +531,10 @@ export function PromptsView() {
         <div className="flex gap-4 min-h-[calc(100vh-10rem)]">
           {/* Category sidebar */}
           <div className="w-56 shrink-0 hidden md:block">
-            <Card className="border-slate-800 bg-slate-900/80 sticky top-0">
+            <Card className="border-gray-200 bg-slate-900/80 sticky top-0">
               <CardContent className="p-2">
                 <div className="px-3 py-2 mb-1">
-                  <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Categories</p>
+                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Categories</p>
                 </div>
                 <ScrollArea className="max-h-[calc(100vh-14rem)]">
                   <button
@@ -542,7 +542,7 @@ export function PromptsView() {
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
                       activeCategory === 'all'
                         ? 'bg-violet-500/15 text-violet-300'
-                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                        : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
                     }`}
                   >
                     <div className="flex items-center gap-2">
@@ -551,7 +551,7 @@ export function PromptsView() {
                     </div>
                     <span className="text-xs tabular-nums">{prompts.length}</span>
                   </button>
-                  <Separator className="my-1 bg-slate-800" />
+                  <Separator className="my-1 bg-gray-100" />
                   {PROMPT_CATEGORIES.map((cat) => {
                     const meta = CATEGORY_META[cat]
                     const Icon = meta.icon
@@ -562,8 +562,8 @@ export function PromptsView() {
                         onClick={() => setActiveCategory(cat)}
                         className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
                           activeCategory === cat
-                            ? `bg-gradient-to-r ${meta.gradient} text-white`
-                            : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                            ? `bg-gradient-to-r ${meta.gradient} text-gray-900`
+                            : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
                         }`}
                       >
                         <div className="flex items-center gap-2">
@@ -587,7 +587,7 @@ export function PromptsView() {
                 className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                   activeCategory === 'all'
                     ? 'bg-violet-500/15 text-violet-300 border-violet-500/30'
-                    : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                    : 'bg-white text-gray-500 border-gray-200 hover:text-gray-900'
                 }`}
               >
                 All ({prompts.length})
@@ -601,8 +601,8 @@ export function PromptsView() {
                     onClick={() => setActiveCategory(cat)}
                     className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                       activeCategory === cat
-                        ? `bg-gradient-to-r ${meta.gradient} text-white border-transparent`
-                        : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                        ? `bg-gradient-to-r ${meta.gradient} text-gray-900 border-transparent`
+                        : 'bg-white text-gray-500 border-gray-200 hover:text-gray-900'
                     }`}
                   >
                     {meta.label} ({count})
@@ -617,28 +617,28 @@ export function PromptsView() {
             {loading ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <Card key={i} className="border-slate-800 bg-slate-900/80">
+                  <Card key={i} className="border-gray-200 bg-slate-900/80">
                     <CardContent className="p-4 space-y-3">
                       <div className="flex items-center gap-2">
-                        <Skeleton className="h-6 w-6 rounded-md bg-slate-800" />
-                        <Skeleton className="h-4 w-40 bg-slate-800" />
+                        <Skeleton className="h-6 w-6 rounded-md bg-gray-100" />
+                        <Skeleton className="h-4 w-40 bg-gray-100" />
                       </div>
-                      <Skeleton className="h-3 w-full bg-slate-800" />
-                      <Skeleton className="h-3 w-3/4 bg-slate-800" />
+                      <Skeleton className="h-3 w-full bg-gray-100" />
+                      <Skeleton className="h-3 w-3/4 bg-gray-100" />
                     </CardContent>
                   </Card>
                 ))}
               </div>
             ) : sortedPrompts.length === 0 ? (
-              <Card className="border-slate-800 bg-slate-900/50">
+              <Card className="border-gray-200 bg-gray-50/80">
                 <CardContent className="flex flex-col items-center justify-center py-16">
-                  <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center mb-4">
-                    <BookOpen className="w-6 h-6 text-slate-500" />
+                  <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center mb-4">
+                    <BookOpen className="w-6 h-6 text-gray-400" />
                   </div>
-                  <h3 className="text-sm font-medium text-slate-300 mb-1">
+                  <h3 className="text-sm font-medium text-gray-600 mb-1">
                     {search ? 'No matching prompts' : 'No prompts yet'}
                   </h3>
-                  <p className="text-xs text-slate-500 mb-4">
+                  <p className="text-xs text-gray-400 mb-4">
                     {search
                       ? 'Try a different search term or category'
                       : 'Create your first prompt template to get started'}
@@ -647,7 +647,7 @@ export function PromptsView() {
                     <Button
                       onClick={handleCreate}
                       variant="outline"
-                      className="bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white"
+                      className="bg-gray-100 border-gray-200 text-gray-600 hover:bg-gray-200 hover:text-gray-900"
                     >
                       <Plus className="w-3.5 h-3.5 mr-1.5" />
                       Create Prompt

@@ -81,7 +81,7 @@ const EMPTY_FORM: CampaignForm = {
 const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
   ACTIVE: { label: 'Active', color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25', dot: 'bg-emerald-400' },
   PAUSED: { label: 'Paused', color: 'bg-amber-500/15 text-amber-400 border-amber-500/25', dot: 'bg-amber-400' },
-  COMPLETED: { label: 'Completed', color: 'bg-slate-500/15 text-slate-400 border-slate-500/25', dot: 'bg-slate-400' },
+  COMPLETED: { label: 'Completed', color: 'bg-slate-500/15 text-gray-500 border-slate-500/25', dot: 'bg-slate-400' },
 }
 
 const STAT_ITEMS = [
@@ -187,22 +187,22 @@ export function CampaignsView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-white flex items-center gap-2">
+          <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
             <Target className="w-5 h-5 text-violet-400" />
             Campaigns
           </h1>
-          <p className="text-sm text-slate-400 mt-0.5">
+          <p className="text-sm text-gray-500 mt-0.5">
             {filtered.length} campaign{filtered.length !== 1 ? 's' : ''} in pipeline
           </p>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
             <Input
               placeholder="Search campaigns..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-8 w-52 h-8 text-sm bg-slate-900 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-violet-500/30"
+              className="pl-8 w-52 h-8 text-sm bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
             />
           </div>
           <CreateCampaignDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={refresh} />
@@ -213,14 +213,14 @@ export function CampaignsView() {
       {!loading && filtered.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {STAT_ITEMS.map(s => (
-            <Card key={s.key} className="bg-slate-900 border-slate-800">
+            <Card key={s.key} className="bg-white border-gray-200">
               <CardContent className="p-3 flex items-center gap-3">
-                <div className={cn('p-2 rounded-lg bg-slate-800/60', s.color)}>
+                <div className={cn('p-2 rounded-lg bg-gray-100/80', s.color)}>
                   <s.icon className="w-4 h-4" />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">{s.label}</p>
-                  <p className="text-lg font-semibold text-white">{totals[s.key]}</p>
+                  <p className="text-xs text-gray-400">{s.label}</p>
+                  <p className="text-lg font-semibold text-gray-900">{totals[s.key]}</p>
                 </div>
               </CardContent>
             </Card>
@@ -230,28 +230,28 @@ export function CampaignsView() {
 
       {/* Status Tabs */}
       <Tabs value={statusTab} onValueChange={setStatusTab}>
-        <TabsList className="bg-slate-900 border border-slate-800">
-          <TabsTrigger value="ALL" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400 text-xs">
+        <TabsList className="bg-white border border-gray-200">
+          <TabsTrigger value="ALL" className="data-[state=active]:bg-gray-100 data-[state=active]:text-gray-900 text-gray-500 text-xs">
             All
-            <Badge variant="secondary" className="ml-1.5 h-4 min-w-4 px-1 text-[10px] bg-slate-800 text-slate-400">
+            <Badge variant="secondary" className="ml-1.5 h-4 min-w-4 px-1 text-[10px] bg-gray-100 text-gray-500">
               {campaigns.length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="ACTIVE" className="data-[state=active]:bg-emerald-500/15 data-[state=active]:text-emerald-400 text-slate-400 text-xs">
+          <TabsTrigger value="ACTIVE" className="data-[state=active]:bg-emerald-500/15 data-[state=active]:text-emerald-400 text-gray-500 text-xs">
             Active
-            <Badge variant="secondary" className="ml-1.5 h-4 min-w-4 px-1 text-[10px] bg-slate-800 text-slate-400">
+            <Badge variant="secondary" className="ml-1.5 h-4 min-w-4 px-1 text-[10px] bg-gray-100 text-gray-500">
               {campaigns.filter(c => c.status === 'ACTIVE').length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="PAUSED" className="data-[state=active]:bg-amber-500/15 data-[state=active]:text-amber-400 text-slate-400 text-xs">
+          <TabsTrigger value="PAUSED" className="data-[state=active]:bg-amber-500/15 data-[state=active]:text-amber-400 text-gray-500 text-xs">
             Paused
-            <Badge variant="secondary" className="ml-1.5 h-4 min-w-4 px-1 text-[10px] bg-slate-800 text-slate-400">
+            <Badge variant="secondary" className="ml-1.5 h-4 min-w-4 px-1 text-[10px] bg-gray-100 text-gray-500">
               {campaigns.filter(c => c.status === 'PAUSED').length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="COMPLETED" className="data-[state=active]:bg-slate-700 data-[state=active]:text-slate-300 text-slate-400 text-xs">
+          <TabsTrigger value="COMPLETED" className="data-[state=active]:bg-gray-200 data-[state=active]:text-gray-600 text-gray-500 text-xs">
             Completed
-            <Badge variant="secondary" className="ml-1.5 h-4 min-w-4 px-1 text-[10px] bg-slate-800 text-slate-400">
+            <Badge variant="secondary" className="ml-1.5 h-4 min-w-4 px-1 text-[10px] bg-gray-100 text-gray-500">
               {campaigns.filter(c => c.status === 'COMPLETED').length}
             </Badge>
           </TabsTrigger>
@@ -262,18 +262,18 @@ export function CampaignsView() {
       {loading ? (
         <div className="grid gap-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i} className="bg-slate-900 border-slate-800">
+            <Card key={i} className="bg-white border-gray-200">
               <CardContent className="p-5">
                 <div className="flex items-start justify-between">
                   <div className="space-y-2 flex-1">
-                    <Skeleton className="h-5 w-48 bg-slate-800" />
-                    <Skeleton className="h-3 w-32 bg-slate-800" />
+                    <Skeleton className="h-5 w-48 bg-gray-100" />
+                    <Skeleton className="h-3 w-32 bg-gray-100" />
                   </div>
-                  <Skeleton className="h-8 w-24 bg-slate-800" />
+                  <Skeleton className="h-8 w-24 bg-gray-100" />
                 </div>
                 <div className="flex gap-4 mt-4">
                   {Array.from({ length: 5 }).map((_, j) => (
-                    <Skeleton key={j} className="h-10 flex-1 bg-slate-800" />
+                    <Skeleton key={j} className="h-10 flex-1 bg-gray-100" />
                   ))}
                 </div>
               </CardContent>
@@ -281,14 +281,14 @@ export function CampaignsView() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <Card className="bg-slate-900 border-slate-800 border-dashed">
+        <Card className="bg-white border-gray-200 border-dashed">
           <CardContent className="p-12 text-center">
-            <FolderOpen className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-400 font-medium">No campaigns found</p>
-            <p className="text-sm text-slate-500 mt-1">Create your first campaign to start outbound outreach at scale.</p>
+            <FolderOpen className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500 font-medium">No campaigns found</p>
+            <p className="text-sm text-gray-400 mt-1">Create your first campaign to start outbound outreach at scale.</p>
             <Button
               variant="outline"
-              className="mt-4 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
+              className="mt-4 border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
               onClick={() => setCreateOpen(true)}
             >
               <Plus className="w-3.5 h-3.5 mr-1.5" />New Campaign
@@ -304,7 +304,7 @@ export function CampaignsView() {
             return (
               <Card
                 key={campaign.id}
-                className="bg-slate-900 border-slate-800 hover:border-slate-700 transition-colors cursor-pointer group"
+                className="bg-white border-gray-200 hover:border-gray-200 transition-colors cursor-pointer group"
                 onClick={() => openDetail(campaign)}
               >
                 <CardContent className="p-5">
@@ -312,13 +312,13 @@ export function CampaignsView() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2.5">
-                        <h3 className="text-sm font-semibold text-white truncate">{campaign.name}</h3>
+                        <h3 className="text-sm font-semibold text-gray-900 truncate">{campaign.name}</h3>
                         <Badge variant="outline" className={cn('text-[10px] font-medium shrink-0', statusCfg.color)}>
                           <span className={cn('w-1.5 h-1.5 rounded-full mr-1.5', statusCfg.dot)} />
                           {statusCfg.label}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-500">
+                      <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-400">
                         {campaign.industry && <span>{campaign.industry}</span>}
                         {campaign.targetCity && (
                           <>
@@ -329,7 +329,7 @@ export function CampaignsView() {
                         {campaign.serviceOffering && (
                           <>
                             <span className="text-slate-700">•</span>
-                            <span className="text-slate-400">{campaign.serviceOffering}</span>
+                            <span className="text-gray-500">{campaign.serviceOffering}</span>
                           </>
                         )}
                       </div>
@@ -341,7 +341,7 @@ export function CampaignsView() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 w-7 p-0 text-slate-400 hover:text-white hover:bg-slate-800"
+                          className="h-7 w-7 p-0 text-gray-500 hover:text-gray-900 hover:bg-gray-100"
                           onClick={(e) => { e.stopPropagation(); handleToggleStatus(campaign) }}
                           title={campaign.status === 'ACTIVE' ? 'Pause campaign' : 'Resume campaign'}
                         >
@@ -352,32 +352,32 @@ export function CampaignsView() {
                       {/* Dropdown actions */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-slate-400 hover:text-white hover:bg-slate-800 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-500 hover:text-gray-900 hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
                             <MoreHorizontal className="w-3.5 h-3.5" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-slate-900 border-slate-800">
-                          <DropdownMenuItem onClick={() => openDetail(campaign)} className="text-slate-300 focus:bg-slate-800 focus:text-white">
+                        <DropdownMenuContent align="end" className="bg-white border-gray-200">
+                          <DropdownMenuItem onClick={() => openDetail(campaign)} className="text-gray-600 focus:bg-gray-100 focus:text-gray-900">
                             <Eye className="w-3.5 h-3.5 mr-2" />View Details
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={(e) => openEdit(campaign, e)}
-                            className="text-slate-300 focus:bg-slate-800 focus:text-white"
+                            className="text-gray-600 focus:bg-gray-100 focus:text-gray-900"
                           >
                             <Pencil className="w-3.5 h-3.5 mr-2" />Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={(e) => { e.stopPropagation(); setView('leads') }}
-                            className="text-slate-300 focus:bg-slate-800 focus:text-white"
+                            className="text-gray-600 focus:bg-gray-100 focus:text-gray-900"
                           >
                             <UsersRound className="w-3.5 h-3.5 mr-2" />View Leads
                           </DropdownMenuItem>
                           {campaign.status !== 'COMPLETED' && (
                             <>
-                              <DropdownMenuSeparator className="bg-slate-800" />
+                              <DropdownMenuSeparator className="bg-gray-100" />
                               <DropdownMenuItem
                                 onClick={(e) => { e.stopPropagation(); handleToggleStatus(campaign) }}
-                                className="text-slate-300 focus:bg-slate-800 focus:text-white"
+                                className="text-gray-600 focus:bg-gray-100 focus:text-gray-900"
                               >
                                 {campaign.status === 'ACTIVE' ? (
                                   <><Pause className="w-3.5 h-3.5 mr-2" />Pause</>
@@ -390,7 +390,7 @@ export function CampaignsView() {
                         </DropdownMenuContent>
                       </DropdownMenu>
 
-                      <ArrowRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 transition-colors" />
+                      <ArrowRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-gray-500 transition-colors" />
                     </div>
                   </div>
 
@@ -399,7 +399,7 @@ export function CampaignsView() {
                     {STAT_ITEMS.map(s => (
                       <div key={s.key} className="flex items-center gap-1.5">
                         <s.icon className={cn('w-3 h-3', s.color)} />
-                        <span className="text-xs text-slate-400">{campaign[s.key]}</span>
+                        <span className="text-xs text-gray-500">{campaign[s.key]}</span>
                       </div>
                     ))}
                     <div className="ml-auto flex items-center gap-1.5">
@@ -409,7 +409,7 @@ export function CampaignsView() {
                   </div>
 
                   {/* Row 3: Footer */}
-                  <div className="flex items-center justify-between mt-2.5 text-[11px] text-slate-600">
+                  <div className="flex items-center justify-between mt-2.5 text-[11px] text-gray-300">
                     <span>Created {format(new Date(campaign.createdAt), 'MMM d, yyyy')}</span>
                     <span>Daily limit: {campaign.dailyLimit}</span>
                   </div>
@@ -491,20 +491,20 @@ function CreateCampaignDialog({ open, onOpenChange, onCreated }: {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button size="sm" className="h-8 bg-violet-600 hover:bg-violet-700 text-white">
+        <Button size="sm" className="h-8 bg-violet-600 hover:bg-violet-700 text-gray-900">
           <Plus className="w-3.5 h-3.5 mr-1.5" />New Campaign
         </Button>
       </DialogTrigger>
-      <DialogContent className="bg-slate-900 border-slate-800 max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-white border-gray-200 max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-white">Create New Campaign</DialogTitle>
+          <DialogTitle className="text-gray-900">Create New Campaign</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 mt-2">
           {/* Name */}
           <div>
-            <Label className="text-slate-300 text-xs font-medium">Campaign Name *</Label>
+            <Label className="text-gray-600 text-xs font-medium">Campaign Name *</Label>
             <Input
-              className="mt-1.5 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-violet-500/30"
+              className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
               value={form.name}
               onChange={e => update('name', e.target.value)}
               placeholder="e.g. NYC Law Firms Q4 Outreach"
@@ -514,18 +514,18 @@ function CreateCampaignDialog({ open, onOpenChange, onCreated }: {
           {/* Industry + Service Offering */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-slate-300 text-xs font-medium">Target Industry</Label>
+              <Label className="text-gray-600 text-xs font-medium">Target Industry</Label>
               <Input
-                className="mt-1.5 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-violet-500/30"
+                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
                 value={form.industry}
                 onChange={e => update('industry', e.target.value)}
                 placeholder="e.g. Legal, Healthcare"
               />
             </div>
             <div>
-              <Label className="text-slate-300 text-xs font-medium">Service Offering</Label>
+              <Label className="text-gray-600 text-xs font-medium">Service Offering</Label>
               <Input
-                className="mt-1.5 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-violet-500/30"
+                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
                 value={form.serviceOffering}
                 onChange={e => update('serviceOffering', e.target.value)}
                 placeholder="e.g. Web Design, SEO"
@@ -536,18 +536,18 @@ function CreateCampaignDialog({ open, onOpenChange, onCreated }: {
           {/* Location + City */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-slate-300 text-xs font-medium">Target Location</Label>
+              <Label className="text-gray-600 text-xs font-medium">Target Location</Label>
               <Input
-                className="mt-1.5 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-violet-500/30"
+                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
                 value={form.targetLocation}
                 onChange={e => update('targetLocation', e.target.value)}
                 placeholder="e.g. United States"
               />
             </div>
             <div>
-              <Label className="text-slate-300 text-xs font-medium">Target City</Label>
+              <Label className="text-gray-600 text-xs font-medium">Target City</Label>
               <Input
-                className="mt-1.5 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-violet-500/30"
+                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
                 value={form.targetCity}
                 onChange={e => update('targetCity', e.target.value)}
                 placeholder="e.g. New York"
@@ -558,12 +558,12 @@ function CreateCampaignDialog({ open, onOpenChange, onCreated }: {
           {/* Target Size + Daily Limit */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-slate-300 text-xs font-medium">Target Company Size</Label>
+              <Label className="text-gray-600 text-xs font-medium">Target Company Size</Label>
               <Select value={form.targetSize} onValueChange={v => update('targetSize', v)}>
-                <SelectTrigger className="mt-1.5 bg-slate-800 border-slate-700 text-white">
+                <SelectTrigger className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900">
                   <SelectValue placeholder="Any size" />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800">
+                <SelectContent className="bg-white border-gray-200">
                   <SelectItem value="">Any size</SelectItem>
                   <SelectItem value="1-10">1-10 employees</SelectItem>
                   <SelectItem value="11-50">11-50 employees</SelectItem>
@@ -574,12 +574,12 @@ function CreateCampaignDialog({ open, onOpenChange, onCreated }: {
               </Select>
             </div>
             <div>
-              <Label className="text-slate-300 text-xs font-medium">Daily Limit</Label>
+              <Label className="text-gray-600 text-xs font-medium">Daily Limit</Label>
               <Input
                 type="number"
                 min={1}
                 max={200}
-                className="mt-1.5 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-violet-500/30"
+                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
                 value={form.dailyLimit}
                 onChange={e => update('dailyLimit', e.target.value)}
               />
@@ -588,12 +588,12 @@ function CreateCampaignDialog({ open, onOpenChange, onCreated }: {
 
           {/* AI Model */}
           <div>
-            <Label className="text-slate-300 text-xs font-medium">AI Model</Label>
+            <Label className="text-gray-600 text-xs font-medium">AI Model</Label>
             <Select value={form.aiModel} onValueChange={v => update('aiModel', v)}>
-              <SelectTrigger className="mt-1.5 bg-slate-800 border-slate-700 text-white">
+              <SelectTrigger className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-slate-900 border-slate-800">
+              <SelectContent className="bg-white border-gray-200">
                 {AI_MODELS.map(m => (
                   <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
                 ))}
@@ -603,9 +603,9 @@ function CreateCampaignDialog({ open, onOpenChange, onCreated }: {
 
           {/* Notes */}
           <div>
-            <Label className="text-slate-300 text-xs font-medium">Notes</Label>
+            <Label className="text-gray-600 text-xs font-medium">Notes</Label>
             <Textarea
-              className="mt-1.5 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-violet-500/30 min-h-[80px]"
+              className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30 min-h-[80px]"
               value={form.notes}
               onChange={e => update('notes', e.target.value)}
               placeholder="Additional notes about this campaign..."
@@ -614,13 +614,13 @@ function CreateCampaignDialog({ open, onOpenChange, onCreated }: {
         </div>
 
         <DialogFooter className="mt-4 gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="border-slate-700 text-slate-300 hover:bg-slate-800">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="border-gray-200 text-gray-600 hover:bg-gray-100">
             Cancel
           </Button>
           <Button
             onClick={handleCreate}
             disabled={loading || !form.name.trim()}
-            className="bg-violet-600 hover:bg-violet-700 text-white"
+            className="bg-violet-600 hover:bg-violet-700 text-gray-900"
           >
             {loading ? 'Creating...' : 'Create Campaign'}
           </Button>
@@ -678,47 +678,47 @@ function EditCampaignDialog({ open, onOpenChange, campaign, onUpdated }: {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-900 border-slate-800 max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-white border-gray-200 max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-white">Edit Campaign</DialogTitle>
+          <DialogTitle className="text-gray-900">Edit Campaign</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 mt-2">
           <div>
-            <Label className="text-slate-300 text-xs font-medium">Campaign Name *</Label>
+            <Label className="text-gray-600 text-xs font-medium">Campaign Name *</Label>
             <Input
-              className="mt-1.5 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-violet-500/30"
+              className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
               value={form.name}
               onChange={e => update('name', e.target.value)}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-slate-300 text-xs font-medium">Target Industry</Label>
-              <Input className="mt-1.5 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-violet-500/30" value={form.industry} onChange={e => update('industry', e.target.value)} />
+              <Label className="text-gray-600 text-xs font-medium">Target Industry</Label>
+              <Input className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30" value={form.industry} onChange={e => update('industry', e.target.value)} />
             </div>
             <div>
-              <Label className="text-slate-300 text-xs font-medium">Service Offering</Label>
-              <Input className="mt-1.5 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-violet-500/30" value={form.serviceOffering} onChange={e => update('serviceOffering', e.target.value)} />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label className="text-slate-300 text-xs font-medium">Target Location</Label>
-              <Input className="mt-1.5 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-violet-500/30" value={form.targetLocation} onChange={e => update('targetLocation', e.target.value)} />
-            </div>
-            <div>
-              <Label className="text-slate-300 text-xs font-medium">Target City</Label>
-              <Input className="mt-1.5 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-violet-500/30" value={form.targetCity} onChange={e => update('targetCity', e.target.value)} />
+              <Label className="text-gray-600 text-xs font-medium">Service Offering</Label>
+              <Input className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30" value={form.serviceOffering} onChange={e => update('serviceOffering', e.target.value)} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-slate-300 text-xs font-medium">Company Size</Label>
+              <Label className="text-gray-600 text-xs font-medium">Target Location</Label>
+              <Input className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30" value={form.targetLocation} onChange={e => update('targetLocation', e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-gray-600 text-xs font-medium">Target City</Label>
+              <Input className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30" value={form.targetCity} onChange={e => update('targetCity', e.target.value)} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-gray-600 text-xs font-medium">Company Size</Label>
               <Select value={form.targetSize} onValueChange={v => update('targetSize', v)}>
-                <SelectTrigger className="mt-1.5 bg-slate-800 border-slate-700 text-white">
+                <SelectTrigger className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900">
                   <SelectValue placeholder="Any size" />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800">
+                <SelectContent className="bg-white border-gray-200">
                   <SelectItem value="">Any size</SelectItem>
                   <SelectItem value="1-10">1-10</SelectItem>
                   <SelectItem value="11-50">11-50</SelectItem>
@@ -729,27 +729,27 @@ function EditCampaignDialog({ open, onOpenChange, campaign, onUpdated }: {
               </Select>
             </div>
             <div>
-              <Label className="text-slate-300 text-xs font-medium">Daily Limit</Label>
-              <Input type="number" min={1} max={200} className="mt-1.5 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-violet-500/30" value={form.dailyLimit} onChange={e => update('dailyLimit', e.target.value)} />
+              <Label className="text-gray-600 text-xs font-medium">Daily Limit</Label>
+              <Input type="number" min={1} max={200} className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30" value={form.dailyLimit} onChange={e => update('dailyLimit', e.target.value)} />
             </div>
           </div>
           <div>
-            <Label className="text-slate-300 text-xs font-medium">AI Model</Label>
+            <Label className="text-gray-600 text-xs font-medium">AI Model</Label>
             <Select value={form.aiModel} onValueChange={v => update('aiModel', v)}>
-              <SelectTrigger className="mt-1.5 bg-slate-800 border-slate-700 text-white"><SelectValue /></SelectTrigger>
-              <SelectContent className="bg-slate-900 border-slate-800">
+              <SelectTrigger className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900"><SelectValue /></SelectTrigger>
+              <SelectContent className="bg-white border-gray-200">
                 {AI_MODELS.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label className="text-slate-300 text-xs font-medium">Notes</Label>
-            <Textarea className="mt-1.5 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-violet-500/30 min-h-[80px]" value={form.notes} onChange={e => update('notes', e.target.value)} />
+            <Label className="text-gray-600 text-xs font-medium">Notes</Label>
+            <Textarea className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30 min-h-[80px]" value={form.notes} onChange={e => update('notes', e.target.value)} />
           </div>
         </div>
         <DialogFooter className="mt-4 gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="border-slate-700 text-slate-300 hover:bg-slate-800">Cancel</Button>
-          <Button onClick={handleUpdate} disabled={loading || !form.name.trim()} className="bg-violet-600 hover:bg-violet-700 text-white">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="border-gray-200 text-gray-600 hover:bg-gray-100">Cancel</Button>
+          <Button onClick={handleUpdate} disabled={loading || !form.name.trim()} className="bg-violet-600 hover:bg-violet-700 text-gray-900">
             {loading ? 'Saving...' : 'Save Changes'}
           </Button>
         </DialogFooter>
@@ -771,10 +771,10 @@ function CampaignDetailDialog({ open, onOpenChange, campaign, leads, leadsLoadin
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-900 border-slate-800 max-w-2xl max-h-[85vh] flex flex-col">
+      <DialogContent className="bg-white border-gray-200 max-w-2xl max-h-[85vh] flex flex-col">
         <DialogHeader>
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-white text-lg">{campaign.name}</DialogTitle>
+            <DialogTitle className="text-gray-900 text-lg">{campaign.name}</DialogTitle>
             <Badge variant="outline" className={cn('text-xs font-medium', statusCfg.color)}>
               <span className={cn('w-1.5 h-1.5 rounded-full mr-1.5', statusCfg.dot)} />
               {statusCfg.label}
@@ -786,53 +786,53 @@ function CampaignDetailDialog({ open, onOpenChange, campaign, leads, leadsLoadin
           {/* Campaign Meta */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
             {campaign.industry && (
-              <div className="bg-slate-800/50 rounded-lg p-3">
-                <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-0.5">Industry</p>
-                <p className="text-sm text-white">{campaign.industry}</p>
+              <div className="bg-gray-100/70 rounded-lg p-3">
+                <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Industry</p>
+                <p className="text-sm text-gray-900">{campaign.industry}</p>
               </div>
             )}
             {campaign.targetCity && (
-              <div className="bg-slate-800/50 rounded-lg p-3">
-                <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-0.5">Location</p>
-                <p className="text-sm text-white">{campaign.targetCity}{campaign.targetLocation ? `, ${campaign.targetLocation}` : ''}</p>
+              <div className="bg-gray-100/70 rounded-lg p-3">
+                <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Location</p>
+                <p className="text-sm text-gray-900">{campaign.targetCity}{campaign.targetLocation ? `, ${campaign.targetLocation}` : ''}</p>
               </div>
             )}
-            <div className="bg-slate-800/50 rounded-lg p-3">
-              <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-0.5">Daily Limit</p>
-              <p className="text-sm text-white">{campaign.dailyLimit}</p>
+            <div className="bg-gray-100/70 rounded-lg p-3">
+              <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Daily Limit</p>
+              <p className="text-sm text-gray-900">{campaign.dailyLimit}</p>
             </div>
             {campaign.serviceOffering && (
-              <div className="bg-slate-800/50 rounded-lg p-3">
-                <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-0.5">Service</p>
-                <p className="text-sm text-white">{campaign.serviceOffering}</p>
+              <div className="bg-gray-100/70 rounded-lg p-3">
+                <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Service</p>
+                <p className="text-sm text-gray-900">{campaign.serviceOffering}</p>
               </div>
             )}
-            <div className="bg-slate-800/50 rounded-lg p-3">
-              <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-0.5">AI Model</p>
-              <p className="text-sm text-white">{AI_MODELS.find(m => m.value === campaign.aiModel)?.label || campaign.aiModel}</p>
+            <div className="bg-gray-100/70 rounded-lg p-3">
+              <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">AI Model</p>
+              <p className="text-sm text-gray-900">{AI_MODELS.find(m => m.value === campaign.aiModel)?.label || campaign.aiModel}</p>
             </div>
-            <div className="bg-slate-800/50 rounded-lg p-3">
-              <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-0.5">Reply Rate</p>
+            <div className="bg-gray-100/70 rounded-lg p-3">
+              <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Reply Rate</p>
               <p className="text-sm text-emerald-400 font-medium">{replyRate}%</p>
             </div>
           </div>
 
           {campaign.notes && (
             <div className="bg-slate-800/30 rounded-lg p-3 mb-5">
-              <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Notes</p>
-              <p className="text-sm text-slate-300">{campaign.notes}</p>
+              <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-1">Notes</p>
+              <p className="text-sm text-gray-600">{campaign.notes}</p>
             </div>
           )}
 
           {/* Outreach Stats */}
           <div className="mb-5">
-            <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">Outreach Performance</h4>
+            <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Outreach Performance</h4>
             <div className="grid grid-cols-5 gap-2">
               {STAT_ITEMS.map(s => (
                 <div key={s.key} className="bg-slate-800/40 rounded-lg p-3 text-center">
                   <s.icon className={cn('w-4 h-4 mx-auto mb-1.5', s.color)} />
-                  <p className="text-lg font-bold text-white">{campaign[s.key]}</p>
-                  <p className="text-[10px] text-slate-500">{s.label}</p>
+                  <p className="text-lg font-bold text-gray-900">{campaign[s.key]}</p>
+                  <p className="text-[10px] text-gray-400">{s.label}</p>
                 </div>
               ))}
             </div>
@@ -845,7 +845,7 @@ function CampaignDetailDialog({ open, onOpenChange, campaign, leads, leadsLoadin
                 variant="outline"
                 size="sm"
                 className={cn(
-                  'border-slate-700 text-slate-300 hover:bg-slate-800',
+                  'border-gray-200 text-gray-600 hover:bg-gray-100',
                   campaign.status === 'ACTIVE' && 'hover:text-amber-400'
                 )}
                 onClick={() => onToggleStatus(campaign)}
@@ -855,32 +855,32 @@ function CampaignDetailDialog({ open, onOpenChange, campaign, leads, leadsLoadin
             </div>
           )}
 
-          <Separator className="bg-slate-800 mb-5" />
+          <Separator className="bg-gray-100 mb-5" />
 
           {/* Campaign Leads */}
           <div>
-            <h4 className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-3">
+            <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
               Campaign Leads ({leads.length})
             </h4>
             {leadsLoading ? (
               <div className="space-y-2">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full bg-slate-800" />
+                  <Skeleton key={i} className="h-12 w-full bg-gray-100" />
                 ))}
               </div>
             ) : leads.length === 0 ? (
-              <div className="text-center py-8 text-slate-500 text-sm">No leads in this campaign yet.</div>
+              <div className="text-center py-8 text-gray-400 text-sm">No leads in this campaign yet.</div>
             ) : (
               <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                 {leads.map(lead => (
                   <div
                     key={lead.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 hover:bg-slate-800 cursor-pointer transition-colors group"
+                    className="flex items-center justify-between p-3 rounded-lg bg-slate-800/40 hover:bg-gray-100 cursor-pointer transition-colors group"
                     onClick={() => { onNavigateLead(lead.id); onOpenChange(false) }}
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-white truncate">{lead.business.name}</p>
-                      <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500">
+                      <p className="text-sm font-medium text-gray-900 truncate">{lead.business.name}</p>
+                      <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-400">
                         {lead.business.industry && <span>{lead.business.industry}</span>}
                         {lead.business.city && (
                           <>
@@ -892,10 +892,10 @@ function CampaignDetailDialog({ open, onOpenChange, campaign, leads, leadsLoadin
                     </div>
                     <div className="flex items-center gap-3 shrink-0 ml-3">
                       <div className="text-right hidden sm:block">
-                        <p className="text-xs text-slate-400">{lead.stage.replace(/_/g, ' ')}</p>
-                        <p className="text-[10px] text-slate-600">{lead._count.outreaches} emails</p>
+                        <p className="text-xs text-gray-500">{lead.stage.replace(/_/g, ' ')}</p>
+                        <p className="text-[10px] text-gray-300">{lead._count.outreaches} emails</p>
                       </div>
-                      <ArrowRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 transition-colors" />
+                      <ArrowRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-gray-500 transition-colors" />
                     </div>
                   </div>
                 ))}

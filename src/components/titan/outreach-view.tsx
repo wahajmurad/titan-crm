@@ -24,7 +24,7 @@ const STATUS_ICON: Record<string, React.ElementType> = {
 }
 
 const STATUS_COLOR: Record<string, string> = {
-  DRAFT: 'bg-slate-100 text-slate-600', SENT: 'bg-blue-50 text-blue-700',
+  DRAFT: 'bg-slate-100 text-gray-300', SENT: 'bg-blue-50 text-blue-700',
   OPENED: 'bg-amber-50 text-amber-700', REPLIED: 'bg-emerald-50 text-emerald-700',
   BOUNCED: 'bg-red-50 text-red-700', FAILED: 'bg-red-50 text-red-700',
 }
@@ -67,11 +67,11 @@ export function OutreachView() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-slate-900">Outreach</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Track and manage your email campaigns</p>
+          <p className="text-sm text-gray-400 mt-0.5">Track and manage your email campaigns</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
             <Input placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} className="pl-8 w-48 h-8 text-sm" />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -93,7 +93,7 @@ export function OutreachView() {
         {stats.map(s => (
           <Card key={s.label} className="border-slate-200">
             <CardContent className="p-4">
-              <p className="text-xs text-slate-500">{s.label}</p>
+              <p className="text-xs text-gray-400">{s.label}</p>
               <p className="text-xl font-semibold text-slate-900 mt-0.5">{s.value}</p>
             </CardContent>
           </Card>
@@ -109,30 +109,30 @@ export function OutreachView() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-100">
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase">Subject</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase">Business</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase">Type</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase">Status</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-400 uppercase">Date</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Subject</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Business</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Type</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Date</th>
                   </tr>
                 </thead>
                 <tbody>
                   {outreaches.length === 0 ? (
-                    <tr><td colSpan={5} className="px-4 py-12 text-center text-slate-400">No outreach emails yet. Compose your first one.</td></tr>
+                    <tr><td colSpan={5} className="px-4 py-12 text-center text-gray-500">No outreach emails yet. Compose your first one.</td></tr>
                   ) : outreaches.map(o => (
                     <tr key={o.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
                       <td className="px-4 py-3">
                         <p className="font-medium text-slate-900 truncate max-w-xs">{o.subject}</p>
-                        <p className="text-xs text-slate-400 truncate max-w-xs mt-0.5">{o.body.slice(0, 80)}...</p>
+                        <p className="text-xs text-gray-500 truncate max-w-xs mt-0.5">{o.body.slice(0, 80)}...</p>
                       </td>
-                      <td className="px-4 py-3 text-slate-600">{o.lead?.business?.name || '—'}</td>
-                      <td className="px-4 py-3"><span className="text-xs text-slate-500">{o.type.replace(/_/g, ' ')}</span></td>
+                      <td className="px-4 py-3 text-gray-300">{o.lead?.business?.name || '—'}</td>
+                      <td className="px-4 py-3"><span className="text-xs text-gray-400">{o.type.replace(/_/g, ' ')}</span></td>
                       <td className="px-4 py-3">
-                        <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium', STATUS_COLOR[o.status] || 'bg-slate-100 text-slate-600')}>
+                        <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium', STATUS_COLOR[o.status] || 'bg-slate-100 text-gray-300')}>
                           {o.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-xs text-slate-400">
+                      <td className="px-4 py-3 text-xs text-gray-500">
                         {o.sentAt ? format(new Date(o.sentAt), 'MMM d, h:mm a') : format(new Date(o.createdAt), 'MMM d')}
                       </td>
                     </tr>

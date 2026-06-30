@@ -51,7 +51,7 @@ export function TeamView() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-slate-900">Team</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Manage team members and their permissions</p>
+          <p className="text-sm text-gray-400 mt-0.5">Manage team members and their permissions</p>
         </div>
         <AddMemberDialog open={addOpen} onOpenChange={setAddOpen} onAdded={refresh} />
       </div>
@@ -60,9 +60,9 @@ export function TeamView() {
         <Card><CardContent className="p-8"><div className="h-48 bg-slate-100 rounded-lg animate-pulse" /></CardContent></Card>
       ) : users.length === 0 ? (
         <Card className="border-slate-200"><CardContent className="py-16 text-center">
-          <Shield className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-500">No team members yet</p>
-          <p className="text-sm text-slate-400 mt-1">Add team members and set their permissions</p>
+          <Shield className="w-10 h-10 text-gray-600 mx-auto mb-3" />
+          <p className="text-gray-400">No team members yet</p>
+          <p className="text-sm text-gray-500 mt-1">Add team members and set their permissions</p>
         </CardContent></Card>
       ) : (
         <div className="grid gap-4">
@@ -79,7 +79,7 @@ export function TeamView() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-sm font-medium text-slate-600">
+                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-sm font-medium text-gray-300">
                         {user.name.slice(0, 2).toUpperCase()}
                       </div>
                       <div>
@@ -87,7 +87,7 @@ export function TeamView() {
                           <p className="text-sm font-medium text-slate-900">{user.name}</p>
                           {!user.isActive && <Badge variant="outline" className="text-xs text-red-500">Inactive</Badge>}
                         </div>
-                        <p className="text-xs text-slate-500">{user.email}</p>
+                        <p className="text-xs text-gray-400">{user.email}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -104,7 +104,7 @@ export function TeamView() {
                         <Badge
                           key={m}
                           variant={perms[m].canView ? 'secondary' : 'outline'}
-                          className={cn('text-xs capitalize', perms[m].canView ? 'bg-slate-100 text-slate-700' : 'text-slate-300')}
+                          className={cn('text-xs capitalize', perms[m].canView ? 'bg-slate-100 text-slate-700' : 'text-gray-600')}
                         >
                           {m}
                           {perms[m].canEdit && <span className="ml-1 text-emerald-600">E</span>}
@@ -189,8 +189,8 @@ function AddMemberDialog({ open, onOpenChange, onAdded }: { open: boolean; onOpe
                         className={cn(
                           'w-7 h-7 rounded text-xs font-medium transition-colors',
                           perms[m][key as keyof PermState[string]]
-                            ? 'bg-slate-900 text-white'
-                            : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                            ? 'bg-white text-gray-900'
+                            : 'bg-slate-100 text-gray-500 hover:bg-slate-200'
                         )}
                       >{label}</button>
                     ))}

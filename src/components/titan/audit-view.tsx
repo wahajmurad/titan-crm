@@ -146,7 +146,7 @@ function CircularScore({ score, size = 140 }: { score: number; size?: number }) 
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className={cn('text-3xl font-bold', getScoreColor(score))}>{score}</span>
-        <span className="text-[10px] text-slate-500 uppercase tracking-wider">Score</span>
+        <span className="text-[10px] text-gray-400 uppercase tracking-wider">Score</span>
       </div>
     </div>
   )
@@ -170,21 +170,21 @@ function ScoreCard({
   const [open, setOpen] = useState(false)
 
   return (
-    <Card className="bg-slate-900 border-slate-800 overflow-hidden">
+    <Card className="bg-white border-gray-200 overflow-hidden">
       <CardContent className="p-4">
         <div className="flex items-center gap-3 mb-3">
           <div className={cn('p-2 rounded-lg', gradient)}>
             <Icon className="w-4 h-4" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-medium text-slate-300">{title}</p>
+            <p className="text-sm font-medium text-gray-600">{title}</p>
             <p className={cn('text-xs', getScoreColor(score))}>{getScoreLabel(score)}</p>
           </div>
           <span className={cn('text-2xl font-bold', getScoreColor(score))}>{score}</span>
         </div>
 
         {/* Progress bar */}
-        <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden mb-3">
+        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mb-3">
           <div
             className={cn('h-full rounded-full transition-all duration-1000 ease-out', getScoreBarColor(score))}
             style={{ width: `${score}%` }}
@@ -193,12 +193,12 @@ function ScoreCard({
 
         {/* Expandable details */}
         <Collapsible open={open} onOpenChange={setOpen}>
-          <CollapsibleTrigger className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-300 transition-colors w-full">
+          <CollapsibleTrigger className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors w-full">
             {open ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
             {open ? 'Hide details' : 'View details'}
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-2">
-            <div className="text-xs text-slate-400 leading-relaxed bg-slate-800/50 rounded-lg p-3 border border-slate-800">
+            <div className="text-xs text-gray-500 leading-relaxed bg-gray-100/70 rounded-lg p-3 border border-gray-200">
               {details}
             </div>
           </CollapsibleContent>
@@ -381,19 +381,19 @@ export function AuditView() {
             <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-emerald-500/20 border border-cyan-500/20">
               <ScanSearch className="w-5 h-5 text-cyan-400" />
             </div>
-            <h1 className="text-xl font-semibold text-white">AI Website Intelligence</h1>
+            <h1 className="text-xl font-semibold text-gray-900">AI Website Intelligence</h1>
           </div>
-          <p className="text-sm text-slate-400 mt-1 ml-1">
+          <p className="text-sm text-gray-500 mt-1 ml-1">
             Analyze any website with AI — get scores, opportunities, and sales talking points
           </p>
         </div>
       </div>
 
       {/* ── Quick Audit Card ── */}
-      <Card className="bg-slate-900 border-slate-800 overflow-hidden">
+      <Card className="bg-white border-gray-200 overflow-hidden">
         <div className="h-1 bg-gradient-to-r from-cyan-600 via-emerald-500 to-teal-400" />
         <CardHeader className="pb-4">
-          <CardTitle className="text-white text-base flex items-center gap-2">
+          <CardTitle className="text-gray-900 text-base flex items-center gap-2">
             <Globe className="w-4 h-4 text-cyan-400" />
             Quick Website Audit
           </CardTitle>
@@ -401,14 +401,14 @@ export function AuditView() {
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
-              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
                 placeholder="Enter website URL (e.g. acme.com)"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAudit()}
                 disabled={auditing}
-                className="pl-10 bg-slate-800/50 border-slate-700 text-slate-200 h-11 placeholder:text-slate-500"
+                className="pl-10 bg-gray-100/70 border-gray-200 text-slate-200 h-11 placeholder:text-gray-400"
               />
             </div>
             <Button
@@ -417,7 +417,7 @@ export function AuditView() {
               className={cn(
                 'h-11 px-6 font-medium transition-all duration-300',
                 'bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500',
-                'text-white shadow-lg shadow-cyan-500/20',
+                'text-gray-900 shadow-lg shadow-cyan-500/20',
                 'disabled:opacity-50 disabled:cursor-not-allowed'
               )}
             >
@@ -438,14 +438,14 @@ export function AuditView() {
           {/* Progress steps */}
           {auditing && (
             <div className="mt-4 space-y-3">
-              <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-cyan-500 via-emerald-500 to-teal-400 rounded-full transition-all duration-700 ease-out"
                   style={{ width: `${auditProgress}%` }}
                 />
               </div>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs text-slate-400">
+                <div className="flex items-center gap-2 text-xs text-gray-500">
                   <Loader2 className="w-3 h-3 animate-spin text-cyan-400" />
                   {auditProgress < 15
                     ? 'Connecting to website...'
@@ -461,7 +461,7 @@ export function AuditView() {
                     ? 'Generating AI insights...'
                     : 'Finalizing report...'}
                 </div>
-                <span className="text-xs text-slate-500">{auditProgress}%</span>
+                <span className="text-xs text-gray-400">{auditProgress}%</span>
               </div>
             </div>
           )}
@@ -478,15 +478,15 @@ export function AuditView() {
                 <Globe className="w-5 h-5 text-cyan-400" />
               </div>
               <div>
-                <p className="text-white font-medium">{currentAudit.domain}</p>
-                <p className="text-xs text-slate-500 truncate max-w-xs">{currentAudit.url}</p>
+                <p className="text-gray-900 font-medium">{currentAudit.domain}</p>
+                <p className="text-xs text-gray-400 truncate max-w-xs">{currentAudit.url}</p>
               </div>
             </div>
             <Button
               variant="outline"
               size="sm"
               onClick={resetAudit}
-              className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
+              className="border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
             >
               New Audit
             </Button>
@@ -495,14 +495,14 @@ export function AuditView() {
           {/* Overall Score + Score Cards */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
             {/* Overall Score - Left column */}
-            <Card className="bg-slate-900 border-slate-800 lg:col-span-4">
+            <Card className="bg-white border-gray-200 lg:col-span-4">
               <CardContent className="p-6 flex flex-col items-center">
-                <p className="text-xs text-slate-500 uppercase tracking-wider font-medium mb-4">Overall Score</p>
+                <p className="text-xs text-gray-400 uppercase tracking-wider font-medium mb-4">Overall Score</p>
                 <CircularScore score={currentAudit.scores.overall} />
                 <p className={cn('text-sm font-medium mt-3', getScoreColor(currentAudit.scores.overall))}>
                   {getOverallLabel(currentAudit.scores.overall)}
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-gray-400 mt-1">
                   {currentAudit.scores.overall >= 70
                     ? 'Strong candidate for outreach'
                     : currentAudit.scores.overall >= 50
@@ -510,17 +510,17 @@ export function AuditView() {
                     : 'Low priority — may need nurturing'}
                 </p>
 
-                <Separator className="my-4 bg-slate-800" />
+                <Separator className="my-4 bg-gray-100" />
 
                 {/* Quick stats */}
                 <div className="w-full space-y-2.5">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-400">Design</span>
+                    <span className="text-gray-500">Design</span>
                     <span className={cn('font-medium', getScoreColor(currentAudit.scores.design))}>
                       {currentAudit.scores.design}
                     </span>
                   </div>
-                  <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
                     <div
                       className={cn('h-full rounded-full', getScoreBarColor(currentAudit.scores.design))}
                       style={{ width: `${currentAudit.scores.design}%` }}
@@ -528,12 +528,12 @@ export function AuditView() {
                   </div>
 
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-400">Technical</span>
+                    <span className="text-gray-500">Technical</span>
                     <span className={cn('font-medium', getScoreColor(currentAudit.scores.technical))}>
                       {currentAudit.scores.technical}
                     </span>
                   </div>
-                  <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
                     <div
                       className={cn('h-full rounded-full', getScoreBarColor(currentAudit.scores.technical))}
                       style={{ width: `${currentAudit.scores.technical}%` }}
@@ -541,12 +541,12 @@ export function AuditView() {
                   </div>
 
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-400">Business</span>
+                    <span className="text-gray-500">Business</span>
                     <span className={cn('font-medium', getScoreColor(currentAudit.scores.business))}>
                       {currentAudit.scores.business}
                     </span>
                   </div>
-                  <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
                     <div
                       className={cn('h-full rounded-full', getScoreBarColor(currentAudit.scores.business))}
                       style={{ width: `${currentAudit.scores.business}%` }}
@@ -554,12 +554,12 @@ export function AuditView() {
                   </div>
 
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-400">Automation</span>
+                    <span className="text-gray-500">Automation</span>
                     <span className={cn('font-medium', getScoreColor(currentAudit.scores.automation))}>
                       {currentAudit.scores.automation}
                     </span>
                   </div>
-                  <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
                     <div
                       className={cn('h-full rounded-full', getScoreBarColor(currentAudit.scores.automation))}
                       style={{ width: `${currentAudit.scores.automation}%` }}
@@ -605,9 +605,9 @@ export function AuditView() {
           {/* AI Insights Row */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             {/* Opportunities */}
-            <Card className="bg-slate-900 border-slate-800">
+            <Card className="bg-white border-gray-200">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-white flex items-center gap-2">
+                <CardTitle className="text-sm font-medium text-gray-900 flex items-center gap-2">
                   <div className="p-1.5 rounded-md bg-emerald-500/15">
                     <Lightbulb className="w-3.5 h-3.5 text-emerald-400" />
                   </div>
@@ -618,7 +618,7 @@ export function AuditView() {
                 {currentAudit.opportunities.length > 0 ? (
                   <div className="space-y-2">
                     {currentAudit.opportunities.map((opp, i) => (
-                      <div key={i} className="flex items-start gap-2 text-xs text-slate-300 leading-relaxed">
+                      <div key={i} className="flex items-start gap-2 text-xs text-gray-600 leading-relaxed">
                         <div className="w-4 h-4 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
                           <Zap className="w-2 h-2 text-emerald-400" />
                         </div>
@@ -627,15 +627,15 @@ export function AuditView() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-500 py-4 text-center">Run a full audit to discover opportunities</p>
+                  <p className="text-xs text-gray-400 py-4 text-center">Run a full audit to discover opportunities</p>
                 )}
               </CardContent>
             </Card>
 
             {/* Recommendations */}
-            <Card className="bg-slate-900 border-slate-800">
+            <Card className="bg-white border-gray-200">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-white flex items-center gap-2">
+                <CardTitle className="text-sm font-medium text-gray-900 flex items-center gap-2">
                   <div className="p-1.5 rounded-md bg-cyan-500/15">
                     <Target className="w-3.5 h-3.5 text-cyan-400" />
                   </div>
@@ -646,7 +646,7 @@ export function AuditView() {
                 {currentAudit.recommendations.length > 0 ? (
                   <div className="space-y-2">
                     {currentAudit.recommendations.map((rec, i) => (
-                      <div key={i} className="flex items-start gap-2 text-xs text-slate-300 leading-relaxed">
+                      <div key={i} className="flex items-start gap-2 text-xs text-gray-600 leading-relaxed">
                         <div className="w-4 h-4 rounded-full bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0 mt-0.5">
                           <Target className="w-2 h-2 text-cyan-400" />
                         </div>
@@ -655,15 +655,15 @@ export function AuditView() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-500 py-4 text-center">Run a full audit to get recommendations</p>
+                  <p className="text-xs text-gray-400 py-4 text-center">Run a full audit to get recommendations</p>
                 )}
               </CardContent>
             </Card>
 
             {/* Talking Points */}
-            <Card className="bg-slate-900 border-slate-800">
+            <Card className="bg-white border-gray-200">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-white flex items-center gap-2">
+                <CardTitle className="text-sm font-medium text-gray-900 flex items-center gap-2">
                   <div className="p-1.5 rounded-md bg-violet-500/15">
                     <MessageSquare className="w-3.5 h-3.5 text-violet-400" />
                   </div>
@@ -674,7 +674,7 @@ export function AuditView() {
                 {currentAudit.talkingPoints.length > 0 ? (
                   <div className="space-y-2">
                     {currentAudit.talkingPoints.map((tp, i) => (
-                      <div key={i} className="flex items-start gap-2 text-xs text-slate-300 leading-relaxed">
+                      <div key={i} className="flex items-start gap-2 text-xs text-gray-600 leading-relaxed">
                         <div className="w-4 h-4 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0 mt-0.5">
                           <MessageSquare className="w-2 h-2 text-violet-400" />
                         </div>
@@ -683,21 +683,21 @@ export function AuditView() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-500 py-4 text-center">Run a full audit to generate talking points</p>
+                  <p className="text-xs text-gray-400 py-4 text-center">Run a full audit to generate talking points</p>
                 )}
               </CardContent>
             </Card>
           </div>
 
           {/* Action Buttons */}
-          <Card className="bg-slate-900 border-slate-800">
+          <Card className="bg-white border-gray-200">
             <CardContent className="p-4">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <Button
                   className={cn(
                     'flex-1 sm:flex-none h-10 px-5',
                     'bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500',
-                    'text-white shadow-lg shadow-violet-500/15'
+                    'text-gray-900 shadow-lg shadow-violet-500/15'
                   )}
                   onClick={() => setView('email-center')}
                 >
@@ -707,7 +707,7 @@ export function AuditView() {
 
                 <Button
                   variant="outline"
-                  className="flex-1 sm:flex-none h-10 px-5 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
+                  className="flex-1 sm:flex-none h-10 px-5 border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                   onClick={() => setView('leads')}
                 >
                   <CheckCircle2 className="w-4 h-4 mr-2" />
@@ -718,12 +718,12 @@ export function AuditView() {
                 {campaigns.length > 0 ? (
                   <div className="flex-1 sm:flex-none">
                     <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
-                      <SelectTrigger className="h-10 w-full sm:w-auto bg-slate-800/50 border-slate-700 text-slate-300">
+                      <SelectTrigger className="h-10 w-full sm:w-auto bg-gray-100/70 border-gray-200 text-gray-600">
                         <SelectValue placeholder="Add to Campaign..." />
                       </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-700">
+                      <SelectContent className="bg-gray-100 border-gray-200">
                         {campaigns.map((c) => (
-                          <SelectItem key={c.id} value={c.id} className="text-slate-200 focus:bg-slate-700 focus:text-white">
+                          <SelectItem key={c.id} value={c.id} className="text-slate-200 focus:bg-gray-200 focus:text-gray-900">
                             {c.name}
                           </SelectItem>
                         ))}
@@ -751,10 +751,10 @@ export function AuditView() {
 
       {/* ── Recent Audits ── */}
       {!currentAudit && (
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="bg-white border-gray-200">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-white flex items-center gap-2">
-              <Clock className="w-4 h-4 text-slate-400" />
+            <CardTitle className="text-sm font-medium text-gray-900 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-gray-500" />
               Recent Audits
             </CardTitle>
           </CardHeader>
@@ -763,12 +763,12 @@ export function AuditView() {
               <div className="space-y-3">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="flex items-center gap-4 p-3 rounded-lg bg-slate-800/30">
-                    <Skeleton className="h-9 w-9 rounded-lg bg-slate-800" />
+                    <Skeleton className="h-9 w-9 rounded-lg bg-gray-100" />
                     <div className="flex-1 space-y-2">
-                      <Skeleton className="h-3.5 w-40 bg-slate-800" />
-                      <Skeleton className="h-3 w-60 bg-slate-700/50" />
+                      <Skeleton className="h-3.5 w-40 bg-gray-100" />
+                      <Skeleton className="h-3 w-60 bg-gray-200/70" />
                     </div>
-                    <Skeleton className="h-6 w-12 bg-slate-800" />
+                    <Skeleton className="h-6 w-12 bg-gray-100" />
                   </div>
                 ))}
               </div>
@@ -779,7 +779,7 @@ export function AuditView() {
                     <button
                       key={audit.id}
                       onClick={() => handleLoadAudit(audit)}
-                      className="w-full flex items-center gap-4 p-3 rounded-lg bg-slate-800/30 hover:bg-slate-800/60 border border-transparent hover:border-slate-700/50 transition-all text-left group"
+                      className="w-full flex items-center gap-4 p-3 rounded-lg bg-slate-800/30 hover:bg-gray-100/80 border border-transparent hover:border-gray-200 transition-all text-left group"
                     >
                       {/* Mini score circle */}
                       <div className="relative w-9 h-9 shrink-0">
@@ -806,12 +806,12 @@ export function AuditView() {
                         <div className="flex items-center gap-2">
                           <p className="text-sm text-slate-200 font-medium truncate">{audit.domain}</p>
                           {audit.lead && (
-                            <Badge variant="outline" className="bg-slate-700/50 border-slate-600 text-slate-400 text-[10px] px-1.5 py-0 shrink-0">
+                            <Badge variant="outline" className="bg-gray-200/70 border-gray-300 text-gray-500 text-[10px] px-1.5 py-0 shrink-0">
                               {audit.lead.business.name}
                             </Badge>
                           )}
                         </div>
-                        <p className="text-xs text-slate-500 mt-0.5">
+                        <p className="text-xs text-gray-400 mt-0.5">
                           {audit.createdAt
                             ? new Date(audit.createdAt).toLocaleDateString('en-US', {
                                 month: 'short',
@@ -827,14 +827,14 @@ export function AuditView() {
                         {/* Mini score badges */}
                         <div className="hidden sm:flex items-center gap-1.5">
                           <span className={cn('text-[10px] font-medium', getScoreColor(audit.scores.design))}>{audit.scores.design}</span>
-                          <span className="text-[10px] text-slate-600">/</span>
+                          <span className="text-[10px] text-gray-300">/</span>
                           <span className={cn('text-[10px] font-medium', getScoreColor(audit.scores.technical))}>{audit.scores.technical}</span>
-                          <span className="text-[10px] text-slate-600">/</span>
+                          <span className="text-[10px] text-gray-300">/</span>
                           <span className={cn('text-[10px] font-medium', getScoreColor(audit.scores.business))}>{audit.scores.business}</span>
-                          <span className="text-[10px] text-slate-600">/</span>
+                          <span className="text-[10px] text-gray-300">/</span>
                           <span className={cn('text-[10px] font-medium', getScoreColor(audit.scores.automation))}>{audit.scores.automation}</span>
                         </div>
-                        <ArrowRight className="w-4 h-4 text-slate-600 group-hover:text-slate-400 transition-colors" />
+                        <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors" />
                       </div>
                     </button>
                   ))}
@@ -842,11 +842,11 @@ export function AuditView() {
               </ScrollArea>
             ) : (
               <div className="py-10 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-slate-800/50 flex items-center justify-center mx-auto mb-4">
-                  <ScanSearch className="w-7 h-7 text-slate-600" />
+                <div className="w-16 h-16 rounded-2xl bg-gray-100/70 flex items-center justify-center mx-auto mb-4">
+                  <ScanSearch className="w-7 h-7 text-gray-300" />
                 </div>
-                <p className="text-white font-medium">No audits yet</p>
-                <p className="text-sm text-slate-400 mt-1">
+                <p className="text-gray-900 font-medium">No audits yet</p>
+                <p className="text-sm text-gray-500 mt-1">
                   Enter a website URL above to run your first AI-powered website audit
                 </p>
               </div>

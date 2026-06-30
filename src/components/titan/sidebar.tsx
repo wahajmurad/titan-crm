@@ -62,19 +62,19 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
     <TooltipProvider delayDuration={0}>
       <aside
         className={cn(
-          'fixed left-0 top-0 h-screen bg-slate-950 border-r border-slate-800 z-40 flex flex-col transition-all duration-200 ease-in-out',
+          'fixed left-0 top-0 h-screen bg-white border-r border-gray-200 z-40 flex flex-col transition-all duration-200 ease-in-out',
           sidebarOpen ? 'w-60' : 'w-[68px]'
         )}
       >
         {/* Logo */}
-        <div className="h-14 flex items-center px-4 border-b border-slate-800/50">
+        <div className="h-14 flex items-center px-4 border-b border-gray-200">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-lg flex items-center justify-center shrink-0 shadow-lg shadow-violet-500/20">
-              <Zap className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-lg flex items-center justify-center shrink-0 shadow-lg shadow-violet-500/10">
+              <Zap className="w-4 h-4 text-gray-900" />
             </div>
             {sidebarOpen && (
               <div>
-                <span className="font-bold text-white text-sm tracking-tight">TITAN</span>
+                <span className="font-bold text-gray-900 text-sm tracking-tight">TITAN</span>
                 <span className="text-[10px] text-violet-400 ml-1.5 font-medium">AI</span>
               </div>
             )}
@@ -86,7 +86,7 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
           {NAV_SECTIONS.map(section => (
             <div key={section.label}>
               {sidebarOpen && (
-                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider px-2.5 mb-1.5">
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-2.5 mb-1.5">
                   {section.label}
                 </p>
               )}
@@ -104,7 +104,7 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
                         'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm font-medium transition-all duration-150',
                         active
                           ? 'bg-violet-600/20 text-violet-300 shadow-sm'
-                          : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                          : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/80'
                       )}
                     >
                       <Icon className={cn('w-4 h-4 shrink-0', active && 'text-violet-400')} />
@@ -133,17 +133,17 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
         </nav>
 
         {/* User */}
-        <div className="border-t border-slate-800/50 p-2.5">
+        <div className="border-t border-gray-200 p-2.5">
           <div className={cn('flex items-center gap-2.5 px-2 py-2', !sidebarOpen && 'justify-center')}>
             <Avatar className="h-7 w-7 shrink-0 ring-2 ring-slate-700">
-              <AvatarFallback className="bg-gradient-to-br from-violet-500 to-indigo-600 text-white text-xs font-bold">
+              <AvatarFallback className="bg-gradient-to-br from-violet-500 to-indigo-600 text-gray-900 text-xs font-bold">
                 {userName.slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             {sidebarOpen && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{userName}</p>
-                <p className="text-[11px] text-slate-500">{userRole}</p>
+                <p className="text-sm font-medium text-gray-900 truncate">{userName}</p>
+                <p className="text-[11px] text-gray-400">{userRole}</p>
               </div>
             )}
           </div>
@@ -151,7 +151,7 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="w-full mt-1 text-slate-500 hover:text-red-400 justify-start px-2.5 hover:bg-slate-800/40"
+              className="w-full mt-1 text-gray-400 hover:text-red-400 justify-start px-2.5 hover:bg-gray-100/40"
               onClick={onLogout}
             >
               <LogOut className="w-3.5 h-3.5 mr-2" />
@@ -163,11 +163,11 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
         {/* Collapse toggle */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="absolute -right-3 top-16 w-6 h-6 bg-slate-900 border border-slate-700 rounded-full flex items-center justify-center shadow-md hover:bg-slate-800 transition-colors"
+          className="absolute -right-3 top-16 w-6 h-6 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-md hover:bg-gray-100 transition-colors"
         >
           {sidebarOpen
-            ? <ChevronLeft className="w-3 h-3 text-slate-400" />
-            : <ChevronRight className="w-3 h-3 text-slate-400" />
+            ? <ChevronLeft className="w-3 h-3 text-gray-500" />
+            : <ChevronRight className="w-3 h-3 text-gray-500" />
           }
         </button>
       </aside>

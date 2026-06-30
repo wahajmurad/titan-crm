@@ -51,7 +51,7 @@ interface CampaignOption {
 // ─── Config ──────────────────────────────────────────────────────────
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ElementType }> = {
-  DRAFT: { label: 'Draft', color: 'bg-slate-500/15 text-slate-400 border-slate-500/25', icon: FileEdit },
+  DRAFT: { label: 'Draft', color: 'bg-slate-500/15 text-gray-500 border-slate-500/25', icon: FileEdit },
   SENT: { label: 'Sent', color: 'bg-blue-500/15 text-blue-400 border-blue-500/25', icon: Send },
   OPENED: { label: 'Opened', color: 'bg-amber-500/15 text-amber-400 border-amber-500/25', icon: MailOpen },
   REPLIED: { label: 'Replied', color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25', icon: Reply },
@@ -70,7 +70,7 @@ const TOP_STATS = [
   { key: 'opened', label: 'Opened', icon: MailOpen, color: 'text-amber-400', bg: 'bg-amber-500/10' },
   { key: 'replied', label: 'Replied', icon: Reply, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
   { key: 'bounced', label: 'Bounced', icon: AlertTriangle, color: 'text-red-400', bg: 'bg-red-500/10' },
-  { key: 'pending', label: 'Pending', icon: Inbox, color: 'text-slate-400', bg: 'bg-slate-500/10' },
+  { key: 'pending', label: 'Pending', icon: Inbox, color: 'text-gray-500', bg: 'bg-slate-500/10' },
 ]
 
 // ─── Main Component ──────────────────────────────────────────────────
@@ -128,29 +128,29 @@ export function EmailCenterView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-white flex items-center gap-2">
+          <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
             <Mail className="w-5 h-5 text-blue-400" />
             Email Center
           </h1>
-          <p className="text-sm text-slate-400 mt-0.5">
+          <p className="text-sm text-gray-500 mt-0.5">
             {emails.length} emails &middot; {openRate}% open rate &middot; {replyRate}% reply rate
           </p>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
             <Input
               placeholder="Search emails..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-8 w-48 h-8 text-sm bg-slate-900 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-blue-500/30"
+              className="pl-8 w-48 h-8 text-sm bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30"
             />
           </div>
           <Select value={campaignFilter} onValueChange={setCampaignFilter}>
-            <SelectTrigger className="w-44 h-8 text-sm bg-slate-900 border-slate-700 text-white">
+            <SelectTrigger className="w-44 h-8 text-sm bg-white border-gray-200 text-gray-900">
               <SelectValue placeholder="All Campaigns" />
             </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-800">
+            <SelectContent className="bg-white border-gray-200">
               <SelectItem value="ALL">All Campaigns</SelectItem>
               {campaigns.map(c => (
                 <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
@@ -163,14 +163,14 @@ export function EmailCenterView() {
       {/* Stats Row */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {TOP_STATS.map(s => (
-          <Card key={s.key} className="bg-slate-900 border-slate-800">
+          <Card key={s.key} className="bg-white border-gray-200">
             <CardContent className="p-3 flex items-center gap-3">
               <div className={cn('p-2 rounded-lg', s.bg, s.color)}>
                 <s.icon className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider">{s.label}</p>
-                <p className="text-lg font-semibold text-white">{stats[s.key as keyof typeof stats]}</p>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider">{s.label}</p>
+                <p className="text-lg font-semibold text-gray-900">{stats[s.key as keyof typeof stats]}</p>
               </div>
             </CardContent>
           </Card>
@@ -180,7 +180,7 @@ export function EmailCenterView() {
       {/* Status Tabs + Action Buttons */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <Tabs value={statusTab} onValueChange={setStatusTab}>
-          <TabsList className="bg-slate-900 border border-slate-800 h-8">
+          <TabsList className="bg-white border border-gray-200 h-8">
             {[
               { value: 'ALL', label: 'All' },
               { value: 'DRAFT', label: 'Draft' },
@@ -192,7 +192,7 @@ export function EmailCenterView() {
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
-                className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400 text-xs px-3"
+                className="data-[state=active]:bg-gray-100 data-[state=active]:text-gray-900 text-gray-500 text-xs px-3"
               >
                 {tab.label}
               </TabsTrigger>
@@ -220,34 +220,34 @@ export function EmailCenterView() {
 
       {/* Email Table */}
       {loading ? (
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="bg-white border-gray-200">
           <CardContent className="p-0">
             <div className="p-4 space-y-3">
               {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-14 w-full bg-slate-800" />
+                <Skeleton key={i} className="h-14 w-full bg-gray-100" />
               ))}
             </div>
           </CardContent>
         </Card>
       ) : emails.length === 0 ? (
-        <Card className="bg-slate-900 border-slate-800 border-dashed">
+        <Card className="bg-white border-gray-200 border-dashed">
           <CardContent className="p-12 text-center">
-            <Mail className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-400 font-medium">No emails found</p>
-            <p className="text-sm text-slate-500 mt-1">
+            <Mail className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500 font-medium">No emails found</p>
+            <p className="text-sm text-gray-400 mt-1">
               {statusTab !== 'ALL' ? 'Try changing your filters.' : 'Generate an AI email or compose your first outreach.'}
             </p>
             <div className="flex items-center justify-center gap-2 mt-4">
               <Button
                 variant="outline"
-                className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
+                className="border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                 onClick={() => setAiGenerateOpen(true)}
               >
                 <Sparkles className="w-3.5 h-3.5 mr-1.5" />Generate AI Email
               </Button>
               <Button
                 variant="outline"
-                className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
+                className="border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                 onClick={() => setComposeOpen(true)}
               >
                 <Plus className="w-3.5 h-3.5 mr-1.5" />Compose
@@ -256,18 +256,18 @@ export function EmailCenterView() {
           </CardContent>
         </Card>
       ) : (
-        <Card className="bg-slate-900 border-slate-800">
+        <Card className="bg-white border-gray-200">
           <CardContent className="p-0">
             <ScrollArea className="max-h-[600px]">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="sticky top-0 z-10">
-                    <tr className="bg-slate-900 border-b border-slate-800">
-                      <th className="text-left px-4 py-3 text-[10px] font-medium text-slate-500 uppercase tracking-wider">Subject</th>
-                      <th className="text-left px-4 py-3 text-[10px] font-medium text-slate-500 uppercase tracking-wider hidden md:table-cell">Lead / Company</th>
-                      <th className="text-left px-4 py-3 text-[10px] font-medium text-slate-500 uppercase tracking-wider hidden sm:table-cell">Type</th>
-                      <th className="text-left px-4 py-3 text-[10px] font-medium text-slate-500 uppercase tracking-wider">Status</th>
-                      <th className="text-left px-4 py-3 text-[10px] font-medium text-slate-500 uppercase tracking-wider hidden lg:table-cell">Sent Date</th>
+                    <tr className="bg-white border-b border-gray-200">
+                      <th className="text-left px-4 py-3 text-[10px] font-medium text-gray-400 uppercase tracking-wider">Subject</th>
+                      <th className="text-left px-4 py-3 text-[10px] font-medium text-gray-400 uppercase tracking-wider hidden md:table-cell">Lead / Company</th>
+                      <th className="text-left px-4 py-3 text-[10px] font-medium text-gray-400 uppercase tracking-wider hidden sm:table-cell">Type</th>
+                      <th className="text-left px-4 py-3 text-[10px] font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                      <th className="text-left px-4 py-3 text-[10px] font-medium text-gray-400 uppercase tracking-wider hidden lg:table-cell">Sent Date</th>
                       <th className="w-10" />
                     </tr>
                   </thead>
@@ -278,16 +278,16 @@ export function EmailCenterView() {
                       return (
                         <tr
                           key={email.id}
-                          className="border-b border-slate-800/50 hover:bg-slate-800/40 transition-colors group"
+                          className="border-b border-gray-200 hover:bg-gray-100/40 transition-colors group"
                         >
                           <td className="px-4 py-3 min-w-0 max-w-xs">
-                            <p className="font-medium text-white truncate">{email.subject || '(No Subject)'}</p>
-                            <p className="text-xs text-slate-500 truncate mt-0.5">{email.body.slice(0, 100)}</p>
+                            <p className="font-medium text-gray-900 truncate">{email.subject || '(No Subject)'}</p>
+                            <p className="text-xs text-gray-400 truncate mt-0.5">{email.body.slice(0, 100)}</p>
                           </td>
                           <td className="px-4 py-3 hidden md:table-cell">
-                            <p className="text-slate-300">{email.lead?.business?.name || '—'}</p>
+                            <p className="text-gray-600">{email.lead?.business?.name || '—'}</p>
                             {email.lead?.decisionMaker && (
-                              <p className="text-xs text-slate-500">{email.lead.decisionMaker}</p>
+                              <p className="text-xs text-gray-400">{email.lead.decisionMaker}</p>
                             )}
                           </td>
                           <td className="px-4 py-3 hidden sm:table-cell">
@@ -300,7 +300,7 @@ export function EmailCenterView() {
                               {statusCfg.label}
                             </Badge>
                           </td>
-                          <td className="px-4 py-3 text-xs text-slate-500 hidden lg:table-cell">
+                          <td className="px-4 py-3 text-xs text-gray-400 hidden lg:table-cell">
                             {email.sentAt
                               ? format(new Date(email.sentAt), 'MMM d, h:mm a')
                               : format(new Date(email.createdAt), 'MMM d')
@@ -310,7 +310,7 @@ export function EmailCenterView() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-7 w-7 p-0 text-slate-500 hover:text-white hover:bg-slate-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="h-7 w-7 p-0 text-gray-400 hover:text-gray-900 hover:bg-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
                               onClick={() => {
                                 // Could open a detail view — for now show a toast
                                 toast.info(`Email: "${email.subject}" — ${email.status}`)
@@ -454,13 +454,13 @@ function AiEmailDialog({ open, onOpenChange, leads, campaigns, onSaved }: {
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v) }}>
       <DialogTrigger asChild>
-        <Button size="sm" className="h-8 bg-blue-600 hover:bg-blue-700 text-white">
+        <Button size="sm" className="h-8 bg-blue-600 hover:bg-blue-700 text-gray-900">
           <Sparkles className="w-3.5 h-3.5 mr-1.5" />Generate AI Email
         </Button>
       </DialogTrigger>
-      <DialogContent className="bg-slate-900 border-slate-800 max-w-2xl max-h-[90vh] flex flex-col">
+      <DialogContent className="bg-white border-gray-200 max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="text-white flex items-center gap-2">
+          <DialogTitle className="text-gray-900 flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-blue-400" />
             Generate AI Email
           </DialogTitle>
@@ -470,12 +470,12 @@ function AiEmailDialog({ open, onOpenChange, leads, campaigns, onSaved }: {
           {/* Lead Selection */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-slate-300 text-xs font-medium">Lead *</Label>
+              <Label className="text-gray-600 text-xs font-medium">Lead *</Label>
               <Select value={leadId} onValueChange={setLeadId} disabled={generated}>
-                <SelectTrigger className="mt-1.5 bg-slate-800 border-slate-700 text-white">
+                <SelectTrigger className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900">
                   <SelectValue placeholder="Select a lead..." />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800 max-h-60">
+                <SelectContent className="bg-white border-gray-200 max-h-60">
                   {leads.map(l => (
                     <SelectItem key={l.id} value={l.id}>{l.business.name}</SelectItem>
                   ))}
@@ -483,12 +483,12 @@ function AiEmailDialog({ open, onOpenChange, leads, campaigns, onSaved }: {
               </Select>
             </div>
             <div>
-              <Label className="text-slate-300 text-xs font-medium">Campaign (optional)</Label>
+              <Label className="text-gray-600 text-xs font-medium">Campaign (optional)</Label>
               <Select value={campaignId} onValueChange={setCampaignId} disabled={generated}>
-                <SelectTrigger className="mt-1.5 bg-slate-800 border-slate-700 text-white">
+                <SelectTrigger className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900">
                   <SelectValue placeholder="No campaign" />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800">
+                <SelectContent className="bg-white border-gray-200">
                   <SelectItem value="">No campaign</SelectItem>
                   {campaigns.map(c => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
@@ -503,7 +503,7 @@ function AiEmailDialog({ open, onOpenChange, leads, campaigns, onSaved }: {
             <Button
               onClick={handleGenerate}
               disabled={generating || !leadId}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-gray-900"
             >
               {generating ? (
                 <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />Generating with AI...</>
@@ -522,9 +522,9 @@ function AiEmailDialog({ open, onOpenChange, leads, campaigns, onSaved }: {
               </div>
 
               <div>
-                <Label className="text-slate-300 text-xs font-medium">Subject</Label>
+                <Label className="text-gray-600 text-xs font-medium">Subject</Label>
                 <Input
-                  className="mt-1.5 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-blue-500/30"
+                  className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30"
                   value={subject}
                   onChange={e => setSubject(e.target.value)}
                   placeholder="Email subject line"
@@ -532,9 +532,9 @@ function AiEmailDialog({ open, onOpenChange, leads, campaigns, onSaved }: {
               </div>
 
               <div>
-                <Label className="text-slate-300 text-xs font-medium">Body</Label>
+                <Label className="text-gray-600 text-xs font-medium">Body</Label>
                 <Textarea
-                  className="mt-1.5 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-blue-500/30 min-h-[200px] font-mono text-sm leading-relaxed"
+                  className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30 min-h-[200px] font-mono text-sm leading-relaxed"
                   value={body}
                   onChange={e => setBody(e.target.value)}
                   placeholder="Email body..."
@@ -544,7 +544,7 @@ function AiEmailDialog({ open, onOpenChange, leads, campaigns, onSaved }: {
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-slate-400 hover:text-white"
+                className="text-gray-500 hover:text-gray-900"
                 onClick={() => { setGenerated(false); setSubject(''); setBody('') }}
               >
                 Regenerate
@@ -555,21 +555,21 @@ function AiEmailDialog({ open, onOpenChange, leads, campaigns, onSaved }: {
 
         {generated && (
           <DialogFooter className="mt-4 gap-2">
-            <Button variant="outline" onClick={() => { reset(); onOpenChange(false) }} className="border-slate-700 text-slate-300 hover:bg-slate-800">
+            <Button variant="outline" onClick={() => { reset(); onOpenChange(false) }} className="border-gray-200 text-gray-600 hover:bg-gray-100">
               Discard
             </Button>
             <Button
               variant="outline"
               onClick={handleSave}
               disabled={saving || !subject || !body}
-              className="border-slate-700 text-slate-300 hover:bg-slate-800"
+              className="border-gray-200 text-gray-600 hover:bg-gray-100"
             >
               {saving ? 'Saving...' : 'Save as Draft'}
             </Button>
             <Button
               onClick={handleSend}
               disabled={saving || !subject || !body}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-blue-600 hover:bg-blue-700 text-gray-900"
             >
               {saving ? 'Sending...' : <><Send className="w-3.5 h-3.5 mr-1.5" />Send Now</>}
             </Button>
@@ -638,24 +638,24 @@ function ComposeEmailDialog({ open, onOpenChange, leads, campaigns, onSent }: {
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v) }}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="h-8 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white">
+        <Button size="sm" variant="outline" className="h-8 border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900">
           <Plus className="w-3.5 h-3.5 mr-1.5" />Compose
         </Button>
       </DialogTrigger>
-      <DialogContent className="bg-slate-900 border-slate-800 max-w-lg max-h-[90vh] flex flex-col">
+      <DialogContent className="bg-white border-gray-200 max-w-lg max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="text-white">Compose Email</DialogTitle>
+          <DialogTitle className="text-gray-900">Compose Email</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 mt-2 flex-1 overflow-y-auto">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-slate-300 text-xs font-medium">Lead *</Label>
+              <Label className="text-gray-600 text-xs font-medium">Lead *</Label>
               <Select value={leadId} onValueChange={setLeadId}>
-                <SelectTrigger className="mt-1.5 bg-slate-800 border-slate-700 text-white">
+                <SelectTrigger className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900">
                   <SelectValue placeholder="Select a lead..." />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800 max-h-60">
+                <SelectContent className="bg-white border-gray-200 max-h-60">
                   {leads.map(l => (
                     <SelectItem key={l.id} value={l.id}>{l.business.name}</SelectItem>
                   ))}
@@ -663,12 +663,12 @@ function ComposeEmailDialog({ open, onOpenChange, leads, campaigns, onSent }: {
               </Select>
             </div>
             <div>
-              <Label className="text-slate-300 text-xs font-medium">Campaign</Label>
+              <Label className="text-gray-600 text-xs font-medium">Campaign</Label>
               <Select value={campaignId} onValueChange={setCampaignId}>
-                <SelectTrigger className="mt-1.5 bg-slate-800 border-slate-700 text-white">
+                <SelectTrigger className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900">
                   <SelectValue placeholder="No campaign" />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800">
+                <SelectContent className="bg-white border-gray-200">
                   <SelectItem value="">No campaign</SelectItem>
                   {campaigns.map(c => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
@@ -680,12 +680,12 @@ function ComposeEmailDialog({ open, onOpenChange, leads, campaigns, onSent }: {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-slate-300 text-xs font-medium">Type</Label>
+              <Label className="text-gray-600 text-xs font-medium">Type</Label>
               <Select value={type} onValueChange={setType}>
-                <SelectTrigger className="mt-1.5 bg-slate-800 border-slate-700 text-white">
+                <SelectTrigger className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-slate-800">
+                <SelectContent className="bg-white border-gray-200">
                   <SelectItem value="INITIAL">Initial</SelectItem>
                   <SelectItem value="FOLLOW_UP">Follow-up</SelectItem>
                   <SelectItem value="REPLY">Reply</SelectItem>
@@ -693,9 +693,9 @@ function ComposeEmailDialog({ open, onOpenChange, leads, campaigns, onSent }: {
               </Select>
             </div>
             <div>
-              <Label className="text-slate-300 text-xs font-medium">Subject *</Label>
+              <Label className="text-gray-600 text-xs font-medium">Subject *</Label>
               <Input
-                className="mt-1.5 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-blue-500/30"
+                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30"
                 value={subject}
                 onChange={e => setSubject(e.target.value)}
                 placeholder="Email subject"
@@ -704,9 +704,9 @@ function ComposeEmailDialog({ open, onOpenChange, leads, campaigns, onSent }: {
           </div>
 
           <div>
-            <Label className="text-slate-300 text-xs font-medium">Message *</Label>
+            <Label className="text-gray-600 text-xs font-medium">Message *</Label>
             <Textarea
-              className="mt-1.5 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus-visible:ring-blue-500/30 min-h-[160px]"
+              className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30 min-h-[160px]"
               value={body}
               onChange={e => setBody(e.target.value)}
               placeholder="Write your personalized message..."
@@ -715,13 +715,13 @@ function ComposeEmailDialog({ open, onOpenChange, leads, campaigns, onSent }: {
         </div>
 
         <DialogFooter className="mt-4 gap-2">
-          <Button variant="outline" onClick={() => { reset(); onOpenChange(false) }} className="border-slate-700 text-slate-300 hover:bg-slate-800">
+          <Button variant="outline" onClick={() => { reset(); onOpenChange(false) }} className="border-gray-200 text-gray-600 hover:bg-gray-100">
             Cancel
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={loading || !leadId || !subject || !body}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-blue-600 hover:bg-blue-700 text-gray-900"
           >
             {loading ? 'Saving...' : sendNow ? <><Send className="w-3.5 h-3.5 mr-1.5" />Send Now</> : 'Save Draft'}
           </Button>
