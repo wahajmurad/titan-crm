@@ -55,6 +55,7 @@ interface DiscoveredLead {
   address: string
   phone: string
   website: string
+  email: string
   mapsUrl: string
   rating: number
   placeId: string
@@ -214,6 +215,7 @@ export function DiscoveryView() {
             name: lead.name,
             website: lead.website || null,
             phone: lead.phone || null,
+            email: lead.email || null,
             city: city || null,
             country: country || null,
             source: lead.source,
@@ -393,9 +395,9 @@ export function DiscoveryView() {
                 </div>
               </div>
               <div className="text-center">
-                <p className="text-gray-900 font-medium">Searching Google Maps...</p>
+                <p className="text-gray-900 font-medium">Searching for businesses...</p>
                 <p className="text-sm text-gray-500 mt-1">
-                  Finding businesses matching &quot;{query}&quot; in {location}
+                  Finding &quot;{query}&quot; in {location}
                 </p>
               </div>
               <div className="flex gap-3 mt-2">

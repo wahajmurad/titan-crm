@@ -103,14 +103,14 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
                       className={cn(
                         'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm font-medium transition-all duration-150',
                         active
-                          ? 'bg-violet-600/20 text-violet-300 shadow-sm'
+                          ? 'bg-violet-50 text-violet-700'
                           : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/80'
                       )}
                     >
-                      <Icon className={cn('w-4 h-4 shrink-0', active && 'text-violet-400')} />
+                      <Icon className={cn('w-4 h-4 shrink-0', active && 'text-violet-600')} />
                       {sidebarOpen && <span>{item.label}</span>}
                       {active && sidebarOpen && (
-                        <div className="ml-auto w-1.5 h-1.5 rounded-full bg-violet-400" />
+                        <div className="ml-auto w-1.5 h-1.5 rounded-full bg-violet-600" />
                       )}
                     </button>
                   )
@@ -135,8 +135,8 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
         {/* User */}
         <div className="border-t border-gray-200 p-2.5">
           <div className={cn('flex items-center gap-2.5 px-2 py-2', !sidebarOpen && 'justify-center')}>
-            <Avatar className="h-7 w-7 shrink-0 ring-2 ring-slate-700">
-              <AvatarFallback className="bg-gradient-to-br from-violet-500 to-indigo-600 text-gray-900 text-xs font-bold">
+            <Avatar className="h-7 w-7 shrink-0 ring-2 ring-violet-200">
+              <AvatarFallback className="bg-gradient-to-br from-violet-500 to-indigo-600 text-white text-xs font-bold">
                 {userName.slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
@@ -151,7 +151,7 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="w-full mt-1 text-gray-400 hover:text-red-400 justify-start px-2.5 hover:bg-gray-100/40"
+              className="w-full mt-1 text-gray-500 hover:text-red-600 justify-start px-2.5 hover:bg-red-50"
               onClick={onLogout}
             >
               <LogOut className="w-3.5 h-3.5 mr-2" />

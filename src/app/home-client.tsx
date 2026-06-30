@@ -111,7 +111,7 @@ export default function HomeClient() {
       )
     }
     switch (currentView) {
-      case 'dashboard': return <DashboardView />
+      case 'dashboard': return <DashboardView userName={user.name} />
       case 'discovery': return <DiscoveryView />
       case 'audit': return <AuditView />
       case 'leads': return <LeadsView />

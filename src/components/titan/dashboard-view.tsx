@@ -104,18 +104,18 @@ const defaultData: DashboardData = {
 
 const PIPELINE_STAGES = LEAD_STAGES.filter((s) => s !== 'LOST')
 
-// ─── Dark-mode stage dot colors for backgrounds ────────────────────────
+// ─── Stage dot colors for light theme backgrounds ────────────────────
 
 const STAGE_BG: Record<string, string> = {
-  DISCOVERED: 'bg-slate-700/40 border-gray-300/50',
-  AUDITED: 'bg-sky-500/10 border-sky-500/30',
-  QUALIFIED: 'bg-emerald-500/10 border-emerald-500/30',
-  OUTREACH_SENT: 'bg-amber-500/10 border-amber-500/30',
-  REPLIED: 'bg-violet-500/10 border-violet-500/30',
-  MEETING_BOOKED: 'bg-blue-500/10 border-blue-500/30',
-  PROPOSAL_SENT: 'bg-orange-500/10 border-orange-500/30',
-  WON: 'bg-green-500/10 border-green-500/30',
-  LOST: 'bg-red-500/10 border-red-500/30',
+  DISCOVERED: 'bg-gray-100 border-gray-200',
+  AUDITED: 'bg-sky-50 border-sky-200',
+  QUALIFIED: 'bg-emerald-50 border-emerald-200',
+  OUTREACH_SENT: 'bg-amber-50 border-amber-200',
+  REPLIED: 'bg-violet-50 border-violet-200',
+  MEETING_BOOKED: 'bg-blue-50 border-blue-200',
+  PROPOSAL_SENT: 'bg-orange-50 border-orange-200',
+  WON: 'bg-green-50 border-green-200',
+  LOST: 'bg-red-50 border-red-200',
 }
 
 // ─── Activity action → icon mapping ────────────────────────────────────
@@ -137,24 +137,31 @@ const ACTION_ICONS: Record<string, React.ElementType> = {
 }
 
 const ACTION_COLORS: Record<string, string> = {
-  LEAD_CREATED: 'bg-violet-500/20 text-violet-400',
-  LEAD_AUDITED: 'bg-sky-500/20 text-sky-400',
-  LEAD_QUALIFIED: 'bg-emerald-500/20 text-emerald-400',
-  OUTREACH_SENT: 'bg-amber-500/20 text-amber-400',
-  REPLY_RECEIVED: 'bg-blue-500/20 text-blue-400',
-  MEETING_BOOKED: 'bg-cyan-500/20 text-cyan-400',
-  MEETING_COMPLETED: 'bg-green-500/20 text-green-400',
-  MEETING_CANCELLED: 'bg-red-500/20 text-red-400',
-  CAMPAIGN_CREATED: 'bg-purple-500/20 text-purple-400',
-  CAMPAIGN_UPDATED: 'bg-indigo-500/20 text-indigo-400',
-  PROPOSAL_SENT: 'bg-orange-500/20 text-orange-400',
-  LEAD_WON: 'bg-green-500/20 text-green-400',
-  LEAD_LOST: 'bg-red-500/20 text-red-400',
+  LEAD_CREATED: 'bg-violet-50 text-violet-600',
+  LEAD_AUDITED: 'bg-sky-50 text-sky-600',
+  LEAD_QUALIFIED: 'bg-emerald-50 text-emerald-600',
+  OUTREACH_SENT: 'bg-amber-50 text-amber-600',
+  REPLY_RECEIVED: 'bg-blue-50 text-blue-600',
+  MEETING_BOOKED: 'bg-cyan-50 text-cyan-600',
+  MEETING_COMPLETED: 'bg-green-50 text-green-600',
+  MEETING_CANCELLED: 'bg-red-50 text-red-600',
+  CAMPAIGN_CREATED: 'bg-purple-50 text-purple-600',
+  CAMPAIGN_UPDATED: 'bg-indigo-50 text-indigo-600',
+  PROPOSAL_SENT: 'bg-orange-50 text-orange-600',
+  LEAD_WON: 'bg-green-50 text-green-600',
+  LEAD_LOST: 'bg-red-50 text-red-600',
 }
 
 // ─── Component ────────────────────────────────────────────────────────
 
-export function DashboardView() {
+function getGreeting(): string {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good Morning'
+  if (hour < 17) return 'Good Afternoon'
+  return 'Good Evening'
+}
+
+export function DashboardView({ userName }: { userName?: string }) {
   const [data, setData] = useState<DashboardData>(defaultData)
   const [campaigns, setCampaigns] = useState<CampaignData[]>([])
   const [loading, setLoading] = useState(true)
@@ -196,54 +203,54 @@ export function DashboardView() {
       label: 'Total Leads',
       value: data.totalLeads,
       icon: Users,
-      iconBg: 'bg-violet-500/15',
-      iconColor: 'text-violet-400',
-      accent: 'from-violet-500/5 to-transparent',
+      iconBg: 'bg-violet-50',
+      iconColor: 'text-violet-600',
+      accent: 'from-violet-50 to-transparent',
       trend: null,
     },
     {
       label: 'Qualified Leads',
       value: data.qualifiedCount,
       icon: Thermometer,
-      iconBg: 'bg-emerald-500/15',
-      iconColor: 'text-emerald-400',
-      accent: 'from-emerald-500/5 to-transparent',
+      iconBg: 'bg-emerald-50',
+      iconColor: 'text-emerald-600',
+      accent: 'from-emerald-50 to-transparent',
       trend: 'hotwarmcold',
     },
     {
       label: 'Outreach Sent',
       value: data.outreachSent,
       icon: Mail,
-      iconBg: 'bg-amber-500/15',
-      iconColor: 'text-amber-400',
-      accent: 'from-amber-500/5 to-transparent',
+      iconBg: 'bg-amber-50',
+      iconColor: 'text-amber-600',
+      accent: 'from-amber-50 to-transparent',
       trend: data.replyRate > 0 ? `${data.replyRate}% replies` : null,
     },
     {
       label: 'Meetings Booked',
       value: data.meetingBooked,
       icon: Calendar,
-      iconBg: 'bg-cyan-500/15',
-      iconColor: 'text-cyan-400',
-      accent: 'from-cyan-500/5 to-transparent',
+      iconBg: 'bg-cyan-50',
+      iconColor: 'text-cyan-600',
+      accent: 'from-cyan-50 to-transparent',
       trend: null,
     },
     {
       label: 'Won Deals',
       value: data.wonCount,
       icon: TrendingUp,
-      iconBg: 'bg-green-500/15',
-      iconColor: 'text-green-400',
-      accent: 'from-green-500/5 to-transparent',
+      iconBg: 'bg-green-50',
+      iconColor: 'text-green-600',
+      accent: 'from-green-50 to-transparent',
       trend: null,
     },
     {
       label: 'Active Campaigns',
       value: data.activeCampaigns,
       icon: Target,
-      iconBg: 'bg-purple-500/15',
-      iconColor: 'text-purple-400',
-      accent: 'from-purple-500/5 to-transparent',
+      iconBg: 'bg-purple-50',
+      iconColor: 'text-purple-600',
+      accent: 'from-purple-50 to-transparent',
       trend: null,
     },
   ]
@@ -353,20 +360,20 @@ export function DashboardView() {
   return (
     <div className="space-y-6">
       {/* ─── 1. Welcome Bar ────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-violet-600/10 via-slate-900 to-emerald-600/10 border border-slate-800/60 px-6 py-5">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-500/5 via-transparent to-transparent" />
+      <div className="relative overflow-hidden rounded-xl bg-white border border-gray-200 px-6 py-5 shadow-sm">
+        <div className="absolute inset-0 bg-gradient-to-r from-violet-50 via-white to-emerald-50 opacity-60" />
         <div className="relative flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-gray-900 tracking-tight">
-              Welcome back
+              {getGreeting()}, {userName || 'there'}
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">
               Here&apos;s your acquisition pipeline overview
             </p>
           </div>
-          <div className="hidden sm:flex items-center gap-2 bg-gray-100/80 rounded-lg px-3 py-1.5 border border-gray-200">
-            <Activity className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="text-xs text-gray-600 font-medium">Live</span>
+          <div className="hidden sm:flex items-center gap-2 bg-emerald-50 rounded-lg px-3 py-1.5 border border-emerald-200">
+            <Activity className="w-3.5 h-3.5 text-emerald-600" />
+            <span className="text-xs text-emerald-700 font-medium">Live</span>
           </div>
         </div>
       </div>

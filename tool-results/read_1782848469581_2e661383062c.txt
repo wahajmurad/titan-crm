@@ -1,0 +1,708 @@
+     1→     1→'use client'
+     2→     2→
+     3→     3→import { useEffect, useState } from 'react'
+     4→     4→import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+     5→     5→import { Badge } from '@/components/ui/badge'
+     6→     6→import { Button } from '@/components/ui/button'
+     7→     7→import { Skeleton } from '@/components/ui/skeleton'
+     8→     8→import { Separator } from '@/components/ui/separator'
+     9→     9→import { Progress } from '@/components/ui/progress'
+    10→    10→import { ScrollArea } from '@/components/ui/scroll-area'
+    11→    11→import {
+    12→    12→  Table,
+    13→    13→  TableBody,
+    14→    14→  TableCell,
+    15→    15→  TableHead,
+    16→    16→  TableHeader,
+    17→    17→  TableRow,
+    18→    18→} from '@/components/ui/table'
+    19→    19→import { LEAD_STAGES, STAGE_DOT_COLORS, STAGE_COLORS } from '@/lib/types'
+    20→    20→import { useAppStore } from '@/lib/store'
+    21→    21→import {
+    22→    22→  Users,
+    23→    23→  Mail,
+    24→    24→  Calendar,
+    25→    25→  TrendingUp,
+    26→    26→  Target,
+    27→    27→  Flame,
+    28→    28→  Thermometer,
+    29→    29→  ArrowUpRight,
+    30→    30→  ArrowRight,
+    31→    31→  Search,
+    32→    32→  Globe2,
+    33→    33→  Brain,
+    34→    34→  Inbox,
+    35→    35→  Zap,
+    36→    36→  Clock,
+    37→    37→  CheckCircle2,
+    38→    38→  XCircle,
+    39→    39→  Send,
+    40→    40→  BarChart3,
+    41→    41→  ChevronRight,
+    42→    42→  Activity,
+    43→    43→} from 'lucide-react'
+    44→    44→import { formatDistanceToNow } from 'date-fns'
+    45→    45→
+    46→    46→// ─── Data Types ────────────────────────────────────────────────────────
+    47→    47→
+    48→    48→interface DashboardData {
+    49→    49→  totalLeads: number
+    50→    50→  stages: Record<string, number>
+    51→    51→  outreach: Record<string, number>
+    52→    52→  meetings: Record<string, number>
+    53→    53→  replyRate: number
+    54→    54→  recentActivities: Array<{
+    55→    55→    id: string
+    56→    56→    action: string
+    57→    57→    details: string
+    58→    58→    createdAt: string
+    59→    59→    user: { name: string } | null
+    60→    60→    lead: { business: { name: string } } | null
+    61→    61→  }>
+    62→    62→  leadsByIndustry: Array<{
+    63→    63→    industry: string | null
+    64→    64→    _count: { industry: number }
+    65→    65→  }>
+    66→    66→  temperature: Record<string, number>
+    67→    67→  wonCount: number
+    68→    68→  meetingBooked: number
+    69→    69→  outreachSent: number
+    70→    70→  qualifiedCount: number
+    71→    71→  activeCampaigns: number
+    72→    72→}
+    73→    73→
+    74→    74→interface CampaignData {
+    75→    75→  id: string
+    76→    76→  name: string
+    77→    77→  industry: string | null
+    78→    78→  status: string
+    79→    79→  leadCount: number
+    80→    80→  sentCount: number
+    81→    81→  replyCount: number
+    82→    82→  meetingCount: number
+    83→    83→  wonCount: number
+    84→    84→  createdAt: string
+    85→    85→}
+    86→    86→
+    87→    87→const defaultData: DashboardData = {
+    88→    88→  totalLeads: 0,
+    89→    89→  stages: {},
+    90→    90→  outreach: {},
+    91→    91→  meetings: {},
+    92→    92→  replyRate: 0,
+    93→    93→  recentActivities: [],
+    94→    94→  leadsByIndustry: [],
+    95→    95→  temperature: {},
+    96→    96→  wonCount: 0,
+    97→    97→  meetingBooked: 0,
+    98→    98→  outreachSent: 0,
+    99→    99→  qualifiedCount: 0,
+   100→   100→  activeCampaigns: 0,
+   101→   101→}
+   102→   102→
+   103→   103→// ─── Pipeline stage order (exclude LOST) ─────────────────────────────
+   104→   104→
+   105→   105→const PIPELINE_STAGES = LEAD_STAGES.filter((s) => s !== 'LOST')
+   106→   106→
+   107→   107→// ─── Dark-mode stage dot colors for backgrounds ────────────────────────
+   108→   108→
+   109→   109→const STAGE_BG: Record<string, string> = {
+   110→   110→  DISCOVERED: 'bg-slate-700/40 border-gray-300/50',
+   111→   111→  AUDITED: 'bg-sky-500/10 border-sky-500/30',
+   112→   112→  QUALIFIED: 'bg-emerald-500/10 border-emerald-500/30',
+   113→   113→  OUTREACH_SENT: 'bg-amber-500/10 border-amber-500/30',
+   114→   114→  REPLIED: 'bg-violet-500/10 border-violet-500/30',
+   115→   115→  MEETING_BOOKED: 'bg-blue-500/10 border-blue-500/30',
+   116→   116→  PROPOSAL_SENT: 'bg-orange-500/10 border-orange-500/30',
+   117→   117→  WON: 'bg-green-500/10 border-green-500/30',
+   118→   118→  LOST: 'bg-red-500/10 border-red-500/30',
+   119→   119→}
+   120→   120→
+   121→   121→// ─── Activity action → icon mapping ────────────────────────────────────
+   122→   122→
+   123→   123→const ACTION_ICONS: Record<string, React.ElementType> = {
+   124→   124→  LEAD_CREATED: Users,
+   125→   125→  LEAD_AUDITED: Search,
+   126→   126→  LEAD_QUALIFIED: CheckCircle2,
+   127→   127→  OUTREACH_SENT: Send,
+   128→   128→  REPLY_RECEIVED: Mail,
+   129→   129→  MEETING_BOOKED: Calendar,
+   130→   130→  MEETING_COMPLETED: CheckCircle2,
+   131→   131→  MEETING_CANCELLED: XCircle,
+   132→   132→  CAMPAIGN_CREATED: Target,
+   133→   133→  CAMPAIGN_UPDATED: BarChart3,
+   134→   134→  PROPOSAL_SENT: Send,
+   135→   135→  LEAD_WON: TrendingUp,
+   136→   136→  LEAD_LOST: XCircle,
+   137→   137→}
+   138→   138→
+   139→   139→const ACTION_COLORS: Record<string, string> = {
+   140→   140→  LEAD_CREATED: 'bg-violet-500/20 text-violet-400',
+   141→   141→  LEAD_AUDITED: 'bg-sky-500/20 text-sky-400',
+   142→   142→  LEAD_QUALIFIED: 'bg-emerald-500/20 text-emerald-400',
+   143→   143→  OUTREACH_SENT: 'bg-amber-500/20 text-amber-400',
+   144→   144→  REPLY_RECEIVED: 'bg-blue-500/20 text-blue-400',
+   145→   145→  MEETING_BOOKED: 'bg-cyan-500/20 text-cyan-400',
+   146→   146→  MEETING_COMPLETED: 'bg-green-500/20 text-green-400',
+   147→   147→  MEETING_CANCELLED: 'bg-red-500/20 text-red-400',
+   148→   148→  CAMPAIGN_CREATED: 'bg-purple-500/20 text-purple-400',
+   149→   149→  CAMPAIGN_UPDATED: 'bg-indigo-500/20 text-indigo-400',
+   150→   150→  PROPOSAL_SENT: 'bg-orange-500/20 text-orange-400',
+   151→   151→  LEAD_WON: 'bg-green-500/20 text-green-400',
+   152→   152→  LEAD_LOST: 'bg-red-500/20 text-red-400',
+   153→   153→}
+   154→   154→
+   155→   155→// ─── Component ────────────────────────────────────────────────────────
+   156→   156→
+   157→   157→export function DashboardView() {
+   158→   158→  const [data, setData] = useState<DashboardData>(defaultData)
+   159→   159→  const [campaigns, setCampaigns] = useState<CampaignData[]>([])
+   160→   160→  const [loading, setLoading] = useState(true)
+   161→   161→  const [error, setError] = useState<string | null>(null)
+   162→   162→  const { setView } = useAppStore()
+   163→   163→
+   164→   164→  useEffect(() => {
+   165→   165→    let cancelled = false
+   166→   166→    const load = async () => {
+   167→   167→      try {
+   168→   168→        const [dashRes, campRes] = await Promise.all([
+   169→   169→          fetch('/api/dashboard', { credentials: 'same-origin' }),
+   170→   170→          fetch('/api/campaigns?status=ACTIVE&limit=10', { credentials: 'same-origin' }),
+   171→   171→        ])
+   172→   172→        if (cancelled) return
+   173→   173→        if (!dashRes.ok) throw new Error('Failed to load dashboard')
+   174→   174→        if (!campRes.ok) throw new Error('Failed to load campaigns')
+   175→   175→
+   176→   176→        const [dashData, campData] = await Promise.all([dashRes.json(), campRes.json()])
+   177→   177→        if (cancelled) return
+   178→   178→        setData(dashData)
+   179→   179→        setCampaigns(campData.campaigns || [])
+   180→   180→      } catch (err) {
+   181→   181→        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load data')
+   182→   182→      } finally {
+   183→   183→        if (!cancelled) setLoading(false)
+   184→   184→      }
+   185→   185→    }
+   186→   186→    load()
+   187→   187→    return () => {
+   188→   188→      cancelled = true
+   189→   189→    }
+   190→   190→  }, [])
+   191→   191→
+   192→   192→  // ─── KPI Cards Data ─────────────────────────────────────────────────
+   193→   193→
+   194→   194→  const kpiCards = [
+   195→   195→    {
+   196→   196→      label: 'Total Leads',
+   197→   197→      value: data.totalLeads,
+   198→   198→      icon: Users,
+   199→   199→      iconBg: 'bg-violet-500/15',
+   200→   200→      iconColor: 'text-violet-400',
+   201→   201→      accent: 'from-violet-500/5 to-transparent',
+   202→   202→      trend: null,
+   203→   203→    },
+   204→   204→    {
+   205→   205→      label: 'Qualified Leads',
+   206→   206→      value: data.qualifiedCount,
+   207→   207→      icon: Thermometer,
+   208→   208→      iconBg: 'bg-emerald-500/15',
+   209→   209→      iconColor: 'text-emerald-400',
+   210→   210→      accent: 'from-emerald-500/5 to-transparent',
+   211→   211→      trend: 'hotwarmcold',
+   212→   212→    },
+   213→   213→    {
+   214→   214→      label: 'Outreach Sent',
+   215→   215→      value: data.outreachSent,
+   216→   216→      icon: Mail,
+   217→   217→      iconBg: 'bg-amber-500/15',
+   218→   218→      iconColor: 'text-amber-400',
+   219→   219→      accent: 'from-amber-500/5 to-transparent',
+   220→   220→      trend: data.replyRate > 0 ? `${data.replyRate}% replies` : null,
+   221→   221→    },
+   222→   222→    {
+   223→   223→      label: 'Meetings Booked',
+   224→   224→      value: data.meetingBooked,
+   225→   225→      icon: Calendar,
+   226→   226→      iconBg: 'bg-cyan-500/15',
+   227→   227→      iconColor: 'text-cyan-400',
+   228→   228→      accent: 'from-cyan-500/5 to-transparent',
+   229→   229→      trend: null,
+   230→   230→    },
+   231→   231→    {
+   232→   232→      label: 'Won Deals',
+   233→   233→      value: data.wonCount,
+   234→   234→      icon: TrendingUp,
+   235→   235→      iconBg: 'bg-green-500/15',
+   236→   236→      iconColor: 'text-green-400',
+   237→   237→      accent: 'from-green-500/5 to-transparent',
+   238→   238→      trend: null,
+   239→   239→    },
+   240→   240→    {
+   241→   241→      label: 'Active Campaigns',
+   242→   242→      value: data.activeCampaigns,
+   243→   243→      icon: Target,
+   244→   244→      iconBg: 'bg-purple-500/15',
+   245→   245→      iconColor: 'text-purple-400',
+   246→   246→      accent: 'from-purple-500/5 to-transparent',
+   247→   247→      trend: null,
+   248→   248→    },
+   249→   249→  ]
+   250→   250→
+   251→   251→  // ─── Top campaigns by reply rate ─────────────────────────────────────
+   252→   252→
+   253→   253→  const topCampaigns = [...campaigns]
+   254→   254→    .map((c) => ({
+   255→   255→      ...c,
+   256→   256→      replyRate: c.sentCount > 0 ? Math.round((c.replyCount / c.sentCount) * 100) : 0,
+   257→   257→    }))
+   258→   258→    .sort((a, b) => b.replyRate - a.replyRate)
+   259→   259→    .slice(0, 5)
+   260→   260→
+   261→   261→  // ─── Quick Actions ──────────────────────────────────────────────────
+   262→   262→
+   263→   263→  const quickActions = [
+   264→   264→    {
+   265→   265→      label: 'Discover Leads',
+   266→   266→      icon: Search,
+   267→   267→      view: 'discovery' as const,
+   268→   268→      gradient: 'from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600',
+   269→   269→    },
+   270→   270→    {
+   271→   271→      label: 'Run Website Audit',
+   272→   272→      icon: Globe2,
+   273→   273→      view: 'audit' as const,
+   274→   274→      gradient: 'from-sky-600 to-sky-700 hover:from-sky-500 hover:to-sky-600',
+   275→   275→    },
+   276→   276→    {
+   277→   277→      label: 'Ask AI',
+   278→   278→      icon: Brain,
+   279→   279→      view: 'ai-assistant' as const,
+   280→   280→      gradient: 'from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600',
+   281→   281→    },
+   282→   282→    {
+   283→   283→      label: 'View Inbox',
+   284→   284→      icon: Inbox,
+   285→   285→      view: 'inbox' as const,
+   286→   286→      gradient: 'from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600',
+   287→   287→    },
+   288→   288→  ]
+   289→   289→
+   290→   290→  // ─── Loading State ───────────────────────────────────────────────────
+   291→   291→
+   292→   292→  if (loading) {
+   293→   293→    return (
+   294→   294→      <div className="space-y-6">
+   295→   295→        {/* Welcome skeleton */}
+   296→   296→        <div className="flex items-center justify-between">
+   297→   297→          <div className="space-y-2">
+   298→   298→            <Skeleton className="h-7 w-64 bg-gray-100" />
+   299→   299→            <Skeleton className="h-4 w-96 bg-gray-100" />
+   300→   300→          </div>
+   301→   301→          <Skeleton className="h-10 w-32 bg-gray-100 rounded-lg" />
+   302→   302→        </div>
+   303→   303→
+   304→   304→        {/* KPI skeletons */}
+   305→   305→        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+   306→   306→          {Array.from({ length: 6 }).map((_, i) => (
+   307→   307→            <Skeleton key={i} className="h-28 bg-gray-100 rounded-xl" />
+   308→   308→          ))}
+   309→   309→        </div>
+   310→   310→
+   311→   311→        {/* Pipeline skeleton */}
+   312→   312→        <Skeleton className="h-32 bg-gray-100 rounded-xl" />
+   313→   313→
+   314→   314→        {/* Two-column skeletons */}
+   315→   315→        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+   316→   316→          <Skeleton className="h-80 bg-gray-100 rounded-xl" />
+   317→   317→          <Skeleton className="h-80 bg-gray-100 rounded-xl" />
+   318→   318→        </div>
+   319→   319→
+   320→   320→        {/* Quick actions skeleton */}
+   321→   321→        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+   322→   322→          {Array.from({ length: 4 }).map((_, i) => (
+   323→   323→            <Skeleton key={i} className="h-20 bg-gray-100 rounded-xl" />
+   324→   324→          ))}
+   325→   325→        </div>
+   326→   326→      </div>
+   327→   327→    )
+   328→   328→  }
+   329→   329→
+   330→   330→  // ─── Error State ────────────────────────────────────────────────────
+   331→   331→
+   332→   332→  if (error) {
+   333→   333→    return (
+   334→   334→      <div className="flex flex-col items-center justify-center py-20">
+   335→   335→        <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
+   336→   336→          <XCircle className="w-6 h-6 text-red-400" />
+   337→   337→        </div>
+   338→   338→        <p className="text-gray-600 font-medium">Failed to load dashboard</p>
+   339→   339→        <p className="text-sm text-gray-400 mt-1">{error}</p>
+   340→   340→        <Button
+   341→   341→          variant="outline"
+   342→   342→          className="mt-4 border-gray-200 text-gray-600 hover:bg-gray-100"
+   343→   343→          onClick={() => window.location.reload()}
+   344→   344→        >
+   345→   345→          Retry
+   346→   346→        </Button>
+   347→   347→      </div>
+   348→   348→    )
+   349→   349→  }
+   350→   350→
+   351→   351→  // ─── Render ──────────────────────────────────────────────────────────
+   352→   352→
+   353→   353→  return (
+   354→   354→    <div className="space-y-6">
+   355→   355→      {/* ─── 1. Welcome Bar ────────────────────────────────────────── */}
+   356→   356→      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-violet-600/10 via-slate-900 to-emerald-600/10 border border-slate-800/60 px-6 py-5">
+   357→   357→        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-500/5 via-transparent to-transparent" />
+   358→   358→        <div className="relative flex items-center justify-between">
+   359→   359→          <div>
+   360→   360→            <h1 className="text-xl font-bold text-gray-900 tracking-tight">
+   361→   361→              Welcome back
+   362→   362→            </h1>
+   363→   363→            <p className="text-sm text-gray-500 mt-0.5">
+   364→   364→              Here&apos;s your acquisition pipeline overview
+   365→   365→            </p>
+   366→   366→          </div>
+   367→   367→          <div className="hidden sm:flex items-center gap-2 bg-gray-100/80 rounded-lg px-3 py-1.5 border border-gray-200">
+   368→   368→            <Activity className="w-3.5 h-3.5 text-emerald-400" />
+   369→   369→            <span className="text-xs text-gray-600 font-medium">Live</span>
+   370→   370→          </div>
+   371→   371→        </div>
+   372→   372→      </div>
+   373→   373→
+   374→   374→      {/* ─── 2. KPI Cards ─────────────────────────────────────────── */}
+   375→   375→      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+   376→   376→        {kpiCards.map((card) => {
+   377→   377→          const Icon = card.icon
+   378→   378→          return (
+   379→   379→            <Card
+   380→   380→              key={card.label}
+   381→   381→              className="bg-white border-slate-800/60 hover:border-gray-300/60 transition-all duration-200 group relative overflow-hidden"
+   382→   382→            >
+   383→   383→              <div className={`absolute inset-0 bg-gradient-to-br ${card.accent} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+   384→   384→              <CardContent className="p-4 relative">
+   385→   385→                <div className="flex items-start justify-between mb-3">
+   386→   386→                  <div
+   387→   387→                    className={`w-9 h-9 rounded-lg ${card.iconBg} flex items-center justify-center`}
+   388→   388→                  >
+   389→   389→                    <Icon className={`w-4 h-4 ${card.iconColor}`} />
+   390→   390→                  </div>
+   391→   391→                  {card.trend && card.trend !== 'hotwarmcold' && (
+   392→   392→                    <Badge
+   393→   393→                      variant="secondary"
+   394→   394→                      className="bg-gray-100 text-gray-600 border-gray-200 text-[10px] px-1.5 py-0"
+   395→   395→                    >
+   396→   396→                      {card.trend}
+   397→   397→                    </Badge>
+   398→   398→                  )}
+   399→   399→                </div>
+   400→   400→                <p className="text-2xl font-bold text-gray-900 tabular-nums">
+   401→   401→                  {card.value.toLocaleString()}
+   402→   402→                </p>
+   403→   403→                <p className="text-xs text-gray-400 mt-0.5">{card.label}</p>
+   404→   404→
+   405→   405→                {/* Hot/Warm/Cold breakdown for Qualified card */}
+   406→   406→                {card.trend === 'hotwarmcold' && (
+   407→   407→                  <div className="mt-2.5 pt-2.5 border-t border-slate-800/60">
+   408→   408→                    <div className="flex items-center gap-3">
+   409→   409→                      <span className="flex items-center gap-1 text-[10px]">
+   410→   410→                        <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+   411→   411→                        <span className="text-gray-400">Hot</span>
+   412→   412→                        <span className="text-red-400 font-medium">
+   413→   413→                          {data.temperature['HOT'] || 0}
+   414→   414→                        </span>
+   415→   415→                      </span>
+   416→   416→                      <span className="flex items-center gap-1 text-[10px]">
+   417→   417→                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+   418→   418→                        <span className="text-gray-400">Warm</span>
+   419→   419→                        <span className="text-amber-400 font-medium">
+   420→   420→                          {data.temperature['WARM'] || 0}
+   421→   421→                        </span>
+   422→   422→                      </span>
+   423→   423→                      <span className="flex items-center gap-1 text-[10px]">
+   424→   424→                        <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+   425→   425→                        <span className="text-gray-400">Cold</span>
+   426→   426→                        <span className="text-sky-400 font-medium">
+   427→   427→                          {data.temperature['COLD'] || 0}
+   428→   428→                        </span>
+   429→   429→                      </span>
+   430→   430→                    </div>
+   431→   431→                  </div>
+   432→   432→                )}
+   433→   433→              </CardContent>
+   434→   434→            </Card>
+   435→   435→          )
+   436→   436→        })}
+   437→   437→      </div>
+   438→   438→
+   439→   439→      {/* ─── 3. Lead Pipeline ──────────────────────────────────────── */}
+   440→   440→      <Card className="bg-white border-slate-800/60">
+   441→   441→        <CardHeader className="pb-3 px-5 pt-4">
+   442→   442→          <div className="flex items-center justify-between">
+   443→   443→            <CardTitle className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+   444→   444→              <BarChart3 className="w-4 h-4 text-gray-500" />
+   445→   445→              Lead Pipeline
+   446→   446→            </CardTitle>
+   447→   447→            <span className="text-xs text-gray-400">
+   448→   448→              {data.totalLeads} total leads
+   449→   449→            </span>
+   450→   450→          </div>
+   451→   451→        </CardHeader>
+   452→   452→        <CardContent className="px-5 pb-4">
+   453→   453→          <ScrollArea className="w-full">
+   454→   454→            <div className="flex gap-2.5 pb-2 min-w-max">
+   455→   455→              {PIPELINE_STAGES.map((stage, idx) => {
+   456→   456→                const count = data.stages[stage] || 0
+   457→   457→                const pct =
+   458→   458→                  data.totalLeads > 0
+   459→   459→                    ? (count / data.totalLeads) * 100
+   460→   460→                    : 0
+   461→   461→                return (
+   462→   462→                  <div key={stage} className="flex items-center gap-2.5">
+   463→   463→                    <div
+   464→   464→                      className={`flex-shrink-0 w-36 rounded-xl border px-4 py-3.5 transition-all duration-200 hover:scale-[1.02] cursor-default ${STAGE_BG[stage] || 'bg-gray-100 border-gray-200'}`}
+   465→   465→                    >
+   466→   466→                      <div className="flex items-center justify-between mb-2">
+   467→   467→                        <div className="flex items-center gap-1.5">
+   468→   468→                          <span
+   469→   469→                            className={`w-2 h-2 rounded-full ${STAGE_DOT_COLORS[stage]}`}
+   470→   470→                          />
+   471→   471→                          <span className="text-xs font-medium text-gray-600 truncate">
+   472→   472→                            {stage.replace(/_/g, ' ')}
+   473→   473→                          </span>
+   474→   474→                        </div>
+   475→   475→                      </div>
+   476→   476→                      <div className="flex items-end justify-between">
+   477→   477→                        <span className="text-lg font-bold text-gray-900 tabular-nums">
+   478→   478→                          {count}
+   479→   479→                        </span>
+   480→   480→                        <span className="text-[10px] text-gray-400 tabular-nums">
+   481→   481→                          {pct.toFixed(0)}%
+   482→   482→                        </span>
+   483→   483→                      </div>
+   484→   484→                      <div className="mt-2 h-1 bg-gray-100 rounded-full overflow-hidden">
+   485→   485→                        <div
+   486→   486→                          className={`h-full rounded-full transition-all duration-700 ${STAGE_DOT_COLORS[stage]}`}
+   487→   487→                          style={{ width: `${Math.max(pct, 0)}%` }}
+   488→   488→                        />
+   489→   489→                      </div>
+   490→   490→                    </div>
+   491→   491→                    {idx < PIPELINE_STAGES.length - 1 && (
+   492→   492→                      <ArrowRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+   493→   493→                    )}
+   494→   494→                  </div>
+   495→   495→                )
+   496→   496→              })}
+   497→   497→            </div>
+   498→   498→          </ScrollArea>
+   499→   499→        </CardContent>
+   500→   500→      </Card>
+   501→   501→
+   502→   502→      {/* ─── 4. Two-Column Section ──────────────────────────────────── */}
+   503→   503→      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+   504→   504→        {/* Left: Campaign Performance Table */}
+   505→   505→        <Card className="bg-white border-slate-800/60">
+   506→   506→          <CardHeader className="pb-3 px-5 pt-4">
+   507→   507→            <div className="flex items-center justify-between">
+   508→   508→              <CardTitle className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+   509→   509→                <Target className="w-4 h-4 text-gray-500" />
+   510→   510→                Campaign Performance
+   511→   511→              </CardTitle>
+   512→   512→              <Badge
+   513→   513→                variant="secondary"
+   514→   514→                className="bg-violet-500/10 text-violet-400 border-violet-500/20 text-[10px]"
+   515→   515→              >
+   516→   516→                Top 5 by reply rate
+   517→   517→              </Badge>
+   518→   518→            </div>
+   519→   519→          </CardHeader>
+   520→   520→          <CardContent className="px-5 pb-4">
+   521→   521→            {topCampaigns.length === 0 ? (
+   522→   522→              <div className="flex flex-col items-center justify-center py-12">
+   523→   523→                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+   524→   524→                  <Target className="w-4 h-4 text-gray-300" />
+   525→   525→                </div>
+   526→   526→                <p className="text-sm text-gray-400">No active campaigns yet</p>
+   527→   527→                <p className="text-xs text-gray-300 mt-1">
+   528→   528→                  Create a campaign to start tracking performance
+   529→   529→                </p>
+   530→   530→              </div>
+   531→   531→            ) : (
+   532→   532→              <div className="overflow-hidden">
+   533→   533→                <ScrollArea className="max-h-[340px]">
+   534→   534→                  <Table>
+   535→   535→                    <TableHeader>
+   536→   536→                      <TableRow className="border-slate-800/60 hover:bg-transparent">
+   537→   537→                        <TableHead className="text-[10px] font-medium text-gray-400 uppercase tracking-wider h-8">
+   538→   538→                          Campaign
+   539→   539→                        </TableHead>
+   540→   540→                        <TableHead className="text-[10px] font-medium text-gray-400 uppercase tracking-wider h-8 text-right">
+   541→   541→                          Sent
+   542→   542→                        </TableHead>
+   543→   543→                        <TableHead className="text-[10px] font-medium text-gray-400 uppercase tracking-wider h-8 text-right">
+   544→   544→                          Replies
+   545→   545→                        </TableHead>
+   546→   546→                        <TableHead className="text-[10px] font-medium text-gray-400 uppercase tracking-wider h-8 text-right">
+   547→   547→                          Reply Rate
+   548→   548→                        </TableHead>
+   549→   549→                      </TableRow>
+   550→   550→                    </TableHeader>
+   551→   551→                    <TableBody>
+   552→   552→                      {topCampaigns.map((c, i) => (
+   553→   553→                        <TableRow
+   554→   554→                          key={c.id}
+   555→   555→                          className="border-slate-800/40 hover:bg-gray-100/40"
+   556→   556→                        >
+   557→   557→                          <TableCell className="py-2.5">
+   558→   558→                            <div className="flex items-center gap-2">
+   559→   559→                              <span className="w-5 h-5 rounded-md bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-400">
+   560→   560→                                {i + 1}
+   561→   561→                              </span>
+   562→   562→                              <div className="min-w-0">
+   563→   563→                                <p className="text-xs font-medium text-slate-200 truncate max-w-[140px]">
+   564→   564→                                  {c.name}
+   565→   565→                                </p>
+   566→   566→                                {c.industry && (
+   567→   567→                                  <p className="text-[10px] text-gray-300 truncate">
+   568→   568→                                    {c.industry}
+   569→   569→                                  </p>
+   570→   570→                                )}
+   571→   571→                              </div>
+   572→   572→                            </div>
+   573→   573→                          </TableCell>
+   574→   574→                          <TableCell className="py-2.5 text-right text-xs text-gray-500 tabular-nums">
+   575→   575→                            {c.sentCount}
+   576→   576→                          </TableCell>
+   577→   577→                          <TableCell className="py-2.5 text-right text-xs text-gray-500 tabular-nums">
+   578→   578→                            {c.replyCount}
+   579→   579→                          </TableCell>
+   580→   580→                          <TableCell className="py-2.5 text-right">
+   581→   581→                            <div className="flex items-center justify-end gap-1.5">
+   582→   582→                              <Progress
+   583→   583→                                value={c.replyRate}
+   584→   584→                                className="w-12 h-1.5 bg-gray-100"
+   585→   585→                              />
+   586→   586→                              <span className="text-xs font-medium text-emerald-400 tabular-nums w-8 text-right">
+   587→   587→                                {c.replyRate}%
+   588→   588→                              </span>
+   589→   589→                            </div>
+   590→   590→                          </TableCell>
+   591→   591→                        </TableRow>
+   592→   592→                      ))}
+   593→   593→                    </TableBody>
+   594→   594→                  </Table>
+   595→   595→                </ScrollArea>
+   596→   596→              </div>
+   597→   597→            )}
+   598→   598→          </CardContent>
+   599→   599→        </Card>
+   600→   600→
+   601→   601→        {/* Right: Recent Activity Feed */}
+   602→   602→        <Card className="bg-white border-slate-800/60">
+   603→   603→          <CardHeader className="pb-3 px-5 pt-4">
+   604→   604→            <div className="flex items-center justify-between">
+   605→   605→              <CardTitle className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+   606→   606→                <Activity className="w-4 h-4 text-gray-500" />
+   607→   607→                Recent Activity
+   608→   608→              </CardTitle>
+   609→   609→              <Badge
+   610→   610→                variant="secondary"
+   611→   611→                className="bg-gray-100 text-gray-500 border-gray-200 text-[10px]"
+   612→   612→              >
+   613→   613→                Last 10
+   614→   614→              </Badge>
+   615→   615→            </div>
+   616→   616→          </CardHeader>
+   617→   617→          <CardContent className="px-5 pb-4">
+   618→   618→            {data.recentActivities.length === 0 ? (
+   619→   619→              <div className="flex flex-col items-center justify-center py-12">
+   620→   620→                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+   621→   621→                  <Clock className="w-4 h-4 text-gray-300" />
+   622→   622→                </div>
+   623→   623→                <p className="text-sm text-gray-400">No activity yet</p>
+   624→   624→                <p className="text-xs text-gray-300 mt-1">
+   625→   625→                  Start by discovering leads
+   626→   626→                </p>
+   627→   627→              </div>
+   628→   628→            ) : (
+   629→   629→              <ScrollArea className="max-h-[340px]">
+   630→   630→                <div className="space-y-1">
+   631→   631→                  {data.recentActivities.map((a, i) => {
+   632→   632→                    const ActionIcon =
+   633→   633→                      ACTION_ICONS[a.action] || ArrowUpRight
+   634→   634→                    const actionColor =
+   635→   635→                      ACTION_COLORS[a.action] ||
+   636→   636→                      'bg-slate-700/40 text-gray-500'
+   637→   637→                    return (
+   638→   638→                      <div
+   639→   639→                        key={a.id}
+   640→   640→                        className={`flex items-start gap-3 py-2.5 ${i < data.recentActivities.length - 1 ? 'border-b border-slate-800/40' : ''}`}
+   641→   641→                      >
+   642→   642→                        <div
+   643→   643→                          className={`w-8 h-8 rounded-lg ${actionColor} flex items-center justify-center shrink-0 mt-0.5`}
+   644→   644→                        >
+   645→   645→                          <ActionIcon className="w-3.5 h-3.5" />
+   646→   646→                        </div>
+   647→   647→                        <div className="flex-1 min-w-0">
+   648→   648→                          <p className="text-xs text-gray-600 leading-relaxed">
+   649→   649→                            {a.details || a.action.replace(/_/g, ' ')}
+   650→   650→                          </p>
+   651→   651→                          <div className="flex items-center gap-1.5 mt-0.5">
+   652→   652→                            <span className="text-[10px] text-gray-300">
+   653→   653→                              {a.user?.name || 'System'}
+   654→   654→                            </span>
+   655→   655→                            {a.lead?.business?.name && (
+   656→   656→                              <>
+   657→   657→                                <span className="text-[10px] text-slate-700">
+   658→   658→                                  ·
+   659→   659→                                </span>
+   660→   660→                                <span className="text-[10px] text-gray-400 truncate">
+   661→   661→                                  {a.lead.business.name}
+   662→   662→                                </span>
+   663→   663→                              </>
+   664→   664→                            )}
+   665→   665→                            <span className="text-[10px] text-slate-700">·</span>
+   666→   666→                            <span className="text-[10px] text-gray-300">
+   667→   667→                              {formatDistanceToNow(new Date(a.createdAt), {
+   668→   668→                                addSuffix: true,
+   669→   669→                              })}
+   670→   670→                            </span>
+   671→   671→                          </div>
+   672→   672→                        </div>
+   673→   673→                      </div>
+   674→   674→                    )
+   675→   675→                  })}
+   676→   676→                </div>
+   677→   677→              </ScrollArea>
+   678→   678→            )}
+   679→   679→          </CardContent>
+   680→   680→        </Card>
+   681→   681→      </div>
+   682→   682→
+   683→   683→      {/* ─── 5. Quick Actions ─────────────────────────────────────── */}
+   684→   684→      <div>
+   685→   685→        <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">
+   686→   686→          Quick Actions
+   687→   687→        </p>
+   688→   688→        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+   689→   689→          {quickActions.map((action) => {
+   690→   690→            const Icon = action.icon
+   691→   691→            return (
+   692→   692→              <Button
+   693→   693→                key={action.view}
+   694→   694→                onClick={() => setView(action.view)}
+   695→   695→                className={`h-auto py-3.5 px-4 bg-gradient-to-r ${action.gradient} border-0 shadow-lg text-gray-900 justify-start gap-2.5 rounded-xl transition-all duration-200 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]`}
+   696→   696→              >
+   697→   697→                <Icon className="w-4 h-4 opacity-90" />
+   698→   698→                <span className="text-sm font-medium">{action.label}</span>
+   699→   699→                <ChevronRight className="w-3.5 h-3.5 ml-auto opacity-50" />
+   700→   700→              </Button>
+   701→   701→            )
+   702→   702→          })}
+   703→   703→        </div>
+   704→   704→      </div>
+   705→   705→    </div>
+   706→   706→  )
+   707→   707→}
+   708→   708→

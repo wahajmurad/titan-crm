@@ -75,10 +75,10 @@ interface RecentAudit {
 /* ──────────── helpers ──────────── */
 
 function getScoreColor(score: number): string {
-  if (score >= 80) return 'text-emerald-400'
-  if (score >= 60) return 'text-cyan-400'
-  if (score >= 40) return 'text-amber-400'
-  return 'text-red-400'
+  if (score >= 80) return 'text-emerald-600'
+  if (score >= 60) return 'text-cyan-600'
+  if (score >= 40) return 'text-amber-600'
+  return 'text-red-600'
 }
 
 function getScoreBarColor(score: number): string {
@@ -96,10 +96,10 @@ function getScoreLabel(score: number): string {
 }
 
 function getScoreRingColor(score: number): string {
-  if (score >= 80) return 'stroke-emerald-400'
-  if (score >= 60) return 'stroke-cyan-400'
-  if (score >= 40) return 'stroke-amber-400'
-  return 'stroke-red-400'
+  if (score >= 80) return 'stroke-emerald-500'
+  if (score >= 60) return 'stroke-cyan-500'
+  if (score >= 40) return 'stroke-amber-500'
+  return 'stroke-red-500'
 }
 
 function getOverallLabel(score: number): string {
@@ -129,7 +129,7 @@ function CircularScore({ score, size = 140 }: { score: number; size?: number }) 
           r={radius}
           fill="none"
           strokeWidth={strokeWidth}
-          className="stroke-slate-800"
+          className="stroke-gray-200"
         />
         {/* Score ring */}
         <circle
@@ -198,7 +198,7 @@ function ScoreCard({
             {open ? 'Hide details' : 'View details'}
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-2">
-            <div className="text-xs text-gray-500 leading-relaxed bg-gray-100/70 rounded-lg p-3 border border-gray-200">
+            <div className="text-xs text-gray-500 leading-relaxed bg-gray-50 rounded-lg p-3 border border-gray-200">
               {details}
             </div>
           </CollapsibleContent>
@@ -408,7 +408,7 @@ export function AuditView() {
                 onChange={(e) => setUrl(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAudit()}
                 disabled={auditing}
-                className="pl-10 bg-gray-100/70 border-gray-200 text-slate-200 h-11 placeholder:text-gray-400"
+                className="pl-10 bg-gray-50 border-gray-200 text-gray-900 h-11 placeholder:text-gray-400"
               />
             </div>
             <Button
@@ -417,7 +417,7 @@ export function AuditView() {
               className={cn(
                 'h-11 px-6 font-medium transition-all duration-300',
                 'bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500',
-                'text-gray-900 shadow-lg shadow-cyan-500/20',
+                'text-white shadow-lg shadow-cyan-500/20',
                 'disabled:opacity-50 disabled:cursor-not-allowed'
               )}
             >
@@ -446,7 +446,7 @@ export function AuditView() {
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <Loader2 className="w-3 h-3 animate-spin text-cyan-400" />
+                  <Loader2 className="w-3 h-3 animate-spin text-cyan-500" />
                   {auditProgress < 15
                     ? 'Connecting to website...'
                     : auditProgress < 35
@@ -575,28 +575,28 @@ export function AuditView() {
                 title="Design & UX"
                 score={currentAudit.scores.design}
                 icon={Palette}
-                gradient="bg-violet-500/15 text-violet-400"
+                gradient="bg-violet-50 text-violet-600"
                 details={currentAudit.details.design || 'Design analysis details will appear here after a full audit.'}
               />
               <ScoreCard
                 title="Technical"
                 score={currentAudit.scores.technical}
                 icon={Code2}
-                gradient="bg-cyan-500/15 text-cyan-400"
+                gradient="bg-cyan-50 text-cyan-600"
                 details={currentAudit.details.technical || 'Technical analysis details will appear here after a full audit.'}
               />
               <ScoreCard
                 title="Business Model"
                 score={currentAudit.scores.business}
                 icon={Briefcase}
-                gradient="bg-amber-500/15 text-amber-400"
+                gradient="bg-amber-50 text-amber-600"
                 details={currentAudit.details.business || 'Business model analysis details will appear here after a full audit.'}
               />
               <ScoreCard
                 title="Automation"
                 score={currentAudit.scores.automation}
                 icon={Bot}
-                gradient="bg-emerald-500/15 text-emerald-400"
+                gradient="bg-emerald-50 text-emerald-600"
                 details={currentAudit.details.automation || 'Automation analysis details will appear here after a full audit.'}
               />
             </div>
@@ -608,8 +608,8 @@ export function AuditView() {
             <Card className="bg-white border-gray-200">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-900 flex items-center gap-2">
-                  <div className="p-1.5 rounded-md bg-emerald-500/15">
-                    <Lightbulb className="w-3.5 h-3.5 text-emerald-400" />
+                  <div className="p-1.5 rounded-md bg-emerald-50">
+                    <Lightbulb className="w-3.5 h-3.5 text-emerald-600" />
                   </div>
                   Opportunities
                 </CardTitle>
@@ -619,8 +619,8 @@ export function AuditView() {
                   <div className="space-y-2">
                     {currentAudit.opportunities.map((opp, i) => (
                       <div key={i} className="flex items-start gap-2 text-xs text-gray-600 leading-relaxed">
-                        <div className="w-4 h-4 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                          <Zap className="w-2 h-2 text-emerald-400" />
+                        <div className="w-4 h-4 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center shrink-0 mt-0.5">
+                          <Zap className="w-2 h-2 text-emerald-600" />
                         </div>
                         <span>{opp}</span>
                       </div>
@@ -636,8 +636,8 @@ export function AuditView() {
             <Card className="bg-white border-gray-200">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-900 flex items-center gap-2">
-                  <div className="p-1.5 rounded-md bg-cyan-500/15">
-                    <Target className="w-3.5 h-3.5 text-cyan-400" />
+                  <div className="p-1.5 rounded-md bg-cyan-50">
+                    <Target className="w-3.5 h-3.5 text-cyan-600" />
                   </div>
                   Recommendations
                 </CardTitle>
@@ -647,8 +647,8 @@ export function AuditView() {
                   <div className="space-y-2">
                     {currentAudit.recommendations.map((rec, i) => (
                       <div key={i} className="flex items-start gap-2 text-xs text-gray-600 leading-relaxed">
-                        <div className="w-4 h-4 rounded-full bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                          <Target className="w-2 h-2 text-cyan-400" />
+                        <div className="w-4 h-4 rounded-full bg-cyan-50 border border-cyan-200 flex items-center justify-center shrink-0 mt-0.5">
+                          <Target className="w-2 h-2 text-cyan-600" />
                         </div>
                         <span>{rec}</span>
                       </div>
@@ -664,8 +664,8 @@ export function AuditView() {
             <Card className="bg-white border-gray-200">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-900 flex items-center gap-2">
-                  <div className="p-1.5 rounded-md bg-violet-500/15">
-                    <MessageSquare className="w-3.5 h-3.5 text-violet-400" />
+                  <div className="p-1.5 rounded-md bg-violet-50">
+                    <MessageSquare className="w-3.5 h-3.5 text-violet-600" />
                   </div>
                   Sales Talking Points
                 </CardTitle>
@@ -675,8 +675,8 @@ export function AuditView() {
                   <div className="space-y-2">
                     {currentAudit.talkingPoints.map((tp, i) => (
                       <div key={i} className="flex items-start gap-2 text-xs text-gray-600 leading-relaxed">
-                        <div className="w-4 h-4 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                          <MessageSquare className="w-2 h-2 text-violet-400" />
+                        <div className="w-4 h-4 rounded-full bg-violet-50 border border-violet-200 flex items-center justify-center shrink-0 mt-0.5">
+                          <MessageSquare className="w-2 h-2 text-violet-600" />
                         </div>
                         <span>{tp}</span>
                       </div>
@@ -697,7 +697,7 @@ export function AuditView() {
                   className={cn(
                     'flex-1 sm:flex-none h-10 px-5',
                     'bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500',
-                    'text-gray-900 shadow-lg shadow-violet-500/15'
+                    'text-white shadow-lg shadow-violet-500/15'
                   )}
                   onClick={() => setView('email-center')}
                 >
@@ -718,12 +718,12 @@ export function AuditView() {
                 {campaigns.length > 0 ? (
                   <div className="flex-1 sm:flex-none">
                     <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
-                      <SelectTrigger className="h-10 w-full sm:w-auto bg-gray-100/70 border-gray-200 text-gray-600">
+                      <SelectTrigger className="h-10 w-full sm:w-auto bg-gray-50 border-gray-200 text-gray-600">
                         <SelectValue placeholder="Add to Campaign..." />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-100 border-gray-200">
+                      <SelectContent className="bg-white border-gray-200">
                         {campaigns.map((c) => (
-                          <SelectItem key={c.id} value={c.id} className="text-slate-200 focus:bg-gray-200 focus:text-gray-900">
+                          <SelectItem key={c.id} value={c.id} className="text-gray-700 focus:bg-gray-50 focus:text-gray-900">
                             {c.name}
                           </SelectItem>
                         ))}
@@ -734,7 +734,7 @@ export function AuditView() {
                 {selectedCampaignId && (
                   <Button
                     variant="outline"
-                    className="h-10 px-5 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+                    className="h-10 px-5 border-emerald-200 text-emerald-600 hover:bg-emerald-50"
                     onClick={handleAddToCampaign}
                   >
                     <ArrowRight className="w-4 h-4 mr-2" />
@@ -762,11 +762,11 @@ export function AuditView() {
             {auditsLoading ? (
               <div className="space-y-3">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="flex items-center gap-4 p-3 rounded-lg bg-slate-800/30">
+                  <div key={i} className="flex items-center gap-4 p-3 rounded-lg bg-gray-50">
                     <Skeleton className="h-9 w-9 rounded-lg bg-gray-100" />
                     <div className="flex-1 space-y-2">
                       <Skeleton className="h-3.5 w-40 bg-gray-100" />
-                      <Skeleton className="h-3 w-60 bg-gray-200/70" />
+                      <Skeleton className="h-3 w-60 bg-gray-200" />
                     </div>
                     <Skeleton className="h-6 w-12 bg-gray-100" />
                   </div>
@@ -779,12 +779,12 @@ export function AuditView() {
                     <button
                       key={audit.id}
                       onClick={() => handleLoadAudit(audit)}
-                      className="w-full flex items-center gap-4 p-3 rounded-lg bg-slate-800/30 hover:bg-gray-100/80 border border-transparent hover:border-gray-200 transition-all text-left group"
+                      className="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-left group"
                     >
                       {/* Mini score circle */}
                       <div className="relative w-9 h-9 shrink-0">
                         <svg className="w-9 h-9 -rotate-90">
-                          <circle cx="18" cy="18" r="14" fill="none" strokeWidth="3" className="stroke-slate-700" />
+                          <circle cx="18" cy="18" r="14" fill="none" strokeWidth="3" className="stroke-gray-200" />
                           <circle
                             cx="18"
                             cy="18"
@@ -804,7 +804,7 @@ export function AuditView() {
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <p className="text-sm text-slate-200 font-medium truncate">{audit.domain}</p>
+                          <p className="text-sm text-gray-900 font-medium truncate">{audit.domain}</p>
                           {audit.lead && (
                             <Badge variant="outline" className="bg-gray-200/70 border-gray-300 text-gray-500 text-[10px] px-1.5 py-0 shrink-0">
                               {audit.lead.business.name}
@@ -827,14 +827,14 @@ export function AuditView() {
                         {/* Mini score badges */}
                         <div className="hidden sm:flex items-center gap-1.5">
                           <span className={cn('text-[10px] font-medium', getScoreColor(audit.scores.design))}>{audit.scores.design}</span>
-                          <span className="text-[10px] text-gray-300">/</span>
+                          <span className="text-[10px] text-gray-400">/</span>
                           <span className={cn('text-[10px] font-medium', getScoreColor(audit.scores.technical))}>{audit.scores.technical}</span>
-                          <span className="text-[10px] text-gray-300">/</span>
+                          <span className="text-[10px] text-gray-400">/</span>
                           <span className={cn('text-[10px] font-medium', getScoreColor(audit.scores.business))}>{audit.scores.business}</span>
-                          <span className="text-[10px] text-gray-300">/</span>
+                          <span className="text-[10px] text-gray-400">/</span>
                           <span className={cn('text-[10px] font-medium', getScoreColor(audit.scores.automation))}>{audit.scores.automation}</span>
                         </div>
-                        <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors" />
+                        <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-gray-500 transition-colors" />
                       </div>
                     </button>
                   ))}
@@ -842,8 +842,8 @@ export function AuditView() {
               </ScrollArea>
             ) : (
               <div className="py-10 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-gray-100/70 flex items-center justify-center mx-auto mb-4">
-                  <ScanSearch className="w-7 h-7 text-gray-300" />
+                <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                  <ScanSearch className="w-7 h-7 text-gray-400" />
                 </div>
                 <p className="text-gray-900 font-medium">No audits yet</p>
                 <p className="text-sm text-gray-500 mt-1">

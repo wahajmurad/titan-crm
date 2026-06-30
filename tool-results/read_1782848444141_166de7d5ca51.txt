@@ -1,0 +1,862 @@
+     1→'use client'
+     2→
+     3→import { useState, useCallback } from 'react'
+     4→import { useAppStore } from '@/lib/store'
+     5→import { Card, CardContent } from '@/components/ui/card'
+     6→import { Button } from '@/components/ui/button'
+     7→import { Input } from '@/components/ui/input'
+     8→import { Badge } from '@/components/ui/badge'
+     9→import { Progress } from '@/components/ui/progress'
+    10→import { Skeleton } from '@/components/ui/skeleton'
+    11→import {
+    12→  Dialog,
+    13→  DialogContent,
+    14→  DialogHeader,
+    15→  DialogTitle,
+    16→  DialogDescription,
+    17→} from '@/components/ui/dialog'
+    18→import {
+    19→  Table,
+    20→  TableBody,
+    21→  TableCell,
+    22→  TableHead,
+    23→  TableHeader,
+    24→  TableRow,
+    25→} from '@/components/ui/table'
+    26→import { ScrollArea } from '@/components/ui/scroll-area'
+    27→import {
+    28→  Search,
+    29→  MapPin,
+    30→  Globe,
+    31→  Phone,
+    32→  Star,
+    33→  ExternalLink,
+    34→  Loader2,
+    35→  Sparkles,
+    36→  Plus,
+    37→  Check,
+    38→  AlertTriangle,
+    39→  Target,
+    40→  TrendingUp,
+    41→  MessageSquare,
+    42→  Radar,
+    43→  X,
+    44→  Shield,
+    45→  Cpu,
+    46→  Briefcase,
+    47→  Bot,
+    48→} from 'lucide-react'
+    49→import { cn } from '@/lib/utils'
+    50→
+    51→/* ──────────── Types ──────────── */
+    52→
+    53→interface DiscoveredLead {
+    54→  name: string
+    55→  address: string
+    56→  phone: string
+    57→  website: string
+    58→  mapsUrl: string
+    59→  rating: number
+    60→  placeId: string
+    61→  source: string
+    62→  existing?: boolean
+    63→}
+    64→
+    65→interface AuditResult {
+    66→  designScore: number
+    67→  technicalScore: number
+    68→  businessScore: number
+    69→  automationScore: number
+    70→  overallScore: number
+    71→  designDetails: string
+    72→  technicalDetails: string
+    73→  businessDetails: string
+    74→  automationDetails: string
+    75→  opportunities: string
+    76→  recommendations: string
+    77→  talkingPoints: string
+    78→}
+    79→
+    80→/* ──────────── Helpers ──────────── */
+    81→
+    82→function scoreColor(score: number): string {
+    83→  if (score >= 70) return 'text-emerald-600'
+    84→  if (score >= 40) return 'text-amber-600'
+    85→  return 'text-red-600'
+    86→}
+    87→
+    88→function scoreBg(score: number): string {
+    89→  if (score >= 70) return 'bg-emerald-50 border-emerald-200'
+    90→  if (score >= 40) return 'bg-amber-50 border-amber-200'
+    91→  return 'bg-red-50 border-red-200'
+    92→}
+    93→
+    94→function progressBarColor(score: number): string {
+    95→  if (score >= 70) return '[&>div]:bg-emerald-500'
+    96→  if (score >= 40) return '[&>div]:bg-amber-500'
+    97→  return '[&>div]:bg-red-500'
+    98→}
+    99→
+   100→function renderStars(rating: number) {
+   101→  const full = Math.floor(rating)
+   102→  const hasHalf = rating - full >= 0.3
+   103→  return (
+   104→    <div className="flex items-center gap-0.5">
+   105→      {Array.from({ length: 5 }).map((_, i) => (
+   106→        <Star
+   107→          key={i}
+   108→          className={cn(
+   109→            'w-3.5 h-3.5',
+   110→            i < full
+   111→              ? 'text-amber-400 fill-amber-400'
+   112→              : i === full && hasHalf
+   113→                ? 'text-amber-400 fill-amber-200'
+   114→                : 'text-gray-300',
+   115→          )}
+   116→        />
+   117→      ))}
+   118→      <span className="text-xs text-gray-500 ml-1">{rating > 0 ? rating.toFixed(1) : '—'}</span>
+   119→    </div>
+   120→  )
+   121→}
+   122→
+   123→function parseNumberedList(text: string): string[] {
+   124→  if (!text) return []
+   125→  return text
+   126→    .split('\n')
+   127→    .map((line) => line.replace(/^\d+[\.\)\-]\s*/, '').trim())
+   128→    .filter((line) => line.length > 0)
+   129→}
+   130→
+   131→/* ──────────── Main Component ──────────── */
+   132→
+   133→export function DiscoveryView() {
+   134→  const { setView } = useAppStore()
+   135→
+   136→  // Search form
+   137→  const [query, setQuery] = useState('')
+   138→  const [location, setLocation] = useState('')
+   139→
+   140→  // Search state
+   141→  const [searching, setSearching] = useState(false)
+   142→  const [leads, setLeads] = useState<DiscoveredLead[]>([])
+   143→  const [totalResults, setTotalResults] = useState(0)
+   144→  const [newCount, setNewCount] = useState(0)
+   145→  const [existingCount, setExistingCount] = useState(0)
+   146→  const [searchError, setSearchError] = useState('')
+   147→
+   148→  // Track which leads have been added
+   149→  const [addedIds, setAddedIds] = useState<Set<string>>(new Set())
+   150→
+   151→  // Audit modal
+   152→  const [auditModalOpen, setAuditModalOpen] = useState(false)
+   153→  const [auditLead, setAuditLead] = useState<DiscoveredLead | null>(null)
+   154→  const [auditLoading, setAuditLoading] = useState(false)
+   155→  const [auditResult, setAuditResult] = useState<AuditResult | null>(null)
+   156→  const [auditError, setAuditError] = useState('')
+   157→
+   158→  const handleSearch = useCallback(async () => {
+   159→    if (!query.trim() || !location.trim()) return
+   160→
+   161→    setSearching(true)
+   162→    setSearchError('')
+   163→    setLeads([])
+   164→    setTotalResults(0)
+   165→    setNewCount(0)
+   166→    setExistingCount(0)
+   167→
+   168→    try {
+   169→      const res = await fetch('/api/leads/search', {
+   170→        method: 'POST',
+   171→        headers: { 'Content-Type': 'application/json' },
+   172→        credentials: 'same-origin',
+   173→        body: JSON.stringify({ query: query.trim(), location: location.trim() }),
+   174→      })
+   175→
+   176→      const data = await res.json()
+   177→
+   178→      if (!res.ok) {
+   179→        setSearchError(data.error || 'Search failed')
+   180→        return
+   181→      }
+   182→
+   183→      setLeads(data.leads || [])
+   184→      setTotalResults(data.total || 0)
+   185→      setNewCount(data.newCount || 0)
+   186→      setExistingCount(data.existingCount || 0)
+   187→    } catch {
+   188→      setSearchError('Network error. Please try again.')
+   189→    } finally {
+   190→      setSearching(false)
+   191→    }
+   192→  }, [query, location])
+   193→
+   194→  const handleKeyDown = useCallback(
+   195→    (e: React.KeyboardEvent) => {
+   196→      if (e.key === 'Enter' && !searching) handleSearch()
+   197→    },
+   198→    [handleSearch, searching],
+   199→  )
+   200→
+   201→  const handleAddLead = useCallback(async (lead: DiscoveredLead) => {
+   202→    try {
+   203→      // Parse city/country from address
+   204→      const addressParts = lead.address.split(',').map((s) => s.trim())
+   205→      const city = addressParts[addressParts.length - 2] || ''
+   206→      const country = addressParts[addressParts.length - 1] || ''
+   207→
+   208→      const res = await fetch('/api/leads', {
+   209→        method: 'POST',
+   210→        headers: { 'Content-Type': 'application/json' },
+   211→        credentials: 'same-origin',
+   212→        body: JSON.stringify({
+   213→          business: {
+   214→            name: lead.name,
+   215→            website: lead.website || null,
+   216→            phone: lead.phone || null,
+   217→            city: city || null,
+   218→            country: country || null,
+   219→            source: lead.source,
+   220→          },
+   221→        }),
+   222→      })
+   223→
+   224→      if (res.ok) {
+   225→        setAddedIds((prev) => new Set(prev).add(lead.placeId || lead.name))
+   226→      }
+   227→    } catch {
+   228→      // silently fail
+   229→    }
+   230→  }, [])
+   231→
+   232→  const handleAudit = useCallback(async (lead: DiscoveredLead) => {
+   233→    if (!lead.website) {
+   234→      setAuditError('No website found for this business. Cannot run audit without a website URL.')
+   235→      setAuditLead(lead)
+   236→      setAuditResult(null)
+   237→      setAuditModalOpen(true)
+   238→      return
+   239→    }
+   240→
+   241→    setAuditLead(lead)
+   242→    setAuditLoading(true)
+   243→    setAuditResult(null)
+   244→    setAuditError('')
+   245→    setAuditModalOpen(true)
+   246→
+   247→    try {
+   248→      // First, save as a lead to get a businessId
+   249→      let businessId = ''
+   250→      const addressParts = lead.address.split(',').map((s) => s.trim())
+   251→      const city = addressParts[addressParts.length - 2] || ''
+   252→      const country = addressParts[addressParts.length - 1] || ''
+   253→
+   254→      const leadRes = await fetch('/api/leads', {
+   255→        method: 'POST',
+   256→        headers: { 'Content-Type': 'application/json' },
+   257→        credentials: 'same-origin',
+   258→        body: JSON.stringify({
+   259→          business: {
+   260→            name: lead.name,
+   261→            website: lead.website,
+   262→            phone: lead.phone || null,
+   263→            city: city || null,
+   264→            country: country || null,
+   265→            source: lead.source,
+   266→          },
+   267→        }),
+   268→      })
+   269→
+   270→      if (leadRes.ok) {
+   271→        const leadData = await leadRes.json()
+   272→        businessId = leadData.lead?.businessId || ''
+   273→        // Mark as added
+   274→        setAddedIds((prev) => new Set(prev).add(lead.placeId || lead.name))
+   275→      }
+   276→
+   277→      if (!businessId) {
+   278→        setAuditError('Failed to create business record. Cannot run audit.')
+   279→        setAuditLoading(false)
+   280→        return
+   281→      }
+   282→
+   283→      // Now run audit
+   284→      const auditRes = await fetch('/api/audit', {
+   285→        method: 'POST',
+   286→        headers: { 'Content-Type': 'application/json' },
+   287→        credentials: 'same-origin',
+   288→        body: JSON.stringify({ url: lead.website, businessId }),
+   289→      })
+   290→
+   291→      const auditData = await auditRes.json()
+   292→
+   293→      if (!auditRes.ok) {
+   294→        setAuditError(auditData.error || 'Audit failed')
+   295→        return
+   296→      }
+   297→
+   298→      setAuditResult(auditData.audit)
+   299→    } catch {
+   300→      setAuditError('Network error during audit. Please try again.')
+   301→    } finally {
+   302→      setAuditLoading(false)
+   303→    }
+   304→  }, [])
+   305→
+   306→  const isAdded = (lead: DiscoveredLead) => addedIds.has(lead.placeId || lead.name) || !!lead.existing
+   307→
+   308→  return (
+   309→    <div className="space-y-6">
+   310→      {/* ── Header ── */}
+   311→      <div>
+   312→        <div className="flex items-center gap-2.5 mb-1">
+   313→          <div className="p-2 rounded-lg bg-violet-50 border border-violet-200/60">
+   314→            <Radar className="w-5 h-5 text-violet-600" />
+   315→          </div>
+   316→          <h1 className="text-xl font-semibold text-gray-900">Lead Discovery</h1>
+   317→        </div>
+   318→        <p className="text-sm text-gray-500 mt-1 ml-1">
+   319→          Search Google Maps for real businesses and add them to your pipeline
+   320→        </p>
+   321→      </div>
+   322→
+   323→      {/* ── Search Form ── */}
+   324→      <Card className="bg-white border-gray-200 shadow-sm">
+   325→        <CardContent className="p-5">
+   326→          <div className="flex flex-col sm:flex-row gap-3">
+   327→            <div className="flex-1">
+   328→              <div className="relative">
+   329→                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+   330→                <Input
+   331→                  placeholder='What to search for (e.g. "digital marketing agency")'
+   332→                  value={query}
+   333→                  onChange={(e) => setQuery(e.target.value)}
+   334→                  onKeyDown={handleKeyDown}
+   335→                  className="pl-9 h-10 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30 focus-visible:border-violet-400"
+   336→                  disabled={searching}
+   337→                />
+   338→              </div>
+   339→            </div>
+   340→            <div className="sm:w-64">
+   341→              <div className="relative">
+   342→                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+   343→                <Input
+   344→                  placeholder='Location (e.g. "New York")'
+   345→                  value={location}
+   346→                  onChange={(e) => setLocation(e.target.value)}
+   347→                  onKeyDown={handleKeyDown}
+   348→                  className="pl-9 h-10 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30 focus-visible:border-violet-400"
+   349→                  disabled={searching}
+   350→                />
+   351→              </div>
+   352→            </div>
+   353→            <Button
+   354→              onClick={handleSearch}
+   355→              disabled={searching || !query.trim() || !location.trim()}
+   356→              className="h-10 px-6 bg-violet-600 hover:bg-violet-700 text-white font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+   357→            >
+   358→              {searching ? (
+   359→                <>
+   360→                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+   361→                  Searching...
+   362→                </>
+   363→              ) : (
+   364→                <>
+   365→                  <Search className="w-4 h-4 mr-2" />
+   366→                  Search
+   367→                </>
+   368→              )}
+   369→            </Button>
+   370→          </div>
+   371→          {searchError && (
+   372→            <div className="mt-3 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700 flex items-start gap-2">
+   373→              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+   374→              <span>{searchError}</span>
+   375→              <button onClick={() => setSearchError('')} className="ml-auto shrink-0">
+   376→                <X className="w-4 h-4 text-red-400 hover:text-red-600" />
+   377→              </button>
+   378→            </div>
+   379→          )}
+   380→        </CardContent>
+   381→      </Card>
+   382→
+   383→      {/* ── Loading State ── */}
+   384→      {searching && (
+   385→        <Card className="bg-white border-gray-200 shadow-sm">
+   386→          <CardContent className="p-8">
+   387→            <div className="flex flex-col items-center justify-center py-6 space-y-4">
+   388→              <div className="relative w-16 h-16">
+   389→                <div className="absolute inset-0 rounded-full border-2 border-violet-200 animate-ping" style={{ animationDuration: '2s' }} />
+   390→                <div className="absolute inset-2 rounded-full border-2 border-violet-300 animate-ping" style={{ animationDuration: '1.5s', animationDelay: '0.3s' }} />
+   391→                <div className="absolute inset-0 flex items-center justify-center">
+   392→                  <Radar className="w-7 h-7 text-violet-500 animate-pulse" />
+   393→                </div>
+   394→              </div>
+   395→              <div className="text-center">
+   396→                <p className="text-gray-900 font-medium">Searching Google Maps...</p>
+   397→                <p className="text-sm text-gray-500 mt-1">
+   398→                  Finding businesses matching &quot;{query}&quot; in {location}
+   399→                </p>
+   400→              </div>
+   401→              <div className="flex gap-3 mt-2">
+   402→                {Array.from({ length: 3 }).map((_, i) => (
+   403→                  <Skeleton key={i} className="h-12 w-48 rounded-lg bg-gray-100" />
+   404→                ))}
+   405→              </div>
+   406→            </div>
+   407→          </CardContent>
+   408→        </Card>
+   409→      )}
+   410→
+   411→      {/* ── Results ── */}
+   412→      {leads.length > 0 && !searching && (
+   413→        <div className="space-y-4">
+   414→          {/* Summary bar */}
+   415→          <div className="flex flex-wrap items-center gap-3 px-1">
+   416→            <span className="text-sm font-medium text-gray-900">{totalResults} businesses found</span>
+   417→            <Badge variant="outline" className="bg-emerald-50 border-emerald-200 text-emerald-700 text-xs font-medium">
+   418→              {newCount} new
+   419→            </Badge>
+   420→            <Badge variant="outline" className="bg-gray-100 border-gray-200 text-gray-600 text-xs font-medium">
+   421→              {existingCount} already in CRM
+   422→            </Badge>
+   423→          </div>
+   424→
+   425→          {/* Desktop Table */}
+   426→          <Card className="bg-white border-gray-200 shadow-sm hidden md:block">
+   427→            <div className="overflow-x-auto">
+   428→              <Table>
+   429→                <TableHeader>
+   430→                  <TableRow className="bg-gray-50/80 border-b border-gray-200 hover:bg-gray-50/80">
+   431→                    <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider px-4 py-3">Business</TableHead>
+   432→                    <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider px-3 py-3">Phone</TableHead>
+   433→                    <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider px-3 py-3">Website</TableHead>
+   434→                    <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider px-3 py-3">Rating</TableHead>
+   435→                    <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider px-3 py-3">Status</TableHead>
+   436→                    <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider px-3 py-3 text-right">Actions</TableHead>
+   437→                  </TableRow>
+   438→                </TableHeader>
+   439→                <TableBody>
+   440→                  {leads.map((lead, idx) => (
+   441→                    <TableRow
+   442→                      key={lead.placeId || idx}
+   443→                      className={cn(
+   444→                        'border-b border-gray-100 hover:bg-gray-50/50 transition-colors',
+   445→                        idx % 2 === 1 && 'bg-gray-50/30',
+   446→                      )}
+   447→                    >
+   448→                      <TableCell className="px-4 py-3">
+   449→                        <div className="min-w-0">
+   450→                          <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">{lead.name}</p>
+   451→                          <div className="flex items-center gap-1 mt-0.5 text-xs text-gray-500">
+   452→                            <MapPin className="w-3 h-3 shrink-0" />
+   453→                            <span className="truncate max-w-[200px]">{lead.address || 'No address'}</span>
+   454→                          </div>
+   455→                        </div>
+   456→                      </TableCell>
+   457→                      <TableCell className="px-3 py-3">
+   458→                        {lead.phone ? (
+   459→                          <a
+   460→                            href={`tel:${lead.phone}`}
+   461→                            className="text-xs text-gray-700 hover:text-violet-600 transition-colors flex items-center gap-1"
+   462→                          >
+   463→                            <Phone className="w-3 h-3 shrink-0" />
+   464→                            <span>{lead.phone}</span>
+   465→                          </a>
+   466→                        ) : (
+   467→                          <span className="text-xs text-gray-400">—</span>
+   468→                        )}
+   469→                      </TableCell>
+   470→                      <TableCell className="px-3 py-3">
+   471→                        {lead.website ? (
+   472→                          <a
+   473→                            href={lead.website}
+   474→                            target="_blank"
+   475→                            rel="noopener noreferrer"
+   476→                            className="text-xs text-violet-600 hover:text-violet-700 transition-colors flex items-center gap-1 max-w-[180px]"
+   477→                          >
+   478→                            <Globe className="w-3 h-3 shrink-0" />
+   479→                            <span className="truncate">{lead.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}</span>
+   480→                            <ExternalLink className="w-3 h-3 shrink-0 opacity-50" />
+   481→                          </a>
+   482→                        ) : (
+   483→                          <span className="text-xs text-gray-400">—</span>
+   484→                        )}
+   485→                      </TableCell>
+   486→                      <TableCell className="px-3 py-3">{renderStars(lead.rating)}</TableCell>
+   487→                      <TableCell className="px-3 py-3">
+   488→                        {isAdded(lead) ? (
+   489→                          <Badge variant="outline" className="bg-gray-100 border-gray-200 text-gray-600 text-[10px] font-medium">
+   490→                            <Check className="w-2.5 h-2.5 mr-1" />
+   491→                            In CRM
+   492→                          </Badge>
+   493→                        ) : (
+   494→                          <Badge variant="outline" className="bg-emerald-50 border-emerald-200 text-emerald-700 text-[10px] font-medium">
+   495→                            New
+   496→                          </Badge>
+   497→                        )}
+   498→                      </TableCell>
+   499→                      <TableCell className="px-3 py-3 text-right">
+   500→                        <div className="flex items-center justify-end gap-2">
+   501→                          <Button
+   502→                            size="sm"
+   503→                            variant="outline"
+   504→                            onClick={() => handleAudit(lead)}
+   505→                            disabled={!lead.website}
+   506→                            className="h-8 px-3 text-xs border-gray-200 text-gray-600 hover:bg-violet-50 hover:text-violet-700 hover:border-violet-300 disabled:opacity-40 disabled:cursor-not-allowed"
+   507→                            title={!lead.website ? 'No website available for audit' : 'Run AI website audit'}
+   508→                          >
+   509→                            <Sparkles className="w-3 h-3 mr-1" />
+   510→                            Audit
+   511→                          </Button>
+   512→                          <Button
+   513→                            size="sm"
+   514→                            variant="outline"
+   515→                            onClick={() => handleAddLead(lead)}
+   516→                            disabled={isAdded(lead)}
+   517→                            className={cn(
+   518→                              'h-8 px-3 text-xs transition-colors disabled:opacity-60 disabled:cursor-not-allowed',
+   519→                              isAdded(lead)
+   520→                                ? 'border-emerald-200 bg-emerald-50 text-emerald-700 cursor-default'
+   521→                                : 'border-gray-200 text-gray-600 hover:bg-violet-50 hover:text-violet-700 hover:border-violet-300',
+   522→                            )}
+   523→                          >
+   524→                            {isAdded(lead) ? (
+   525→                              <>
+   526→                                <Check className="w-3 h-3 mr-1" />
+   527→                                Added
+   528→                              </>
+   529→                            ) : (
+   530→                              <>
+   531→                                <Plus className="w-3 h-3 mr-1" />
+   532→                                Add
+   533→                              </>
+   534→                            )}
+   535→                          </Button>
+   536→                        </div>
+   537→                      </TableCell>
+   538→                    </TableRow>
+   539→                  ))}
+   540→                </TableBody>
+   541→              </Table>
+   542→            </div>
+   543→          </Card>
+   544→
+   545→          {/* Mobile Cards */}
+   546→          <div className="md:hidden space-y-3">
+   547→            {leads.map((lead, idx) => (
+   548→              <Card key={lead.placeId || idx} className="bg-white border-gray-200 shadow-sm">
+   549→                <CardContent className="p-4 space-y-3">
+   550→                  <div className="flex items-start justify-between gap-2">
+   551→                    <div className="min-w-0">
+   552→                      <p className="text-sm font-semibold text-gray-900">{lead.name}</p>
+   553→                      <div className="flex items-center gap-1 mt-0.5 text-xs text-gray-500">
+   554→                        <MapPin className="w-3 h-3 shrink-0" />
+   555→                        <span className="truncate">{lead.address || 'No address'}</span>
+   556→                      </div>
+   557→                    </div>
+   558→                    {isAdded(lead) ? (
+   559→                      <Badge variant="outline" className="bg-gray-100 border-gray-200 text-gray-600 text-[10px] font-medium shrink-0">
+   560→                        <Check className="w-2.5 h-2.5 mr-1" />
+   561→                        In CRM
+   562→                      </Badge>
+   563→                    ) : (
+   564→                      <Badge variant="outline" className="bg-emerald-50 border-emerald-200 text-emerald-700 text-[10px] font-medium shrink-0">
+   565→                        New
+   566→                      </Badge>
+   567→                    )}
+   568→                  </div>
+   569→
+   570→                  <div className="grid grid-cols-1 gap-1.5 text-xs">
+   571→                    {lead.phone && (
+   572→                      <div className="flex items-center gap-1.5 text-gray-600">
+   573→                        <Phone className="w-3 h-3 text-gray-400" />
+   574→                        <a href={`tel:${lead.phone}`} className="hover:text-violet-600 transition-colors">{lead.phone}</a>
+   575→                      </div>
+   576→                    )}
+   577→                    {lead.website && (
+   578→                      <div className="flex items-center gap-1.5 text-gray-600">
+   579→                        <Globe className="w-3 h-3 text-gray-400" />
+   580→                        <a href={lead.website} target="_blank" rel="noopener noreferrer" className="hover:text-violet-600 transition-colors truncate">
+   581→                          {lead.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+   582→                          <ExternalLink className="w-2.5 h-2.5 inline ml-1 opacity-50" />
+   583→                        </a>
+   584→                      </div>
+   585→                    )}
+   586→                    {lead.rating > 0 && <div className="pt-0.5">{renderStars(lead.rating)}</div>}
+   587→                  </div>
+   588→
+   589→                  <div className="flex gap-2 pt-1">
+   590→                    <Button
+   591→                      size="sm"
+   592→                      variant="outline"
+   593→                      onClick={() => handleAudit(lead)}
+   594→                      disabled={!lead.website}
+   595→                      className="flex-1 h-8 text-xs border-gray-200 text-gray-600 hover:bg-violet-50 hover:text-violet-700 hover:border-violet-300 disabled:opacity-40"
+   596→                    >
+   597→                      <Sparkles className="w-3 h-3 mr-1" />
+   598→                      Audit
+   599→                    </Button>
+   600→                    <Button
+   601→                      size="sm"
+   602→                      variant="outline"
+   603→                      onClick={() => handleAddLead(lead)}
+   604→                      disabled={isAdded(lead)}
+   605→                      className={cn(
+   606→                        'flex-1 h-8 text-xs transition-colors disabled:opacity-60',
+   607→                        isAdded(lead)
+   608→                          ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+   609→                          : 'border-gray-200 text-gray-600 hover:bg-violet-50 hover:text-violet-700 hover:border-violet-300',
+   610→                      )}
+   611→                    >
+   612→                      {isAdded(lead) ? (
+   613→                        <>
+   614→                          <Check className="w-3 h-3 mr-1" />
+   615→                          Added
+   616→                        </>
+   617→                      ) : (
+   618→                        <>
+   619→                          <Plus className="w-3 h-3 mr-1" />
+   620→                          Add
+   621→                        </>
+   622→                      )}
+   623→                    </Button>
+   624→                  </div>
+   625→                </CardContent>
+   626→              </Card>
+   627→            ))}
+   628→          </div>
+   629→        </div>
+   630→      )}
+   631→
+   632→      {/* ── Empty State (after search, no results) ── */}
+   633→      {!searching && leads.length === 0 && searchError === '' && totalResults === 0 && (
+   634→        <Card className="bg-white border-gray-200 border-dashed shadow-sm">
+   635→          <CardContent className="p-12 text-center">
+   636→            <div className="w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center mx-auto mb-4">
+   637→              <Radar className="w-7 h-7 text-gray-300" />
+   638→            </div>
+   639→            <p className="text-gray-900 font-medium">Search for businesses on Google Maps</p>
+   640→            <p className="text-sm text-gray-500 mt-2 max-w-md mx-auto">
+   641→              Enter what type of business you&apos;re looking for and a location to discover real leads.
+   642→              Run AI-powered audits to find opportunities and generate talking points.
+   643→            </p>
+   644→            <div className="flex items-center justify-center gap-6 mt-6">
+   645→              <div className="flex items-center gap-2 text-sm text-gray-400">
+   646→                <Search className="w-4 h-4 text-violet-500" />
+   647→                Google Maps
+   648→              </div>
+   649→              <div className="flex items-center gap-2 text-sm text-gray-400">
+   650→                <Sparkles className="w-4 h-4 text-violet-500" />
+   651→                AI Audits
+   652→              </div>
+   653→              <div className="flex items-center gap-2 text-sm text-gray-400">
+   654→                <Target className="w-4 h-4 text-violet-500" />
+   655→                Real Businesses
+   656→              </div>
+   657→            </div>
+   658→          </CardContent>
+   659→        </Card>
+   660→      )}
+   661→
+   662→      {/* ── No Results State ── */}
+   663→      {!searching && searchError === '' && leads.length === 0 && totalResults > 0 && (
+   664→        <Card className="bg-white border-gray-200 shadow-sm">
+   665→          <CardContent className="p-12 text-center">
+   666→            <div className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center mx-auto mb-4">
+   667→              <Search className="w-7 h-7 text-gray-300" />
+   668→            </div>
+   669→            <p className="text-gray-900 font-medium">No businesses found</p>
+   670→            <p className="text-sm text-gray-500 mt-1">
+   671→              Try different keywords or a broader location
+   672→            </p>
+   673→          </CardContent>
+   674→        </Card>
+   675→      )}
+   676→
+   677→      {/* ── Audit Modal ── */}
+   678→      <Dialog open={auditModalOpen} onOpenChange={(open) => { if (!open) { setAuditModalOpen(false); setAuditResult(null); setAuditError('') } else { setAuditModalOpen(true) } }}>
+   679→        <DialogContent className="bg-white border-gray-200 shadow-xl sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0">
+   680→          {auditLead && (
+   681→            <>
+   682→              {/* Modal header with business info */}
+   683→              <div className="p-6 pb-0">
+   684→                <DialogHeader>
+   685→                  <DialogTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+   686→                    <Sparkles className="w-5 h-5 text-violet-600" />
+   687→                    AI Website Audit
+   688→                  </DialogTitle>
+   689→                  <DialogDescription className="text-sm text-gray-500 mt-1">
+   690→                    {auditLead.name}
+   691→                    {auditLead.website && (
+   692→                      <a href={auditLead.website} target="_blank" rel="noopener noreferrer" className="text-violet-600 hover:underline ml-2">
+   693→                        ({auditLead.website.replace(/^https?:\/\//, '').replace(/\/$/, '')})
+   694→                      </a>
+   695→                    )}
+   696→                  </DialogDescription>
+   697→                </DialogHeader>
+   698→              </div>
+   699→
+   700→              <div className="flex-1 overflow-y-auto">
+   701→                {/* Loading state */}
+   702→                {auditLoading && (
+   703→                  <div className="p-8 space-y-5">
+   704→                    <div className="flex flex-col items-center justify-center py-8 space-y-4">
+   705→                      <div className="relative w-14 h-14">
+   706→                        <div className="absolute inset-0 rounded-full border-2 border-violet-200 animate-ping" style={{ animationDuration: '2s' }} />
+   707→                        <div className="absolute inset-0 flex items-center justify-center">
+   708→                          <Bot className="w-6 h-6 text-violet-500 animate-pulse" />
+   709→                        </div>
+   710→                      </div>
+   711→                      <div className="text-center">
+   712→                        <p className="text-gray-900 font-medium">Analyzing website...</p>
+   713→                        <p className="text-sm text-gray-500 mt-1">AI is auditing design, technical, business & automation</p>
+   714→                      </div>
+   715→                    </div>
+   716→                    <div className="space-y-3">
+   717→                      <Skeleton className="h-4 w-3/4 bg-gray-100" />
+   718→                      <Skeleton className="h-4 w-1/2 bg-gray-100" />
+   719→                      <Skeleton className="h-20 w-full bg-gray-100 rounded-lg" />
+   720→                      <Skeleton className="h-4 w-2/3 bg-gray-100" />
+   721→                      <Skeleton className="h-20 w-full bg-gray-100 rounded-lg" />
+   722→                    </div>
+   723→                  </div>
+   724→                )}
+   725→
+   726→                {/* Error state */}
+   727→                {!auditLoading && auditError && (
+   728→                  <div className="p-6">
+   729→                    <div className="p-4 rounded-lg bg-red-50 border border-red-200 flex items-start gap-3">
+   730→                      <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 shrink-0" />
+   731→                      <div>
+   732→                        <p className="text-sm font-medium text-red-800">Audit Failed</p>
+   733→                        <p className="text-sm text-red-600 mt-1">{auditError}</p>
+   734→                      </div>
+   735→                    </div>
+   736→                  </div>
+   737→                )}
+   738→
+   739→                {/* Audit results */}
+   740→                {!auditLoading && auditResult && (
+   741→                  <div className="p-6 pt-2 space-y-6">
+   742→                    {/* Overall Score */}
+   743→                    <div className="flex items-center gap-5">
+   744→                      <div className={cn('w-20 h-20 rounded-2xl border-2 flex flex-col items-center justify-center shrink-0', scoreBg(auditResult.overallScore))}>
+   745→                        <span className={cn('text-2xl font-bold leading-none', scoreColor(auditResult.overallScore))}>
+   746→                          {auditResult.overallScore}
+   747→                        </span>
+   748→                        <span className="text-[10px] text-gray-500 mt-0.5">/ 100</span>
+   749→                      </div>
+   750→                      <div>
+   751→                        <p className="text-sm font-medium text-gray-900">Overall Score</p>
+   752→                        <p className="text-xs text-gray-500 mt-0.5">
+   753→                          {auditResult.overallScore >= 70
+   754→                            ? 'Strong online presence — good opportunity for partnership'
+   755→                            : auditResult.overallScore >= 40
+   756→                              ? 'Moderate presence — clear room for improvement'
+   757→                              : 'Significant gaps — strong pitch opportunity'}
+   758→                        </p>
+   759→                      </div>
+   760→                    </div>
+   761→
+   762→                    {/* Category Scores */}
+   763→                    <div className="grid grid-cols-2 gap-3">
+   764→                      {[
+   765→                        { label: 'Design', score: auditResult.designScore, icon: Shield, details: auditResult.designDetails },
+   766→                        { label: 'Technical', score: auditResult.technicalScore, icon: Cpu, details: auditResult.technicalDetails },
+   767→                        { label: 'Business', score: auditResult.businessScore, icon: Briefcase, details: auditResult.businessDetails },
+   768→                        { label: 'Automation', score: auditResult.automationScore, icon: Bot, details: auditResult.automationDetails },
+   769→                      ].map((cat) => (
+   770→                        <div key={cat.label} className="p-3 rounded-xl bg-gray-50 border border-gray-100 space-y-2">
+   771→                          <div className="flex items-center justify-between">
+   772→                            <div className="flex items-center gap-1.5 text-xs font-medium text-gray-700">
+   773→                              <cat.icon className="w-3.5 h-3.5 text-gray-400" />
+   774→                              {cat.label}
+   775→                            </div>
+   776→                            <span className={cn('text-sm font-bold', scoreColor(cat.score))}>{cat.score}</span>
+   777→                          </div>
+   778→                          <Progress value={cat.score} className={cn('h-1.5 bg-gray-200/60', progressBarColor(cat.score))} />
+   779→                          {cat.details && (
+   780→                            <p className="text-[11px] text-gray-500 leading-relaxed line-clamp-3">{cat.details}</p>
+   781→                          )}
+   782→                        </div>
+   783→                      ))}
+   784→                    </div>
+   785→
+   786→                    {/* Key Problems */}
+   787→                    {auditResult.recommendations && (
+   788→                      <div className="space-y-2">
+   789→                        <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+   790→                          <AlertTriangle className="w-4 h-4 text-amber-500" />
+   791→                          Key Problems Found
+   792→                        </h3>
+   793→                        <div className="space-y-1.5">
+   794→                          {parseNumberedList(auditResult.recommendations).map((item, i) => (
+   795→                            <div key={i} className="flex gap-2 text-xs text-gray-600 leading-relaxed">
+   796→                              <span className="text-amber-500 font-semibold shrink-0">{i + 1}.</span>
+   797→                              <span>{item}</span>
+   798→                            </div>
+   799→                          ))}
+   800→                        </div>
+   801→                      </div>
+   802→                    )}
+   803→
+   804→                    {/* Opportunities */}
+   805→                    {auditResult.opportunities && (
+   806→                      <div className="space-y-2">
+   807→                        <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+   808→                          <TrendingUp className="w-4 h-4 text-emerald-500" />
+   809→                          Opportunities
+   810→                        </h3>
+   811→                        <div className="space-y-1.5">
+   812→                          {parseNumberedList(auditResult.opportunities).map((item, i) => (
+   813→                            <div key={i} className="flex gap-2 text-xs text-gray-600 leading-relaxed">
+   814→                              <span className="text-emerald-500 font-semibold shrink-0">{i + 1}.</span>
+   815→                              <span>{item}</span>
+   816→                            </div>
+   817→                          ))}
+   818→                        </div>
+   819→                      </div>
+   820→                    )}
+   821→
+   822→                    {/* How to Pitch */}
+   823→                    {auditResult.talkingPoints && (
+   824→                      <div className="space-y-2">
+   825→                        <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+   826→                          <MessageSquare className="w-4 h-4 text-violet-500" />
+   827→                          How to Pitch
+   828→                        </h3>
+   829→                        <div className="space-y-1.5">
+   830→                          {parseNumberedList(auditResult.talkingPoints).map((item, i) => (
+   831→                            <div key={i} className="flex gap-2 text-xs text-gray-600 leading-relaxed">
+   832→                              <span className="text-violet-500 font-semibold shrink-0">{i + 1}.</span>
+   833→                              <span>{item}</span>
+   834→                            </div>
+   835→                          ))}
+   836→                        </div>
+   837→                      </div>
+   838→                    )}
+   839→
+   840→                    {/* View in CRM button */}
+   841→                    <div className="pt-2 pb-1">
+   842→                      <Button
+   843→                        onClick={() => {
+   844→                          setAuditModalOpen(false)
+   845→                          setAuditResult(null)
+   846→                          setView('leads')
+   847→                        }}
+   848→                        className="w-full h-9 bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium"
+   849→                      >
+   850→                        View in Leads Pipeline
+   851→                      </Button>
+   852→                    </div>
+   853→                  </div>
+   854→                )}
+   855→              </div>
+   856→            </>
+   857→          )}
+   858→        </DialogContent>
+   859→      </Dialog>
+   860→    </div>
+   861→  )
+   862→}
