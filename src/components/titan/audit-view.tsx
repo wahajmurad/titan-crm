@@ -385,37 +385,37 @@ export function AuditView() {
     const rawUrl = String(raw.url ?? '')
     const s = (raw.scores && typeof raw.scores === 'object') ? raw.scores : {}
     const scores = {
-      ui: clampScore(raw.ui ?? s.ui ?? 0),
-      ux: clampScore(raw.ux ?? s.ux ?? 0),
-      seo: clampScore(raw.seo ?? s.seo ?? 0),
-      performance: clampScore(raw.performance ?? s.performance ?? 0),
-      accessibility: clampScore(raw.accessibility ?? s.accessibility ?? 0),
-      mobile: clampScore(raw.mobile ?? s.mobile ?? 0),
-      security: clampScore(raw.security ?? s.security ?? 0),
-      aiReadiness: clampScore(raw.aiReadiness ?? s.aiReadiness ?? 0),
-      automation: clampScore(raw.automation ?? s.automation ?? 0),
-      conversion: clampScore(raw.conversion ?? s.conversion ?? 0),
-      overall: clampScore(raw.overall ?? s.overall ?? 0),
+      ui: clampScore(raw.uiScore ?? raw.ui ?? s.uiScore ?? s.ui ?? 0),
+      ux: clampScore(raw.uxScore ?? raw.ux ?? s.uxScore ?? s.ux ?? 0),
+      seo: clampScore(raw.seoScore ?? raw.seo ?? s.seoScore ?? s.seo ?? 0),
+      performance: clampScore(raw.performanceScore ?? raw.performance ?? s.performanceScore ?? s.performance ?? 0),
+      accessibility: clampScore(raw.accessibilityScore ?? raw.accessibility ?? s.accessibilityScore ?? s.accessibility ?? 0),
+      mobile: clampScore(raw.mobileScore ?? raw.mobile ?? s.mobileScore ?? s.mobile ?? 0),
+      security: clampScore(raw.securityScore ?? raw.security ?? s.securityScore ?? s.security ?? 0),
+      aiReadiness: clampScore(raw.aiReadinessScore ?? raw.aiReadiness ?? s.aiReadinessScore ?? s.aiReadiness ?? 0),
+      automation: clampScore(raw.automationScore ?? raw.automation ?? s.automationScore ?? s.automation ?? 0),
+      conversion: clampScore(raw.conversionScore ?? raw.conversion ?? s.conversionScore ?? s.conversion ?? 0),
+      overall: clampScore(raw.overallScore ?? raw.overall ?? s.overallScore ?? s.overall ?? 0),
     }
 
     // calculate overall if not provided
-    if (!raw.overall && !s.overall) {
+    if (!raw.overallScore && !s.overallScore && !raw.overall && !s.overall) {
       const vals = [scores.ui, scores.ux, scores.seo, scores.performance, scores.accessibility, scores.mobile, scores.security, scores.aiReadiness, scores.automation, scores.conversion]
       scores.overall = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length)
     }
 
     const rawDetails = (raw.details ?? raw.analysis ?? {}) as Record<string, unknown>
     const details = {
-      ui: String(rawDetails.ui ?? ''),
-      ux: String(rawDetails.ux ?? ''),
-      seo: String(rawDetails.seo ?? ''),
-      performance: String(rawDetails.performance ?? ''),
-      accessibility: String(rawDetails.accessibility ?? ''),
-      mobile: String(rawDetails.mobile ?? ''),
-      security: String(rawDetails.security ?? ''),
-      aiReadiness: String(rawDetails.aiReadiness ?? ''),
-      automation: String(rawDetails.automation ?? ''),
-      conversion: String(rawDetails.conversion ?? ''),
+      ui: String(rawDetails.ui ?? raw.uiDetails ?? ''),
+      ux: String(rawDetails.ux ?? raw.uxDetails ?? ''),
+      seo: String(rawDetails.seo ?? raw.seoDetails ?? ''),
+      performance: String(rawDetails.performance ?? raw.performanceDetails ?? ''),
+      accessibility: String(rawDetails.accessibility ?? raw.accessibilityDetails ?? ''),
+      mobile: String(rawDetails.mobile ?? raw.mobileDetails ?? ''),
+      security: String(rawDetails.security ?? raw.securityDetails ?? ''),
+      aiReadiness: String(rawDetails.aiReadiness ?? raw.aiReadinessDetails ?? ''),
+      automation: String(rawDetails.automation ?? raw.automationDetails ?? ''),
+      conversion: String(rawDetails.conversion ?? raw.conversionDetails ?? ''),
     }
 
     return {
