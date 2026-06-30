@@ -34,10 +34,10 @@ export function LoginView({ onLogin }: { onLogin: (user: unknown) => void }) {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-900/20 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent" />
       <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="mx-auto w-14 h-14 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-violet-500/15">
+          <div className="mx-auto w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-blue-500/15">
             <Zap className="w-7 h-7 text-gray-900" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Welcome to TITAN</h1>
@@ -54,7 +54,7 @@ export function LoginView({ onLogin }: { onLogin: (user: unknown) => void }) {
               <Label htmlFor="password" className="text-gray-600">Password</Label>
               <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Your password" required className="bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400" />
             </div>
-            <Button type="submit" className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-gray-900 shadow-lg shadow-violet-500/10" disabled={loading}>
+            <Button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-gray-900 shadow-lg shadow-blue-500/10" disabled={loading}>
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>

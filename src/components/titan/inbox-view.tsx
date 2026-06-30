@@ -71,8 +71,8 @@ const TYPE_CONFIG: Record<InboxItemType, {
     borderColor: 'border-l-emerald-500', icon: ThumbsUp,
   },
   MEETING_REQUEST: {
-    label: 'Meeting Request', color: 'text-violet-400', bg: 'bg-violet-500/10',
-    borderColor: 'border-l-violet-500', icon: Calendar,
+    label: 'Meeting Request', color: 'text-blue-400', bg: 'bg-blue-500/10',
+    borderColor: 'border-l-blue-500', icon: Calendar,
   },
   PRICING: {
     label: 'Pricing Question', color: 'text-amber-400', bg: 'bg-amber-500/10',
@@ -91,7 +91,7 @@ const TYPE_CONFIG: Record<InboxItemType, {
 const COUNT_BADGES: Array<{ type: InboxItemType; label: string; color: string; bgColor: string }> = [
   { type: 'REPLY', label: 'New Replies', color: 'text-blue-400', bgColor: 'bg-blue-500/15' },
   { type: 'POSITIVE', label: 'Positive', color: 'text-emerald-400', bgColor: 'bg-emerald-500/15' },
-  { type: 'MEETING_REQUEST', label: 'Meeting Requests', color: 'text-violet-400', bgColor: 'bg-violet-500/15' },
+  { type: 'MEETING_REQUEST', label: 'Meeting Requests', color: 'text-blue-400', bgColor: 'bg-blue-500/15' },
   { type: 'PRICING', label: 'Pricing Questions', color: 'text-amber-400', bgColor: 'bg-amber-500/15' },
   { type: 'OOO', label: 'OOO', color: 'text-gray-500', bgColor: 'bg-slate-500/15' },
 ]
@@ -197,7 +197,7 @@ export function InboxView() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-            <InboxIcon className="w-5 h-5 text-violet-400" />
+            <InboxIcon className="w-5 h-5 text-blue-400" />
             Unified Inbox
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">
@@ -297,7 +297,7 @@ export function InboxView() {
                   'hover:border-gray-200',
                   cfg.borderColor,
                   isExpanded && 'ring-1 ring-slate-700/50',
-                  !item.isRead && 'bg-violet-50',
+                  !item.isRead && 'bg-blue-50',
                   // Visual distinction: positive gets a subtle emerald tint
                   isPositive && !isExpanded && 'bg-emerald-500/[0.03]',
                   // OOO gets a subtle desaturated look
@@ -420,7 +420,7 @@ export function InboxView() {
                             </Button>
                             <Button
                               size="sm"
-                              className="h-8 bg-violet-600 hover:bg-violet-700 text-gray-900 text-xs"
+                              className="h-8 bg-blue-600 hover:bg-blue-700 text-gray-900 text-xs"
                               onClick={(e) => { e.stopPropagation(); openMeetingDialog(item) }}
                             >
                               <CalendarClock className="w-3 h-3 mr-1.5" />Schedule Meeting
@@ -541,7 +541,7 @@ function ReplyDialog({ open, onOpenChange, item, onSent }: {
           <div>
             <Label className="text-gray-600 text-xs font-medium">Subject</Label>
             <Input
-              className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
+              className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30"
               value={subject}
               onChange={e => setSubject(e.target.value)}
             />
@@ -549,7 +549,7 @@ function ReplyDialog({ open, onOpenChange, item, onSent }: {
           <div>
             <Label className="text-gray-600 text-xs font-medium">Reply *</Label>
             <Textarea
-              className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30 min-h-[120px]"
+              className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30 min-h-[120px]"
               value={body}
               onChange={e => setBody(e.target.value)}
               placeholder="Write your reply..."
@@ -563,7 +563,7 @@ function ReplyDialog({ open, onOpenChange, item, onSent }: {
           <Button
             onClick={handleSend}
             disabled={loading || !body.trim()}
-            className="bg-violet-600 hover:bg-violet-700 text-gray-900"
+            className="bg-blue-600 hover:bg-blue-700 text-gray-900"
           >
             {loading ? 'Sending...' : <><Send className="w-3.5 h-3.5 mr-1.5" />Send Reply</>}
           </Button>
@@ -620,7 +620,7 @@ function ScheduleMeetingDialog({ open, onOpenChange, item, onScheduled }: {
       <DialogContent className="bg-white border-gray-200 max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-gray-900 flex items-center gap-2">
-            <CalendarClock className="w-4 h-4 text-violet-400" />
+            <CalendarClock className="w-4 h-4 text-blue-400" />
             Schedule Meeting
           </DialogTitle>
         </DialogHeader>
@@ -628,7 +628,7 @@ function ScheduleMeetingDialog({ open, onOpenChange, item, onScheduled }: {
           <div>
             <Label className="text-gray-600 text-xs font-medium">Title</Label>
             <Input
-              className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
+              className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30"
               value={title}
               onChange={e => setTitle(e.target.value)}
             />
@@ -638,7 +638,7 @@ function ScheduleMeetingDialog({ open, onOpenChange, item, onScheduled }: {
               <Label className="text-gray-600 text-xs font-medium">Date & Time *</Label>
               <Input
                 type="datetime-local"
-                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 focus-visible:ring-violet-500/30 [color-scheme:dark]"
+                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 focus-visible:ring-blue-500/30 [color-scheme:dark]"
                 value={date}
                 onChange={e => setDate(e.target.value)}
               />
@@ -650,7 +650,7 @@ function ScheduleMeetingDialog({ open, onOpenChange, item, onScheduled }: {
                 min={15}
                 max={120}
                 step={15}
-                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 focus-visible:ring-violet-500/30"
+                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 focus-visible:ring-blue-500/30"
                 value={duration}
                 onChange={e => setDuration(e.target.value)}
               />
@@ -659,7 +659,7 @@ function ScheduleMeetingDialog({ open, onOpenChange, item, onScheduled }: {
           <div>
             <Label className="text-gray-600 text-xs font-medium">Description</Label>
             <Textarea
-              className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30 min-h-[80px]"
+              className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30 min-h-[80px]"
               value={description}
               onChange={e => setDescription(e.target.value)}
             />
@@ -684,7 +684,7 @@ function ScheduleMeetingDialog({ open, onOpenChange, item, onScheduled }: {
           <Button
             onClick={handleSchedule}
             disabled={loading || !date}
-            className="bg-violet-600 hover:bg-violet-700 text-gray-900"
+            className="bg-blue-600 hover:bg-blue-700 text-gray-900"
           >
             {loading ? 'Scheduling...' : <><CalendarClock className="w-3.5 h-3.5 mr-1.5" />Schedule</>}
           </Button>

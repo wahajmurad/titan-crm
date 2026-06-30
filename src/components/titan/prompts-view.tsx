@@ -105,9 +105,9 @@ const CATEGORY_META: Record<
   sales_strategy: {
     label: 'Sales Strategy',
     icon: Target,
-    gradient: 'from-violet-500/20 to-purple-500/20',
-    borderColor: 'border-violet-500/30',
-    iconColor: 'text-violet-400',
+    gradient: 'from-blue-500/20 to-purple-500/20',
+    borderColor: 'border-blue-500/30',
+    iconColor: 'text-blue-400',
   },
   proposal_writing: {
     label: 'Proposal Writing',
@@ -142,7 +142,7 @@ function PromptCard({
   return (
     <Card
       className={`border-gray-200 bg-gray-50 hover:bg-white transition-all duration-200 group ${
-        prompt.isDefault ? 'ring-1 ring-violet-500/30' : ''
+        prompt.isDefault ? 'ring-1 ring-blue-500/30' : ''
       }`}
     >
       <CardContent className="p-4">
@@ -188,7 +188,7 @@ function PromptCard({
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200">
           <div className="flex items-center gap-1.5">
             {prompt.isDefault && (
-              <Badge className="bg-violet-500/15 text-violet-400 border-violet-500/25 text-[10px] px-1.5 py-0">
+              <Badge className="bg-blue-500/15 text-blue-400 border-blue-500/25 text-[10px] px-1.5 py-0">
                 <Star className="w-2.5 h-2.5 mr-0.5" />
                 Default
               </Badge>
@@ -254,7 +254,7 @@ function PromptFormDialog({
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               placeholder="e.g., Cold Outreach - Pain Point Discovery"
-              className="mt-1.5 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
+              className="mt-1.5 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30"
             />
           </div>
           <div>
@@ -287,7 +287,7 @@ function PromptFormDialog({
               value={form.prompt}
               onChange={(e) => setForm((f) => ({ ...f, prompt: e.target.value }))}
               placeholder="Write your AI prompt template here. Use {company}, {industry}, {website} as placeholders..."
-              className="mt-1.5 min-h-[200px] bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 text-sm leading-relaxed focus-visible:ring-violet-500/30"
+              className="mt-1.5 min-h-[200px] bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 text-sm leading-relaxed focus-visible:ring-blue-500/30"
             />
           </div>
           <div className="flex items-center justify-between">
@@ -312,7 +312,7 @@ function PromptFormDialog({
           <Button
             onClick={handleSave}
             disabled={saving || !form.name.trim() || !form.prompt.trim()}
-            className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-gray-900"
+            className="bg-gradient-to-r from-blue-600 to-fuchsia-600 hover:from-blue-500 hover:to-fuchsia-500 text-gray-900"
           >
             {saving ? (
               <span className="flex items-center gap-2">
@@ -514,12 +514,12 @@ export function PromptsView() {
                 placeholder="Search prompts..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-8 w-48 h-8 text-sm bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
+                className="pl-8 w-48 h-8 text-sm bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30"
               />
             </div>
             <Button
               onClick={handleCreate}
-              className="h-8 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-gray-900"
+              className="h-8 bg-gradient-to-r from-blue-600 to-fuchsia-600 hover:from-blue-500 hover:to-fuchsia-500 text-gray-900"
             >
               <Plus className="w-3.5 h-3.5 mr-1.5" />
               New Prompt
@@ -541,7 +541,7 @@ export function PromptsView() {
                     onClick={() => setActiveCategory('all')}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
                       activeCategory === 'all'
-                        ? 'bg-violet-500/15 text-violet-300'
+                        ? 'bg-blue-500/15 text-blue-300'
                         : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
                     }`}
                   >
@@ -586,7 +586,7 @@ export function PromptsView() {
                 onClick={() => setActiveCategory('all')}
                 className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                   activeCategory === 'all'
-                    ? 'bg-violet-500/15 text-violet-300 border-violet-500/30'
+                    ? 'bg-blue-500/15 text-blue-300 border-blue-500/30'
                     : 'bg-white text-gray-500 border-gray-200 hover:text-gray-900'
                 }`}
               >

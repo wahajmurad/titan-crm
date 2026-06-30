@@ -60,7 +60,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.
 }
 
 const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
-  INITIAL: { label: 'Initial', color: 'bg-violet-500/15 text-violet-400 border-violet-500/25' },
+  INITIAL: { label: 'Initial', color: 'bg-blue-500/15 text-blue-400 border-blue-500/25' },
   FOLLOW_UP: { label: 'Follow-up', color: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/25' },
   REPLY: { label: 'Reply', color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25' },
 }

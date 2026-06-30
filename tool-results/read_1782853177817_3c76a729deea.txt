@@ -1,0 +1,909 @@
+     1→'use client'
+     2→
+     3→import { useEffect, useState } from 'react'
+     4→import { useAppStore } from '@/lib/store'
+     5→import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+     6→import { Button } from '@/components/ui/button'
+     7→import { Badge } from '@/components/ui/badge'
+     8→import { Input } from '@/components/ui/input'
+     9→import { Textarea } from '@/components/ui/textarea'
+    10→import { Label } from '@/components/ui/label'
+    11→import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+    12→import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+    13→import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog'
+    14→import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
+    15→import { ScrollArea } from '@/components/ui/scroll-area'
+    16→import { Separator } from '@/components/ui/separator'
+    17→import { Skeleton } from '@/components/ui/skeleton'
+    18→import {
+    19→  Plus, Search, Users, Send, Reply, Calendar, Trophy, Pause, Play,
+    20→  MoreHorizontal, Eye, Pencil, UsersRound, ArrowRight, Target,
+    21→  Zap, TrendingUp, Mail, ChevronDown, FolderOpen
+    22→} from 'lucide-react'
+    23→import { cn } from '@/lib/utils'
+    24→import { format } from 'date-fns'
+    25→import { toast } from 'sonner'
+    26→
+    27→// ─── Types ───────────────────────────────────────────────────────────
+    28→
+    29→interface Campaign {
+    30→  id: string
+    31→  name: string
+    32→  industry: string | null
+    33→  targetLocation: string | null
+    34→  targetCity: string | null
+    35→  targetSize: string | null
+    36→  serviceOffering: string | null
+    37→  dailyLimit: number
+    38→  aiModel: string
+    39→  notes: string | null
+    40→  status: 'ACTIVE' | 'PAUSED' | 'COMPLETED'
+    41→  leadCount: number
+    42→  sentCount: number
+    43→  replyCount: number
+    44→  meetingCount: number
+    45→  wonCount: number
+    46→  createdAt: string
+    47→  updatedAt: string
+    48→  owner: { id: string; name: string; email: string }
+    49→  leads?: CampaignLead[]
+    50→}
+    51→
+    52→interface CampaignLead {
+    53→  id: string
+    54→  stage: string
+    55→  temperature: string
+    56→  business: { id: string; name: string; industry: string | null; city: string | null }
+    57→  decisionMaker: string | null
+    58→  decisionMakerRole: string | null
+    59→  _count: { outreaches: number; meetings: number }
+    60→}
+    61→
+    62→type CampaignForm = {
+    63→  name: string
+    64→  industry: string
+    65→  targetLocation: string
+    66→  targetCity: string
+    67→  targetSize: string
+    68→  serviceOffering: string
+    69→  dailyLimit: string
+    70→  aiModel: string
+    71→  notes: string
+    72→}
+    73→
+    74→const EMPTY_FORM: CampaignForm = {
+    75→  name: '', industry: '', targetLocation: '', targetCity: '',
+    76→  targetSize: '', serviceOffering: '', dailyLimit: '20', aiModel: 'default', notes: '',
+    77→}
+    78→
+    79→// ─── Config ──────────────────────────────────────────────────────────
+    80→
+    81→const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
+    82→  ACTIVE: { label: 'Active', color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25', dot: 'bg-emerald-400' },
+    83→  PAUSED: { label: 'Paused', color: 'bg-amber-500/15 text-amber-400 border-amber-500/25', dot: 'bg-amber-400' },
+    84→  COMPLETED: { label: 'Completed', color: 'bg-slate-500/15 text-gray-500 border-slate-500/25', dot: 'bg-slate-400' },
+    85→}
+    86→
+    87→const STAT_ITEMS = [
+    88→  { key: 'leadCount' as const, label: 'Leads', icon: Users, color: 'text-blue-400' },
+    89→  { key: 'sentCount' as const, label: 'Sent', icon: Send, color: 'text-violet-400' },
+    90→  { key: 'replyCount' as const, label: 'Replies', icon: Reply, color: 'text-amber-400' },
+    91→  { key: 'meetingCount' as const, label: 'Meetings', icon: Calendar, color: 'text-cyan-400' },
+    92→  { key: 'wonCount' as const, label: 'Won', icon: Trophy, color: 'text-emerald-400' },
+    93→]
+    94→
+    95→const AI_MODELS = [
+    96→  { value: 'default', label: 'Default' },
+    97→  { value: 'gpt-4o', label: 'GPT-4o' },
+    98→  { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
+    99→  { value: 'claude-3.5-sonnet', label: 'Claude 3.5 Sonnet' },
+   100→  { value: 'claude-3-haiku', label: 'Claude 3 Haiku' },
+   101→]
+   102→
+   103→// ─── Main Component ──────────────────────────────────────────────────
+   104→
+   105→export function CampaignsView() {
+   106→  const { setView } = useAppStore()
+   107→  const [campaigns, setCampaigns] = useState<Campaign[]>([])
+   108→  const [loading, setLoading] = useState(true)
+   109→  const [search, setSearch] = useState('')
+   110→  const [statusTab, setStatusTab] = useState('ALL')
+   111→  const [createOpen, setCreateOpen] = useState(false)
+   112→  const [editOpen, setEditOpen] = useState(false)
+   113→  const [detailOpen, setDetailOpen] = useState(false)
+   114→  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null)
+   115→  const [refreshKey, setRefreshKey] = useState(0)
+   116→
+   117→  useEffect(() => {
+   118→    const params = new URLSearchParams()
+   119→    if (search) params.set('search', search)
+   120→    if (statusTab !== 'ALL') params.set('status', statusTab)
+   121→    fetch(`/api/campaigns?${params}`, { credentials: 'same-origin' })
+   122→      .then(r => r.json())
+   123→      .then(d => setCampaigns(d.campaigns || []))
+   124→      .catch(() => toast.error('Failed to load campaigns'))
+   125→      .finally(() => setLoading(false))
+   126→  }, [search, statusTab, refreshKey])
+   127→
+   128→  const refresh = () => setRefreshKey(k => k + 1)
+   129→
+   130→  const filtered = campaigns.filter(c =>
+   131→    statusTab === 'ALL' || c.status === statusTab
+   132→  )
+   133→
+   134→  // Aggregate stats
+   135→  const totals = filtered.reduce((acc, c) => ({
+   136→    leadCount: acc.leadCount + c.leadCount,
+   137→    sentCount: acc.sentCount + c.sentCount,
+   138→    replyCount: acc.replyCount + c.replyCount,
+   139→    meetingCount: acc.meetingCount + c.meetingCount,
+   140→    wonCount: acc.wonCount + c.wonCount,
+   141→  }), { leadCount: 0, sentCount: 0, replyCount: 0, meetingCount: 0, wonCount: 0 })
+   142→
+   143→  const handleToggleStatus = async (campaign: Campaign) => {
+   144→    const newStatus = campaign.status === 'ACTIVE' ? 'PAUSED' : campaign.status === 'PAUSED' ? 'ACTIVE' : campaign.status
+   145→    try {
+   146→      const res = await fetch(`/api/campaigns/${campaign.id}`, {
+   147→        method: 'PATCH',
+   148→        headers: { 'Content-Type': 'application/json' },
+   149→        credentials: 'same-origin',
+   150→        body: JSON.stringify({ status: newStatus }),
+   151→      })
+   152→      if (res.ok) {
+   153→        toast.success(`Campaign ${newStatus === 'ACTIVE' ? 'resumed' : 'paused'}`)
+   154→        refresh()
+   155→      }
+   156→    } catch {
+   157→      toast.error('Failed to update campaign status')
+   158→    }
+   159→  }
+   160→
+   161→  const openEdit = (campaign: Campaign, e: React.MouseEvent) => {
+   162→    e.stopPropagation()
+   163→    setSelectedCampaign(campaign)
+   164→    setEditOpen(true)
+   165→  }
+   166→
+   167→  const openDetail = (campaign: Campaign) => {
+   168→    setSelectedCampaign(campaign)
+   169→    setDetailOpen(true)
+   170→    fetchCampaignLeads(campaign.id)
+   171→  }
+   172→
+   173→  const [campaignLeads, setCampaignLeads] = useState<CampaignLead[]>([])
+   174→  const [leadsLoading, setLeadsLoading] = useState(false)
+   175→
+   176→  const fetchCampaignLeads = (campaignId: string) => {
+   177→    setLeadsLoading(true)
+   178→    fetch(`/api/campaigns/${campaignId}/leads`, { credentials: 'same-origin' })
+   179→      .then(r => r.json())
+   180→      .then(d => setCampaignLeads(d.leads || []))
+   181→      .catch(() => setCampaignLeads([]))
+   182→      .finally(() => setLeadsLoading(false))
+   183→  }
+   184→
+   185→  return (
+   186→    <div className="space-y-5">
+   187→      {/* Header */}
+   188→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+   189→        <div>
+   190→          <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+   191→            <Target className="w-5 h-5 text-violet-400" />
+   192→            Campaigns
+   193→          </h1>
+   194→          <p className="text-sm text-gray-500 mt-0.5">
+   195→            {filtered.length} campaign{filtered.length !== 1 ? 's' : ''} in pipeline
+   196→          </p>
+   197→        </div>
+   198→        <div className="flex items-center gap-2">
+   199→          <div className="relative">
+   200→            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+   201→            <Input
+   202→              placeholder="Search campaigns..."
+   203→              value={search}
+   204→              onChange={e => setSearch(e.target.value)}
+   205→              className="pl-8 w-52 h-8 text-sm bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
+   206→            />
+   207→          </div>
+   208→          <CreateCampaignDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={refresh} />
+   209→        </div>
+   210→      </div>
+   211→
+   212→      {/* Aggregate Stats Row */}
+   213→      {!loading && filtered.length > 0 && (
+   214→        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+   215→          {STAT_ITEMS.map(s => (
+   216→            <Card key={s.key} className="bg-white border-gray-200">
+   217→              <CardContent className="p-3 flex items-center gap-3">
+   218→                <div className={cn('p-2 rounded-lg bg-gray-100/80', s.color)}>
+   219→                  <s.icon className="w-4 h-4" />
+   220→                </div>
+   221→                <div>
+   222→                  <p className="text-xs text-gray-400">{s.label}</p>
+   223→                  <p className="text-lg font-semibold text-gray-900">{totals[s.key]}</p>
+   224→                </div>
+   225→              </CardContent>
+   226→            </Card>
+   227→          ))}
+   228→        </div>
+   229→      )}
+   230→
+   231→      {/* Status Tabs */}
+   232→      <Tabs value={statusTab} onValueChange={setStatusTab}>
+   233→        <TabsList className="bg-white border border-gray-200">
+   234→          <TabsTrigger value="ALL" className="data-[state=active]:bg-gray-100 data-[state=active]:text-gray-900 text-gray-500 text-xs">
+   235→            All
+   236→            <Badge variant="secondary" className="ml-1.5 h-4 min-w-4 px-1 text-[10px] bg-gray-100 text-gray-500">
+   237→              {campaigns.length}
+   238→            </Badge>
+   239→          </TabsTrigger>
+   240→          <TabsTrigger value="ACTIVE" className="data-[state=active]:bg-emerald-500/15 data-[state=active]:text-emerald-400 text-gray-500 text-xs">
+   241→            Active
+   242→            <Badge variant="secondary" className="ml-1.5 h-4 min-w-4 px-1 text-[10px] bg-gray-100 text-gray-500">
+   243→              {campaigns.filter(c => c.status === 'ACTIVE').length}
+   244→            </Badge>
+   245→          </TabsTrigger>
+   246→          <TabsTrigger value="PAUSED" className="data-[state=active]:bg-amber-500/15 data-[state=active]:text-amber-400 text-gray-500 text-xs">
+   247→            Paused
+   248→            <Badge variant="secondary" className="ml-1.5 h-4 min-w-4 px-1 text-[10px] bg-gray-100 text-gray-500">
+   249→              {campaigns.filter(c => c.status === 'PAUSED').length}
+   250→            </Badge>
+   251→          </TabsTrigger>
+   252→          <TabsTrigger value="COMPLETED" className="data-[state=active]:bg-gray-200 data-[state=active]:text-gray-600 text-gray-500 text-xs">
+   253→            Completed
+   254→            <Badge variant="secondary" className="ml-1.5 h-4 min-w-4 px-1 text-[10px] bg-gray-100 text-gray-500">
+   255→              {campaigns.filter(c => c.status === 'COMPLETED').length}
+   256→            </Badge>
+   257→          </TabsTrigger>
+   258→        </TabsList>
+   259→      </Tabs>
+   260→
+   261→      {/* Campaign List */}
+   262→      {loading ? (
+   263→        <div className="grid gap-3">
+   264→          {Array.from({ length: 3 }).map((_, i) => (
+   265→            <Card key={i} className="bg-white border-gray-200">
+   266→              <CardContent className="p-5">
+   267→                <div className="flex items-start justify-between">
+   268→                  <div className="space-y-2 flex-1">
+   269→                    <Skeleton className="h-5 w-48 bg-gray-100" />
+   270→                    <Skeleton className="h-3 w-32 bg-gray-100" />
+   271→                  </div>
+   272→                  <Skeleton className="h-8 w-24 bg-gray-100" />
+   273→                </div>
+   274→                <div className="flex gap-4 mt-4">
+   275→                  {Array.from({ length: 5 }).map((_, j) => (
+   276→                    <Skeleton key={j} className="h-10 flex-1 bg-gray-100" />
+   277→                  ))}
+   278→                </div>
+   279→              </CardContent>
+   280→            </Card>
+   281→          ))}
+   282→        </div>
+   283→      ) : filtered.length === 0 ? (
+   284→        <Card className="bg-white border-gray-200 border-dashed">
+   285→          <CardContent className="p-12 text-center">
+   286→            <FolderOpen className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+   287→            <p className="text-gray-500 font-medium">No campaigns found</p>
+   288→            <p className="text-sm text-gray-400 mt-1">Create your first campaign to start outbound outreach at scale.</p>
+   289→            <Button
+   290→              variant="outline"
+   291→              className="mt-4 border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+   292→              onClick={() => setCreateOpen(true)}
+   293→            >
+   294→              <Plus className="w-3.5 h-3.5 mr-1.5" />New Campaign
+   295→            </Button>
+   296→          </CardContent>
+   297→        </Card>
+   298→      ) : (
+   299→        <div className="grid gap-3">
+   300→          {filtered.map(campaign => {
+   301→            const statusCfg = STATUS_CONFIG[campaign.status] || STATUS_CONFIG.ACTIVE
+   302→            const replyRate = campaign.sentCount > 0 ? ((campaign.replyCount / campaign.sentCount) * 100).toFixed(1) : '0.0'
+   303→
+   304→            return (
+   305→              <Card
+   306→                key={campaign.id}
+   307→                className="bg-white border-gray-200 hover:border-gray-200 transition-colors cursor-pointer group"
+   308→                onClick={() => openDetail(campaign)}
+   309→              >
+   310→                <CardContent className="p-5">
+   311→                  {/* Row 1: Name + Status + Actions */}
+   312→                  <div className="flex items-start justify-between gap-3">
+   313→                    <div className="flex-1 min-w-0">
+   314→                      <div className="flex items-center gap-2.5">
+   315→                        <h3 className="text-sm font-semibold text-gray-900 truncate">{campaign.name}</h3>
+   316→                        <Badge variant="outline" className={cn('text-[10px] font-medium shrink-0', statusCfg.color)}>
+   317→                          <span className={cn('w-1.5 h-1.5 rounded-full mr-1.5', statusCfg.dot)} />
+   318→                          {statusCfg.label}
+   319→                        </Badge>
+   320→                      </div>
+   321→                      <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-400">
+   322→                        {campaign.industry && <span>{campaign.industry}</span>}
+   323→                        {campaign.targetCity && (
+   324→                          <>
+   325→                            <span className="text-slate-700">•</span>
+   326→                            <span>{campaign.targetCity}</span>
+   327→                          </>
+   328→                        )}
+   329→                        {campaign.serviceOffering && (
+   330→                          <>
+   331→                            <span className="text-slate-700">•</span>
+   332→                            <span className="text-gray-500">{campaign.serviceOffering}</span>
+   333→                          </>
+   334→                        )}
+   335→                      </div>
+   336→                    </div>
+   337→
+   338→                    <div className="flex items-center gap-1.5 shrink-0">
+   339→                      {/* Pause/Resume button */}
+   340→                      {campaign.status !== 'COMPLETED' && (
+   341→                        <Button
+   342→                          variant="ghost"
+   343→                          size="sm"
+   344→                          className="h-7 w-7 p-0 text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+   345→                          onClick={(e) => { e.stopPropagation(); handleToggleStatus(campaign) }}
+   346→                          title={campaign.status === 'ACTIVE' ? 'Pause campaign' : 'Resume campaign'}
+   347→                        >
+   348→                          {campaign.status === 'ACTIVE' ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+   349→                        </Button>
+   350→                      )}
+   351→
+   352→                      {/* Dropdown actions */}
+   353→                      <DropdownMenu>
+   354→                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+   355→                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-500 hover:text-gray-900 hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
+   356→                            <MoreHorizontal className="w-3.5 h-3.5" />
+   357→                          </Button>
+   358→                        </DropdownMenuTrigger>
+   359→                        <DropdownMenuContent align="end" className="bg-white border-gray-200">
+   360→                          <DropdownMenuItem onClick={() => openDetail(campaign)} className="text-gray-600 focus:bg-gray-100 focus:text-gray-900">
+   361→                            <Eye className="w-3.5 h-3.5 mr-2" />View Details
+   362→                          </DropdownMenuItem>
+   363→                          <DropdownMenuItem
+   364→                            onClick={(e) => openEdit(campaign, e)}
+   365→                            className="text-gray-600 focus:bg-gray-100 focus:text-gray-900"
+   366→                          >
+   367→                            <Pencil className="w-3.5 h-3.5 mr-2" />Edit
+   368→                          </DropdownMenuItem>
+   369→                          <DropdownMenuItem
+   370→                            onClick={(e) => { e.stopPropagation(); setView('leads') }}
+   371→                            className="text-gray-600 focus:bg-gray-100 focus:text-gray-900"
+   372→                          >
+   373→                            <UsersRound className="w-3.5 h-3.5 mr-2" />View Leads
+   374→                          </DropdownMenuItem>
+   375→                          {campaign.status !== 'COMPLETED' && (
+   376→                            <>
+   377→                              <DropdownMenuSeparator className="bg-gray-100" />
+   378→                              <DropdownMenuItem
+   379→                                onClick={(e) => { e.stopPropagation(); handleToggleStatus(campaign) }}
+   380→                                className="text-gray-600 focus:bg-gray-100 focus:text-gray-900"
+   381→                              >
+   382→                                {campaign.status === 'ACTIVE' ? (
+   383→                                  <><Pause className="w-3.5 h-3.5 mr-2" />Pause</>
+   384→                                ) : (
+   385→                                  <><Play className="w-3.5 h-3.5 mr-2" />Resume</>
+   386→                                )}
+   387→                              </DropdownMenuItem>
+   388→                            </>
+   389→                          )}
+   390→                        </DropdownMenuContent>
+   391→                      </DropdownMenu>
+   392→
+   393→                      <ArrowRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-gray-500 transition-colors" />
+   394→                    </div>
+   395→                  </div>
+   396→
+   397→                  {/* Row 2: Stats */}
+   398→                  <div className="flex items-center gap-4 mt-4 pt-3 border-t border-gray-200">
+   399→                    {STAT_ITEMS.map(s => (
+   400→                      <div key={s.key} className="flex items-center gap-1.5">
+   401→                        <s.icon className={cn('w-3 h-3', s.color)} />
+   402→                        <span className="text-xs text-gray-500">{campaign[s.key]}</span>
+   403→                      </div>
+   404→                    ))}
+   405→                    <div className="ml-auto flex items-center gap-1.5">
+   406→                      <TrendingUp className="w-3 h-3 text-emerald-400" />
+   407→                      <span className="text-xs text-emerald-400 font-medium">{replyRate}% reply rate</span>
+   408→                    </div>
+   409→                  </div>
+   410→
+   411→                  {/* Row 3: Footer */}
+   412→                  <div className="flex items-center justify-between mt-2.5 text-[11px] text-gray-300">
+   413→                    <span>Created {format(new Date(campaign.createdAt), 'MMM d, yyyy')}</span>
+   414→                    <span>Daily limit: {campaign.dailyLimit}</span>
+   415→                  </div>
+   416→                </CardContent>
+   417→              </Card>
+   418→            )
+   419→          })}
+   420→        </div>
+   421→      )}
+   422→
+   423→      {/* Edit Campaign Dialog */}
+   424→      {selectedCampaign && (
+   425→        <EditCampaignDialog
+   426→          open={editOpen}
+   427→          onOpenChange={setEditOpen}
+   428→          campaign={selectedCampaign}
+   429→          onUpdated={() => { refresh(); setEditOpen(false) }}
+   430→        />
+   431→      )}
+   432→
+   433→      {/* Campaign Detail Dialog */}
+   434→      {selectedCampaign && (
+   435→        <CampaignDetailDialog
+   436→          open={detailOpen}
+   437→          onOpenChange={setDetailOpen}
+   438→          campaign={selectedCampaign}
+   439→          leads={campaignLeads}
+   440→          leadsLoading={leadsLoading}
+   441→          onToggleStatus={handleToggleStatus}
+   442→          onNavigateLead={(leadId) => setView('lead-detail', leadId)}
+   443→        />
+   444→      )}
+   445→    </div>
+   446→  )
+   447→}
+   448→
+   449→// ─── Create Campaign Dialog ──────────────────────────────────────────
+   450→
+   451→function CreateCampaignDialog({ open, onOpenChange, onCreated }: {
+   452→  open: boolean; onOpenChange: (o: boolean) => void; onCreated: () => void
+   453→}) {
+   454→  const [form, setForm] = useState<CampaignForm>(EMPTY_FORM)
+   455→  const [loading, setLoading] = useState(false)
+   456→
+   457→  const update = (key: keyof CampaignForm, value: string) =>
+   458→    setForm(f => ({ ...f, [key]: value }))
+   459→
+   460→  const handleCreate = async () => {
+   461→    if (!form.name.trim()) {
+   462→      toast.error('Campaign name is required')
+   463→      return
+   464→    }
+   465→    setLoading(true)
+   466→    try {
+   467→      const res = await fetch('/api/campaigns', {
+   468→        method: 'POST',
+   469→        headers: { 'Content-Type': 'application/json' },
+   470→        credentials: 'same-origin',
+   471→        body: JSON.stringify({
+   472→          ...form,
+   473→          dailyLimit: parseInt(form.dailyLimit) || 20,
+   474→        }),
+   475→      })
+   476→      if (res.ok) {
+   477→        toast.success('Campaign created successfully')
+   478→        setForm(EMPTY_FORM)
+   479→        onOpenChange(false)
+   480→        onCreated()
+   481→      } else {
+   482→        const d = await res.json().catch(() => ({}))
+   483→        toast.error(d.error || 'Failed to create campaign')
+   484→      }
+   485→    } catch {
+   486→      toast.error('Failed to create campaign')
+   487→    }
+   488→    setLoading(false)
+   489→  }
+   490→
+   491→  return (
+   492→    <Dialog open={open} onOpenChange={onOpenChange}>
+   493→      <DialogTrigger asChild>
+   494→        <Button size="sm" className="h-8 bg-violet-600 hover:bg-violet-700 text-gray-900">
+   495→          <Plus className="w-3.5 h-3.5 mr-1.5" />New Campaign
+   496→        </Button>
+   497→      </DialogTrigger>
+   498→      <DialogContent className="bg-white border-gray-200 max-w-lg max-h-[90vh] overflow-y-auto">
+   499→        <DialogHeader>
+   500→          <DialogTitle className="text-gray-900">Create New Campaign</DialogTitle>
+   501→        </DialogHeader>
+   502→        <div className="space-y-4 mt-2">
+   503→          {/* Name */}
+   504→          <div>
+   505→            <Label className="text-gray-600 text-xs font-medium">Campaign Name *</Label>
+   506→            <Input
+   507→              className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
+   508→              value={form.name}
+   509→              onChange={e => update('name', e.target.value)}
+   510→              placeholder="e.g. NYC Law Firms Q4 Outreach"
+   511→            />
+   512→          </div>
+   513→
+   514→          {/* Industry + Service Offering */}
+   515→          <div className="grid grid-cols-2 gap-3">
+   516→            <div>
+   517→              <Label className="text-gray-600 text-xs font-medium">Target Industry</Label>
+   518→              <Input
+   519→                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
+   520→                value={form.industry}
+   521→                onChange={e => update('industry', e.target.value)}
+   522→                placeholder="e.g. Legal, Healthcare"
+   523→              />
+   524→            </div>
+   525→            <div>
+   526→              <Label className="text-gray-600 text-xs font-medium">Service Offering</Label>
+   527→              <Input
+   528→                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
+   529→                value={form.serviceOffering}
+   530→                onChange={e => update('serviceOffering', e.target.value)}
+   531→                placeholder="e.g. Web Design, SEO"
+   532→              />
+   533→            </div>
+   534→          </div>
+   535→
+   536→          {/* Location + City */}
+   537→          <div className="grid grid-cols-2 gap-3">
+   538→            <div>
+   539→              <Label className="text-gray-600 text-xs font-medium">Target Location</Label>
+   540→              <Input
+   541→                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
+   542→                value={form.targetLocation}
+   543→                onChange={e => update('targetLocation', e.target.value)}
+   544→                placeholder="e.g. United States"
+   545→              />
+   546→            </div>
+   547→            <div>
+   548→              <Label className="text-gray-600 text-xs font-medium">Target City</Label>
+   549→              <Input
+   550→                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
+   551→                value={form.targetCity}
+   552→                onChange={e => update('targetCity', e.target.value)}
+   553→                placeholder="e.g. New York"
+   554→              />
+   555→            </div>
+   556→          </div>
+   557→
+   558→          {/* Target Size + Daily Limit */}
+   559→          <div className="grid grid-cols-2 gap-3">
+   560→            <div>
+   561→              <Label className="text-gray-600 text-xs font-medium">Target Company Size</Label>
+   562→              <Select value={form.targetSize} onValueChange={v => update('targetSize', v)}>
+   563→                <SelectTrigger className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900">
+   564→                  <SelectValue placeholder="Any size" />
+   565→                </SelectTrigger>
+   566→                <SelectContent className="bg-white border-gray-200">
+   567→                  <SelectItem value="">Any size</SelectItem>
+   568→                  <SelectItem value="1-10">1-10 employees</SelectItem>
+   569→                  <SelectItem value="11-50">11-50 employees</SelectItem>
+   570→                  <SelectItem value="51-200">51-200 employees</SelectItem>
+   571→                  <SelectItem value="201-500">201-500 employees</SelectItem>
+   572→                  <SelectItem value="500+">500+ employees</SelectItem>
+   573→                </SelectContent>
+   574→              </Select>
+   575→            </div>
+   576→            <div>
+   577→              <Label className="text-gray-600 text-xs font-medium">Daily Limit</Label>
+   578→              <Input
+   579→                type="number"
+   580→                min={1}
+   581→                max={200}
+   582→                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
+   583→                value={form.dailyLimit}
+   584→                onChange={e => update('dailyLimit', e.target.value)}
+   585→              />
+   586→            </div>
+   587→          </div>
+   588→
+   589→          {/* AI Model */}
+   590→          <div>
+   591→            <Label className="text-gray-600 text-xs font-medium">AI Model</Label>
+   592→            <Select value={form.aiModel} onValueChange={v => update('aiModel', v)}>
+   593→              <SelectTrigger className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900">
+   594→                <SelectValue />
+   595→              </SelectTrigger>
+   596→              <SelectContent className="bg-white border-gray-200">
+   597→                {AI_MODELS.map(m => (
+   598→                  <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+   599→                ))}
+   600→              </SelectContent>
+   601→            </Select>
+   602→          </div>
+   603→
+   604→          {/* Notes */}
+   605→          <div>
+   606→            <Label className="text-gray-600 text-xs font-medium">Notes</Label>
+   607→            <Textarea
+   608→              className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30 min-h-[80px]"
+   609→              value={form.notes}
+   610→              onChange={e => update('notes', e.target.value)}
+   611→              placeholder="Additional notes about this campaign..."
+   612→            />
+   613→          </div>
+   614→        </div>
+   615→
+   616→        <DialogFooter className="mt-4 gap-2">
+   617→          <Button variant="outline" onClick={() => onOpenChange(false)} className="border-gray-200 text-gray-600 hover:bg-gray-100">
+   618→            Cancel
+   619→          </Button>
+   620→          <Button
+   621→            onClick={handleCreate}
+   622→            disabled={loading || !form.name.trim()}
+   623→            className="bg-violet-600 hover:bg-violet-700 text-gray-900"
+   624→          >
+   625→            {loading ? 'Creating...' : 'Create Campaign'}
+   626→          </Button>
+   627→        </DialogFooter>
+   628→      </DialogContent>
+   629→    </Dialog>
+   630→  )
+   631→}
+   632→
+   633→// ─── Edit Campaign Dialog ────────────────────────────────────────────
+   634→
+   635→function EditCampaignDialog({ open, onOpenChange, campaign, onUpdated }: {
+   636→  open: boolean; onOpenChange: (o: boolean) => void; campaign: Campaign; onUpdated: () => void
+   637→}) {
+   638→  const [form, setForm] = useState<CampaignForm>({
+   639→    name: campaign.name,
+   640→    industry: campaign.industry || '',
+   641→    targetLocation: campaign.targetLocation || '',
+   642→    targetCity: campaign.targetCity || '',
+   643→    targetSize: campaign.targetSize || '',
+   644→    serviceOffering: campaign.serviceOffering || '',
+   645→    dailyLimit: String(campaign.dailyLimit),
+   646→    aiModel: campaign.aiModel,
+   647→    notes: campaign.notes || '',
+   648→  })
+   649→  const [loading, setLoading] = useState(false)
+   650→
+   651→  const update = (key: keyof CampaignForm, value: string) =>
+   652→    setForm(f => ({ ...f, [key]: value }))
+   653→
+   654→  const handleUpdate = async () => {
+   655→    if (!form.name.trim()) {
+   656→      toast.error('Campaign name is required')
+   657→      return
+   658→    }
+   659→    setLoading(true)
+   660→    try {
+   661→      const res = await fetch(`/api/campaigns/${campaign.id}`, {
+   662→        method: 'PATCH',
+   663→        headers: { 'Content-Type': 'application/json' },
+   664→        credentials: 'same-origin',
+   665→        body: JSON.stringify({ ...form, dailyLimit: parseInt(form.dailyLimit) || 20 }),
+   666→      })
+   667→      if (res.ok) {
+   668→        toast.success('Campaign updated')
+   669→        onUpdated()
+   670→      } else {
+   671→        toast.error('Failed to update campaign')
+   672→      }
+   673→    } catch {
+   674→      toast.error('Failed to update campaign')
+   675→    }
+   676→    setLoading(false)
+   677→  }
+   678→
+   679→  return (
+   680→    <Dialog open={open} onOpenChange={onOpenChange}>
+   681→      <DialogContent className="bg-white border-gray-200 max-w-lg max-h-[90vh] overflow-y-auto">
+   682→        <DialogHeader>
+   683→          <DialogTitle className="text-gray-900">Edit Campaign</DialogTitle>
+   684→        </DialogHeader>
+   685→        <div className="space-y-4 mt-2">
+   686→          <div>
+   687→            <Label className="text-gray-600 text-xs font-medium">Campaign Name *</Label>
+   688→            <Input
+   689→              className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
+   690→              value={form.name}
+   691→              onChange={e => update('name', e.target.value)}
+   692→            />
+   693→          </div>
+   694→          <div className="grid grid-cols-2 gap-3">
+   695→            <div>
+   696→              <Label className="text-gray-600 text-xs font-medium">Target Industry</Label>
+   697→              <Input className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30" value={form.industry} onChange={e => update('industry', e.target.value)} />
+   698→            </div>
+   699→            <div>
+   700→              <Label className="text-gray-600 text-xs font-medium">Service Offering</Label>
+   701→              <Input className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30" value={form.serviceOffering} onChange={e => update('serviceOffering', e.target.value)} />
+   702→            </div>
+   703→          </div>
+   704→          <div className="grid grid-cols-2 gap-3">
+   705→            <div>
+   706→              <Label className="text-gray-600 text-xs font-medium">Target Location</Label>
+   707→              <Input className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30" value={form.targetLocation} onChange={e => update('targetLocation', e.target.value)} />
+   708→            </div>
+   709→            <div>
+   710→              <Label className="text-gray-600 text-xs font-medium">Target City</Label>
+   711→              <Input className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30" value={form.targetCity} onChange={e => update('targetCity', e.target.value)} />
+   712→            </div>
+   713→          </div>
+   714→          <div className="grid grid-cols-2 gap-3">
+   715→            <div>
+   716→              <Label className="text-gray-600 text-xs font-medium">Company Size</Label>
+   717→              <Select value={form.targetSize} onValueChange={v => update('targetSize', v)}>
+   718→                <SelectTrigger className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900">
+   719→                  <SelectValue placeholder="Any size" />
+   720→                </SelectTrigger>
+   721→                <SelectContent className="bg-white border-gray-200">
+   722→                  <SelectItem value="">Any size</SelectItem>
+   723→                  <SelectItem value="1-10">1-10</SelectItem>
+   724→                  <SelectItem value="11-50">11-50</SelectItem>
+   725→                  <SelectItem value="51-200">51-200</SelectItem>
+   726→                  <SelectItem value="201-500">201-500</SelectItem>
+   727→                  <SelectItem value="500+">500+</SelectItem>
+   728→                </SelectContent>
+   729→              </Select>
+   730→            </div>
+   731→            <div>
+   732→              <Label className="text-gray-600 text-xs font-medium">Daily Limit</Label>
+   733→              <Input type="number" min={1} max={200} className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30" value={form.dailyLimit} onChange={e => update('dailyLimit', e.target.value)} />
+   734→            </div>
+   735→          </div>
+   736→          <div>
+   737→            <Label className="text-gray-600 text-xs font-medium">AI Model</Label>
+   738→            <Select value={form.aiModel} onValueChange={v => update('aiModel', v)}>
+   739→              <SelectTrigger className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900"><SelectValue /></SelectTrigger>
+   740→              <SelectContent className="bg-white border-gray-200">
+   741→                {AI_MODELS.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+   742→              </SelectContent>
+   743→            </Select>
+   744→          </div>
+   745→          <div>
+   746→            <Label className="text-gray-600 text-xs font-medium">Notes</Label>
+   747→            <Textarea className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30 min-h-[80px]" value={form.notes} onChange={e => update('notes', e.target.value)} />
+   748→          </div>
+   749→        </div>
+   750→        <DialogFooter className="mt-4 gap-2">
+   751→          <Button variant="outline" onClick={() => onOpenChange(false)} className="border-gray-200 text-gray-600 hover:bg-gray-100">Cancel</Button>
+   752→          <Button onClick={handleUpdate} disabled={loading || !form.name.trim()} className="bg-violet-600 hover:bg-violet-700 text-gray-900">
+   753→            {loading ? 'Saving...' : 'Save Changes'}
+   754→          </Button>
+   755→        </DialogFooter>
+   756→      </DialogContent>
+   757→    </Dialog>
+   758→  )
+   759→}
+   760→
+   761→// ─── Campaign Detail Dialog ──────────────────────────────────────────
+   762→
+   763→function CampaignDetailDialog({ open, onOpenChange, campaign, leads, leadsLoading, onToggleStatus, onNavigateLead }: {
+   764→  open: boolean; onOpenChange: (o: boolean) => void; campaign: Campaign
+   765→  leads: CampaignLead[]; leadsLoading: boolean
+   766→  onToggleStatus: (c: Campaign) => void
+   767→  onNavigateLead: (leadId: string) => void
+   768→}) {
+   769→  const statusCfg = STATUS_CONFIG[campaign.status] || STATUS_CONFIG.ACTIVE
+   770→  const replyRate = campaign.sentCount > 0 ? ((campaign.replyCount / campaign.sentCount) * 100).toFixed(1) : '0.0'
+   771→
+   772→  return (
+   773→    <Dialog open={open} onOpenChange={onOpenChange}>
+   774→      <DialogContent className="bg-white border-gray-200 max-w-2xl max-h-[85vh] flex flex-col">
+   775→        <DialogHeader>
+   776→          <div className="flex items-center justify-between">
+   777→            <DialogTitle className="text-gray-900 text-lg">{campaign.name}</DialogTitle>
+   778→            <Badge variant="outline" className={cn('text-xs font-medium', statusCfg.color)}>
+   779→              <span className={cn('w-1.5 h-1.5 rounded-full mr-1.5', statusCfg.dot)} />
+   780→              {statusCfg.label}
+   781→            </Badge>
+   782→          </div>
+   783→        </DialogHeader>
+   784→
+   785→        <ScrollArea className="flex-1 -mx-6 px-6">
+   786→          {/* Campaign Meta */}
+   787→          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
+   788→            {campaign.industry && (
+   789→              <div className="bg-gray-100/70 rounded-lg p-3">
+   790→                <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Industry</p>
+   791→                <p className="text-sm text-gray-900">{campaign.industry}</p>
+   792→              </div>
+   793→            )}
+   794→            {campaign.targetCity && (
+   795→              <div className="bg-gray-100/70 rounded-lg p-3">
+   796→                <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Location</p>
+   797→                <p className="text-sm text-gray-900">{campaign.targetCity}{campaign.targetLocation ? `, ${campaign.targetLocation}` : ''}</p>
+   798→              </div>
+   799→            )}
+   800→            <div className="bg-gray-100/70 rounded-lg p-3">
+   801→              <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Daily Limit</p>
+   802→              <p className="text-sm text-gray-900">{campaign.dailyLimit}</p>
+   803→            </div>
+   804→            {campaign.serviceOffering && (
+   805→              <div className="bg-gray-100/70 rounded-lg p-3">
+   806→                <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Service</p>
+   807→                <p className="text-sm text-gray-900">{campaign.serviceOffering}</p>
+   808→              </div>
+   809→            )}
+   810→            <div className="bg-gray-100/70 rounded-lg p-3">
+   811→              <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">AI Model</p>
+   812→              <p className="text-sm text-gray-900">{AI_MODELS.find(m => m.value === campaign.aiModel)?.label || campaign.aiModel}</p>
+   813→            </div>
+   814→            <div className="bg-gray-100/70 rounded-lg p-3">
+   815→              <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Reply Rate</p>
+   816→              <p className="text-sm text-emerald-400 font-medium">{replyRate}%</p>
+   817→            </div>
+   818→          </div>
+   819→
+   820→          {campaign.notes && (
+   821→            <div className="bg-gray-50 rounded-lg p-3 mb-5">
+   822→              <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-1">Notes</p>
+   823→              <p className="text-sm text-gray-600">{campaign.notes}</p>
+   824→            </div>
+   825→          )}
+   826→
+   827→          {/* Outreach Stats */}
+   828→          <div className="mb-5">
+   829→            <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Outreach Performance</h4>
+   830→            <div className="grid grid-cols-5 gap-2">
+   831→              {STAT_ITEMS.map(s => (
+   832→                <div key={s.key} className="bg-gray-50 rounded-lg p-3 text-center">
+   833→                  <s.icon className={cn('w-4 h-4 mx-auto mb-1.5', s.color)} />
+   834→                  <p className="text-lg font-bold text-gray-900">{campaign[s.key]}</p>
+   835→                  <p className="text-[10px] text-gray-400">{s.label}</p>
+   836→                </div>
+   837→              ))}
+   838→            </div>
+   839→          </div>
+   840→
+   841→          {/* Action Bar */}
+   842→          {campaign.status !== 'COMPLETED' && (
+   843→            <div className="flex gap-2 mb-5">
+   844→              <Button
+   845→                variant="outline"
+   846→                size="sm"
+   847→                className={cn(
+   848→                  'border-gray-200 text-gray-600 hover:bg-gray-100',
+   849→                  campaign.status === 'ACTIVE' && 'hover:text-amber-400'
+   850→                )}
+   851→                onClick={() => onToggleStatus(campaign)}
+   852→              >
+   853→                {campaign.status === 'ACTIVE' ? <><Pause className="w-3.5 h-3.5 mr-1.5" />Pause</> : <><Play className="w-3.5 h-3.5 mr-1.5" />Resume</>}
+   854→              </Button>
+   855→            </div>
+   856→          )}
+   857→
+   858→          <Separator className="bg-gray-100 mb-5" />
+   859→
+   860→          {/* Campaign Leads */}
+   861→          <div>
+   862→            <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
+   863→              Campaign Leads ({leads.length})
+   864→            </h4>
+   865→            {leadsLoading ? (
+   866→              <div className="space-y-2">
+   867→                {Array.from({ length: 4 }).map((_, i) => (
+   868→                  <Skeleton key={i} className="h-12 w-full bg-gray-100" />
+   869→                ))}
+   870→              </div>
+   871→            ) : leads.length === 0 ? (
+   872→              <div className="text-center py-8 text-gray-400 text-sm">No leads in this campaign yet.</div>
+   873→            ) : (
+   874→              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+   875→                {leads.map(lead => (
+   876→                  <div
+   877→                    key={lead.id}
+   878→                    className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors group"
+   879→                    onClick={() => { onNavigateLead(lead.id); onOpenChange(false) }}
+   880→                  >
+   881→                    <div className="min-w-0 flex-1">
+   882→                      <p className="text-sm font-medium text-gray-900 truncate">{lead.business.name}</p>
+   883→                      <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-400">
+   884→                        {lead.business.industry && <span>{lead.business.industry}</span>}
+   885→                        {lead.business.city && (
+   886→                          <>
+   887→                            <span className="text-slate-700">•</span>
+   888→                            <span>{lead.business.city}</span>
+   889→                          </>
+   890→                        )}
+   891→                      </div>
+   892→                    </div>
+   893→                    <div className="flex items-center gap-3 shrink-0 ml-3">
+   894→                      <div className="text-right hidden sm:block">
+   895→                        <p className="text-xs text-gray-500">{lead.stage.replace(/_/g, ' ')}</p>
+   896→                        <p className="text-[10px] text-gray-300">{lead._count.outreaches} emails</p>
+   897→                      </div>
+   898→                      <ArrowRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-gray-500 transition-colors" />
+   899→                    </div>
+   900→                  </div>
+   901→                ))}
+   902→              </div>
+   903→            )}
+   904→          </div>
+   905→        </ScrollArea>
+   906→      </DialogContent>
+   907→    </Dialog>
+   908→  )
+   909→}

@@ -1,0 +1,781 @@
+     1→'use client'
+     2→
+     3→import { useState, useEffect, useCallback } from 'react'
+     4→import { useAppStore } from '@/lib/store'
+     5→import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+     6→import { Button } from '@/components/ui/button'
+     7→import { Input } from '@/components/ui/input'
+     8→import { Badge } from '@/components/ui/badge'
+     9→import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+    10→import { GraduationCap, TrendingUp, AlertTriangle, Lightbulb, Target, Mail, Shield, CheckCircle2, DollarSign, BookOpen, ChevronDown, ChevronRight, Loader2, Search, Sparkles, X } from 'lucide-react'
+    11→import { cn } from '@/lib/utils'
+    12→
+    13→/* ──────────── Types ──────────── */
+    14→
+    15→interface ReportSection {
+    16→  id: string
+    17→  title: string
+    18→  icon: React.ElementType
+    19→  color: string
+    20→  borderColor: string
+    21→  bgColor: string
+    22→  iconColor: string
+    23→  content: string
+    24→}
+    25→
+    26→interface AnalysisResult {
+    27→  industry: string
+    28→  sections: ReportSection[]
+    29→  rawText: string
+    30→}
+    31→
+    32→/* ──────────── Constants ──────────── */
+    33→
+    34→const POPULAR_INDUSTRIES = [
+    35→  'Law Firms',
+    36→  'Plumbers',
+    37→  'Dentists',
+    38→  'Real Estate',
+    39→  'Restaurants',
+    40→  'Gyms',
+    41→  'Accounting',
+    42→  'E-commerce',
+    43→  'Healthcare',
+    44→  'Education',
+    45→  'Construction',
+    46→  'Marketing Agencies',
+    47→]
+    48→
+    49→const SECTION_DEFINITIONS: Omit<ReportSection, 'content'>[] = [
+    50→  { id: 'overview', title: 'Industry Overview', icon: GraduationCap, color: 'blue', borderColor: 'border-l-blue-500', bgColor: 'bg-blue-50', iconColor: 'text-blue-500' },
+    51→  { id: 'problems', title: 'Common Business Problems', icon: AlertTriangle, color: 'amber', borderColor: 'border-l-amber-500', bgColor: 'bg-amber-50', iconColor: 'text-amber-500' },
+    52→  { id: 'trends', title: 'Current Market Trends', icon: TrendingUp, color: 'emerald', borderColor: 'border-l-emerald-500', bgColor: 'bg-emerald-50', iconColor: 'text-emerald-500' },
+    53→  { id: 'automation', title: 'AI & Automation Opportunities', icon: Lightbulb, color: 'violet', borderColor: 'border-l-violet-500', bgColor: 'bg-violet-50', iconColor: 'text-violet-500' },
+    54→  { id: 'services', title: 'Services We Can Sell', icon: DollarSign, color: 'green', borderColor: 'border-l-green-500', bgColor: 'bg-green-50', iconColor: 'text-green-500' },
+    55→  { id: 'outreach', title: 'Outreach Strategy', icon: Target, color: 'cyan', borderColor: 'border-l-cyan-500', bgColor: 'bg-cyan-50', iconColor: 'text-cyan-500' },
+    56→  { id: 'emails', title: 'Email Angles & Templates', icon: Mail, color: 'rose', borderColor: 'border-l-rose-500', bgColor: 'bg-rose-50', iconColor: 'text-rose-500' },
+    57→  { id: 'objections', title: 'Objection Handling', icon: Shield, color: 'orange', borderColor: 'border-l-orange-500', bgColor: 'bg-orange-50', iconColor: 'text-orange-500' },
+    58→  { id: 'closing', title: 'Closing Strategies', icon: CheckCircle2, color: 'teal', borderColor: 'border-l-teal-500', bgColor: 'bg-teal-50', iconColor: 'text-teal-500' },
+    59→  { id: 'offers', title: 'Offer Recommendations', icon: BookOpen, color: 'indigo', borderColor: 'border-l-indigo-500', bgColor: 'bg-indigo-50', iconColor: 'text-indigo-500' },
+    60→]
+    61→
+    62→const LOADING_STEPS = [
+    63→  'Analyzing industry landscape...',
+    64→  'Researching market trends...',
+    65→  'Identifying automation opportunities...',
+    66→  'Generating outreach strategies...',
+    67→  'Crafting email templates...',
+    68→  'Building closing frameworks...',
+    69→  'Finalizing report...',
+    70→]
+    71→
+    72→/* ──────────── Markdown Renderer ──────────── */
+    73→
+    74→function processInlineFormatting(text: string): React.ReactNode {
+    75→  const parts = text.split(/(\*\*[^*]+\*\*)/g)
+    76→
+    77→  return parts.map((part, i) => {
+    78→    if (part.startsWith('**') && part.endsWith('**')) {
+    79→      return (
+    80→        <strong key={i} className="font-semibold text-gray-900">
+    81→          {part.slice(2, -2)}
+    82→        </strong>
+    83→      )
+    84→    }
+    85→    const codeParts = part.split(/(`[^`]+`)/g)
+    86→    return codeParts.map((cp, j) => {
+    87→      if (cp.startsWith('`') && cp.endsWith('`')) {
+    88→        return (
+    89→          <code key={`${i}-${j}`} className="px-1.5 py-0.5 rounded bg-gray-100 text-blue-600 text-xs font-mono">
+    90→            {cp.slice(1, -1)}
+    91→          </code>
+    92→        )
+    93→      }
+    94→      return <span key={`${i}-${j}`}>{cp}</span>
+    95→    })
+    96→  })
+    97→}
+    98→
+    99→function renderMarkdown(text: string) {
+   100→  const lines = text.split('\n')
+   101→  const elements: React.ReactNode[] = []
+   102→  let key = 0
+   103→
+   104→  for (const line of lines) {
+   105→    const trimmed = line.trimEnd()
+   106→
+   107→    if (trimmed === '') {
+   108→      elements.push(<div key={key++} className="h-2" />)
+   109→      continue
+   110→    }
+   111→
+   112→    // Headers: ### Header
+   113→    if (trimmed.startsWith('### ')) {
+   114→      elements.push(
+   115→        <h3 key={key++} className="text-sm font-semibold text-gray-900 mt-3 mb-1">
+   116→          {processInlineFormatting(trimmed.slice(4))}
+   117→        </h3>
+   118→      )
+   119→      continue
+   120→    }
+   121→
+   122→    // Headers: ## Header
+   123→    if (trimmed.startsWith('## ')) {
+   124→      elements.push(
+   125→        <h2 key={key++} className="text-base font-semibold text-gray-900 mt-3 mb-1">
+   126→          {processInlineFormatting(trimmed.slice(3))}
+   127→        </h2>
+   128→      )
+   129→      continue
+   130→    }
+   131→
+   132→    // Headers: # Header
+   133→    if (trimmed.startsWith('# ')) {
+   134→      elements.push(
+   135→        <h1 key={key++} className="text-lg font-bold text-gray-900 mt-3 mb-1.5">
+   136→          {processInlineFormatting(trimmed.slice(2))}
+   137→        </h1>
+   138→      )
+   139→      continue
+   140→    }
+   141→
+   142→    // Bullet points
+   143→    if (trimmed.startsWith('- ') || trimmed.startsWith('* ') || trimmed.startsWith('• ')) {
+   144→      const content = trimmed.replace(/^[-*•]\s+/, '')
+   145→      elements.push(
+   146→        <div key={key++} className="flex gap-2 ml-1">
+   147→          <span className="text-blue-500 mt-0.5 shrink-0">•</span>
+   148→          <span className="text-gray-600 text-sm leading-relaxed">
+   149→            {processInlineFormatting(content)}
+   150→          </span>
+   151→        </div>
+   152→      )
+   153→      continue
+   154→    }
+   155→
+   156→    // Numbered lists: 1. Item
+   157→    const numberedMatch = trimmed.match(/^(\d+)\.\s+(.*)/)
+   158→    if (numberedMatch) {
+   159→      elements.push(
+   160→        <div key={key++} className="flex gap-2 ml-1">
+   161→          <span className="text-blue-500 text-sm font-medium shrink-0">{numberedMatch[1]}.</span>
+   162→          <span className="text-gray-600 text-sm leading-relaxed">
+   163→            {processInlineFormatting(numberedMatch[2])}
+   164→          </span>
+   165→        </div>
+   166→      )
+   167→      continue
+   168→    }
+   169→
+   170→    // Regular paragraph
+   171→    elements.push(
+   172→      <p key={key++} className="text-gray-600 text-sm leading-relaxed">
+   173→        {processInlineFormatting(trimmed)}
+   174→      </p>
+   175→    )
+   176→  }
+   177→
+   178→  return elements
+   179→}
+   180→
+   181→/* ──────────── Section Parser ──────────── */
+   182→
+   183→function parseSectionsFromResponse(rawText: string): ReportSection[] {
+   184→  // Try to parse the AI response into structured sections by looking for common headings
+   185→  const sections: ReportSection[] = []
+   186→  const sectionKeywords: Record<string, string[]> = {
+   187→    overview: ['industry overview', 'overview', 'about the industry', 'industry snapshot', 'industry at a glance'],
+   188→    problems: ['common business problems', 'business problems', 'pain points', 'challenges', 'problems'],
+   189→    trends: ['market trends', 'current trends', 'trends', 'industry trends', 'market landscape'],
+   190→    automation: ['ai & automation', 'ai and automation', 'automation opportunities', 'ai opportunities', 'technology opportunities'],
+   191→    services: ['services we can sell', 'services to sell', 'services', 'what we can sell', 'offerings'],
+   192→    outreach: ['outreach strategy', 'outreach', 'prospecting', 'lead generation'],
+   193→    emails: ['email angles', 'email templates', 'email', 'cold email', 'outreach emails'],
+   194→    objections: ['objection handling', 'objections', 'handling objections', 'common objections'],
+   195→    closing: ['closing strategies', 'closing', 'how to close', 'sales closing'],
+   196→    offers: ['offer recommendations', 'offer', 'pricing', 'pricing strategy', 'recommended offers'],
+   197→  }
+   198→
+   199→  // Split the raw text into potential sections by looking for markdown headers or section-like patterns
+   200→  const lines = rawText.split('\n')
+   201→  let currentSectionId: string | null = null
+   202→  let currentContent: string[] = []
+   203→
+   204→  const flushContent = () => {
+   205→    if (currentSectionId !== null && currentContent.length > 0) {
+   206→      const def = SECTION_DEFINITIONS.find(s => s.id === currentSectionId)
+   207→      if (def) {
+   208→        sections.push({
+   209→          ...def,
+   210→          content: currentContent.join('\n').trim(),
+   211→        })
+   212→      }
+   213→    }
+   214→    currentContent = []
+   215→  }
+   216→
+   217→  for (const line of lines) {
+   218→    const headerMatch = line.match(/^#{1,3}\s+(.+)/i)
+   219→    const boldHeaderMatch = line.match(/^\*\*(.+?)\*\*[:]?$/)
+   220→    const plainHeaderMatch = line.match(/^([A-Z][A-Za-z\s&]+)$/)
+   221→
+   222→    const potentialTitle = headerMatch
+   223→      ? headerMatch[1].trim()
+   224→      : boldHeaderMatch
+   225→        ? boldHeaderMatch[1].trim()
+   226→        : plainHeaderMatch
+   227→          ? plainHeaderMatch[1].trim()
+   228→          : null
+   229→
+   230→    if (potentialTitle) {
+   231→      const lowerTitle = potentialTitle.toLowerCase()
+   232→      let matchedId: string | null = null
+   233→
+   234→      for (const [id, keywords] of Object.entries(sectionKeywords)) {
+   235→        if (keywords.some(kw => lowerTitle.includes(kw) || kw.includes(lowerTitle))) {
+   236→          matchedId = id
+   237→          break
+   238→        }
+   239→      }
+   240→
+   241→      if (matchedId && matchedId !== currentSectionId) {
+   242→        flushContent()
+   243→        currentSectionId = matchedId
+   244→        continue
+   245→      }
+   246→    }
+   247→
+   248→    if (currentSectionId !== null) {
+   249→      currentContent.push(line)
+   250→    }
+   251→  }
+   252→
+   253→  flushContent()
+   254→
+   255→  // If we got structured sections, return them
+   256→  if (sections.length >= 3) {
+   257→    return sections
+   258→  }
+   259→
+   260→  // Fallback: If parsing didn't work well, chunk the text into sequential sections
+   261→  return createFallbackSections(rawText)
+   262→}
+   263→
+   264→function createFallbackSections(rawText: string): ReportSection[] {
+   265→  const lines = rawText.split('\n')
+   266→  const totalLines = lines.length
+   267→  const linesPerSection = Math.max(Math.ceil(totalLines / SECTION_DEFINITIONS.length), 3)
+   268→
+   269→  return SECTION_DEFINITIONS.map((def, index) => {
+   270→    const start = index * linesPerSection
+   271→    const end = start + linesPerSection
+   272→    const chunk = lines.slice(start, end).join('\n').trim()
+   273→
+   274→    // Try to find the most relevant content for each section
+   275→    const keywords = getSectionKeywords(def.id)
+   276→    const relevantLines: string[] = []
+   277→
+   278→    for (const line of lines) {
+   279→      const lowerLine = line.toLowerCase()
+   280→      if (keywords.some(kw => lowerLine.includes(kw))) {
+   281→        relevantLines.push(line)
+   282→      }
+   283→    }
+   284→
+   285→    // If we found relevant lines, use them; otherwise use the chunk
+   286→    const content = relevantLines.length > 3
+   287→      ? relevantLines.join('\n').trim()
+   288→      : chunk || `Analysis for this section is included in the full report above.`
+   289→
+   290→    return {
+   291→      ...def,
+   292→      content,
+   293→    }
+   294→  })
+   295→}
+   296→
+   297→function getSectionKeywords(sectionId: string): string[] {
+   298→  const map: Record<string, string[]> = {
+   299→    overview: ['industry', 'market size', 'revenue', 'overview', 'landscape', 'sector'],
+   300→    problems: ['problem', 'pain point', 'challenge', 'struggle', 'issue', 'difficulty', 'inefficient'],
+   301→    trends: ['trend', 'growth', 'shift', 'emerging', 'adoption', 'changing', 'evolving'],
+   302→    automation: ['automat', 'ai ', 'artificial intelligence', 'machine learning', 'workflow', 'bot', 'chatbot'],
+   303→    services: ['service', 'offer', 'sell', 'provide', 'solution', 'package', 'deliverable'],
+   304→    outreach: ['outreach', 'prospect', 'lead generation', 'find', 'target', 'contact', 'discovery'],
+   305→    emails: ['email', 'subject line', 'template', 'cold email', 'message', 'pitch', 'hook'],
+   306→    objections: ['objection', 'concern', 'hesitation', 'refuse', 'pushback', 'excuse', 'worry'],
+   307→    closing: ['close', 'deal', 'agreement', 'sign', 'commitment', 'proposal', 'convert'],
+   308→    offers: ['offer', 'pricing', 'price', 'cost', 'package', 'retainer', 'fee', 'rate'],
+   309→  }
+   310→  return map[sectionId] || []
+   311→}
+   312→
+   313→/* ──────────── Loading Animation ──────────── */
+   314→
+   315→function LoadingState({ industry }: { industry: string }) {
+   316→  const [currentStep, setCurrentStep] = useState(0)
+   317→  const [progress, setProgress] = useState(0)
+   318→
+   319→  useEffect(() => {
+   320→    const stepInterval = setInterval(() => {
+   321→      setCurrentStep(prev => {
+   322→        const next = prev + 1
+   323→        if (next >= LOADING_STEPS.length) {
+   324→          clearInterval(stepInterval)
+   325→          return prev
+   326→        }
+   327→        return next
+   328→      })
+   329→    }, 2200)
+   330→
+   331→    const progressInterval = setInterval(() => {
+   332→      setProgress(prev => {
+   333→        if (prev >= 92) {
+   334→          clearInterval(progressInterval)
+   335→          return prev
+   336→        }
+   337→        // Accelerating progress
+   338→        const increment = Math.random() * 3 + 1
+   339→        return Math.min(prev + increment, 92)
+   340→      })
+   341→    }, 300)
+   342→
+   343→    return () => {
+   344→      clearInterval(stepInterval)
+   345→      clearInterval(progressInterval)
+   346→    }
+   347→  }, [])
+   348→
+   349→  return (
+   350→    <div className="flex flex-col items-center justify-center py-20 px-6">
+   351→      {/* Animated spinner */}
+   352→      <div className="relative mb-8">
+   353→        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20 animate-pulse">
+   354→          <Sparkles className="w-10 h-10 text-white" />
+   355→        </div>
+   356→        <div className="absolute -inset-3 rounded-3xl bg-blue-500/10 -z-10 blur-xl animate-ping [animation-duration:2s]" />
+   357→      </div>
+   358→
+   359→      <h3 className="text-lg font-semibold text-gray-900 mb-1">
+   360→        Analyzing {industry}
+   361→      </h3>
+   362→      <p className="text-sm text-gray-500 mb-8">
+   363→        Our AI is building your comprehensive industry report
+   364→      </p>
+   365→
+   366→      {/* Progress bar */}
+   367→      <div className="w-full max-w-md mb-6">
+   368→        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+   369→          <div
+   370→            className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-500 ease-out"
+   371→            style={{ width: `${progress}%` }}
+   372→          />
+   373→        </div>
+   374→        <div className="flex justify-between mt-2">
+   375→          <span className="text-xs text-gray-400">Processing...</span>
+   376→          <span className="text-xs font-medium text-blue-500">{Math.round(progress)}%</span>
+   377→        </div>
+   378→      </div>
+   379→
+   380→      {/* Step indicators */}
+   381→      <div className="w-full max-w-md space-y-2">
+   382→        {LOADING_STEPS.map((step, index) => (
+   383→          <div
+   384→            key={index}
+   385→            className={cn(
+   386→              'flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-500',
+   387→              index < currentStep
+   388→                ? 'bg-blue-50/80 text-blue-600'
+   389→                : index === currentStep
+   390→                  ? 'bg-blue-50 text-blue-600 animate-pulse'
+   391→                  : 'text-gray-300'
+   392→            )}
+   393→          >
+   394→            {index < currentStep ? (
+   395→              <CheckCircle2 className="w-4 h-4 shrink-0 text-blue-500" />
+   396→            ) : index === currentStep ? (
+   397→              <Loader2 className="w-4 h-4 shrink-0 animate-spin text-blue-500" />
+   398→            ) : (
+   399→              <div className="w-4 h-4 rounded-full border-2 border-gray-200 shrink-0" />
+   400→            )}
+   401→            <span className={cn(
+   402→              'text-sm transition-colors',
+   403→              index <= currentStep ? 'font-medium' : 'font-normal'
+   404→            )}>
+   405→              {step}
+   406→            </span>
+   407→          </div>
+   408→        ))}
+   409→      </div>
+   410→    </div>
+   411→  )
+   412→}
+   413→
+   414→/* ──────────── Section Card ──────────── */
+   415→
+   416→function SectionCard({ section, defaultOpen }: { section: ReportSection; defaultOpen: boolean }) {
+   417→  const [isOpen, setIsOpen] = useState(defaultOpen)
+   418→  const Icon = section.icon
+   419→
+   420→  return (
+   421→    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+   422→      <Card className={cn(
+   423→        'bg-white border border-gray-200/80 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200',
+   424→        'border-l-4',
+   425→        section.borderColor
+   426→      )}>
+   427→        <CollapsibleTrigger className="w-full text-left">
+   428→          <CardHeader className="pb-3 pt-4 px-5">
+   429→            <div className="flex items-center justify-between">
+   430→              <div className="flex items-center gap-3">
+   431→                <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center shrink-0', section.bgColor)}>
+   432→                  <Icon className={cn('w-4.5 h-4.5', section.iconColor)} />
+   433→                </div>
+   434→                <div>
+   435→                  <CardTitle className="text-sm font-semibold text-gray-900">{section.title}</CardTitle>
+   436→                </div>
+   437→              </div>
+   438→              <div className={cn(
+   439→                'w-7 h-7 rounded-lg flex items-center justify-center transition-transform duration-200',
+   440→                isOpen ? 'bg-blue-50 text-blue-500' : 'bg-gray-50 text-gray-400 hover:text-gray-600'
+   441→              )}>
+   442→                {isOpen ? (
+   443→                  <ChevronDown className="w-4 h-4" />
+   444→                ) : (
+   445→                  <ChevronRight className="w-4 h-4" />
+   446→                )}
+   447→              </div>
+   448→            </div>
+   449→          </CardHeader>
+   450→        </CollapsibleTrigger>
+   451→        <CollapsibleContent>
+   452→          <CardContent className="px-5 pb-5 pt-0">
+   453→            <div className="pl-12">
+   454→              <div className="space-y-0.5">
+   455→                {renderMarkdown(section.content)}
+   456→              </div>
+   457→            </div>
+   458→          </CardContent>
+   459→        </CollapsibleContent>
+   460→      </Card>
+   461→    </Collapsible>
+   462→  )
+   463→}
+   464→
+   465→/* ──────────── Results View ──────────── */
+   466→
+   467→function ResultsView({ result, onReset }: { result: AnalysisResult; onReset: () => void }) {
+   468→  return (
+   469→    <div className="space-y-4">
+   470→      {/* Results header */}
+   471→      <div className="flex items-center justify-between">
+   472→        <div className="flex items-center gap-3">
+   473→          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+   474→            <Sparkles className="w-5 h-5 text-white" />
+   475→          </div>
+   476→          <div>
+   477→            <h2 className="text-lg font-bold text-gray-900">Industry Analysis Report</h2>
+   478→            <p className="text-sm text-gray-500">Comprehensive breakdown for <span className="font-medium text-blue-600">{result.industry}</span></p>
+   479→          </div>
+   480→        </div>
+   481→        <div className="flex items-center gap-2">
+   482→          <Badge className="bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 text-xs font-medium px-3 py-1">
+   483→            {result.sections.length} Sections
+   484→          </Badge>
+   485→          <Button
+   486→            variant="outline"
+   487→            size="sm"
+   488→            onClick={onReset}
+   489→            className="border-gray-200 text-gray-600 hover:text-gray-900 hover:bg-gray-50 text-xs gap-1.5"
+   490→          >
+   491→            <Search className="w-3.5 h-3.5" />
+   492→            New Analysis
+   493→          </Button>
+   494→        </div>
+   495→      </div>
+   496→
+   497→      {/* Section cards */}
+   498→      <div className="space-y-3">
+   499→        {result.sections.map((section, index) => (
+   500→          <SectionCard
+   501→            key={section.id}
+   502→            section={section}
+   503→            defaultOpen={index === 0}
+   504→          />
+   505→        ))}
+   506→      </div>
+   507→
+   508→      {/* Footer */}
+   509→      <div className="flex items-center justify-center pt-4 pb-2">
+   510→        <p className="text-xs text-gray-400">
+   511→          Analysis generated by TITAN AI • Results may vary • Verify critical details independently
+   512→        </p>
+   513→      </div>
+   514→    </div>
+   515→  )
+   516→}
+   517→
+   518→/* ──────────── Main Component ──────────── */
+   519→
+   520→export function IndustryExpertView() {
+   521→  const [industry, setIndustry] = useState('')
+   522→  const [context, setContext] = useState('')
+   523→  const [isLoading, setIsLoading] = useState(false)
+   524→  const [error, setError] = useState<string | null>(null)
+   525→  const [result, setResult] = useState<AnalysisResult | null>(null)
+   526→  const [showContext, setShowContext] = useState(false)
+   527→
+   528→  const analyzeIndustry = useCallback(async (industryName: string, extraContext?: string) => {
+   529→    if (!industryName.trim()) return
+   530→
+   531→    setIsLoading(true)
+   532→    setError(null)
+   533→    setResult(null)
+   534→
+   535→    try {
+   536→      const res = await fetch('/api/ai/industry-expert', {
+   537→        method: 'POST',
+   538→        headers: { 'Content-Type': 'application/json' },
+   539→        credentials: 'same-origin',
+   540→        body: JSON.stringify({
+   541→          industry: industryName.trim(),
+   542→          context: extraContext?.trim() || undefined,
+   543→        }),
+   544→      })
+   545→
+   546→      if (!res.ok) {
+   547→        throw new Error(`Request failed with status ${res.status}`)
+   548→      }
+   549→
+   550→      const data = await res.json()
+   551→      const rawText = data.result || data.response || data.message || data.text || ''
+   552→
+   553→      if (!rawText) {
+   554→        throw new Error('Empty response received from AI')
+   555→      }
+   556→
+   557→      const sections = parseSectionsFromResponse(rawText)
+   558→
+   559→      setResult({
+   560→        industry: industryName.trim(),
+   561→        sections,
+   562→        rawText,
+   563→      })
+   564→    } catch (err) {
+   565→      const message = err instanceof Error ? err.message : 'An unexpected error occurred'
+   566→      setError(message)
+   567→    } finally {
+   568→      setIsLoading(false)
+   569→    }
+   570→  }, [])
+   571→
+   572→  const handleSubmit = (e: React.FormEvent) => {
+   573→    e.preventDefault()
+   574→    analyzeIndustry(industry, context)
+   575→  }
+   576→
+   577→  const handleChipClick = (chipIndustry: string) => {
+   578→    setIndustry(chipIndustry)
+   579→    analyzeIndustry(chipIndustry, context || undefined)
+   580→  }
+   581→
+   582→  const handleReset = () => {
+   583→    setIndustry('')
+   584→    setContext('')
+   585→    setResult(null)
+   586→    setError(null)
+   587→  }
+   588→
+   589→  const handleClearIndustry = () => {
+   590→    setIndustry('')
+   591→  }
+   592→
+   593→  return (
+   594→    <div className="h-full flex flex-col">
+   595→      {/* Page Header */}
+   596→      <div className="flex items-center justify-between pb-6">
+   597→        <div>
+   598→          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+   599→            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+   600→              <GraduationCap className="w-5 h-5 text-white" />
+   601→            </div>
+   602→            Industry Expert
+   603→          </h1>
+   604→          <p className="text-sm text-gray-500 mt-1 ml-[52px]">
+   605→            AI-powered industry analysis to craft winning sales strategies
+   606→          </p>
+   607→        </div>
+   608→        {result && (
+   609→          <Badge className="bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 text-xs font-medium px-3 py-1">
+   610→            <Sparkles className="w-3 h-3 mr-1" />
+   611→            AI Analysis
+   612→          </Badge>
+   613→        )}
+   614→      </div>
+   615→
+   616→      {/* Search Card — always visible at top */}
+   617→      <Card className="bg-white border border-gray-200/80 rounded-xl shadow-sm mb-6 shrink-0">
+   618→        <CardContent className="p-5">
+   619→          <form onSubmit={handleSubmit} className="space-y-4">
+   620→            {/* Industry input row */}
+   621→            <div className="flex gap-3">
+   622→              <div className="flex-1 relative">
+   623→                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+   624→                <Input
+   625→                  value={industry}
+   626→                  onChange={(e) => setIndustry(e.target.value)}
+   627→                  placeholder="Type an industry (e.g., Law Firms, Dentists, Real Estate...)"
+   628→                  className="pl-10 pr-10 h-11 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 rounded-lg text-sm focus-visible:ring-blue-500/30 focus-visible:border-blue-500/30 transition-all"
+   629→                  disabled={isLoading}
+   630→                />
+   631→                {industry && !isLoading && (
+   632→                  <button
+   633→                    type="button"
+   634→                    onClick={handleClearIndustry}
+   635→                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+   636→                  >
+   637→                    <X className="w-4 h-4" />
+   638→                  </button>
+   639→                )}
+   640→              </div>
+   641→              <Button
+   642→                type="submit"
+   643→                disabled={!industry.trim() || isLoading}
+   644→                className="h-11 px-6 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg shadow-sm shadow-blue-600/20 disabled:opacity-40 disabled:shadow-none transition-all gap-2 shrink-0"
+   645→              >
+   646→                {isLoading ? (
+   647→                  <>
+   648→                    <Loader2 className="w-4 h-4 animate-spin" />
+   649→                    Analyzing...
+   650→                  </>
+   651→                ) : (
+   652→                  <>
+   653→                    <Sparkles className="w-4 h-4" />
+   654→                    Analyze Industry
+   655→                  </>
+   656→                )}
+   657→              </Button>
+   658→            </div>
+   659→
+   660→            {/* Optional context toggle */}
+   661→            {!result && (
+   662→              <>
+   663→                <button
+   664→                  type="button"
+   665→                  onClick={() => setShowContext(!showContext)}
+   666→                  className="text-xs text-gray-400 hover:text-blue-500 transition-colors flex items-center gap-1"
+   667→                >
+   668→                  <ChevronRight className={cn('w-3 h-3 transition-transform', showContext && 'rotate-90')} />
+   669→                  Add extra context (optional)
+   670→                </button>
+   671→                {showContext && (
+   672→                  <Input
+   673→                    value={context}
+   674→                    onChange={(e) => setContext(e.target.value)}
+   675→                    placeholder="e.g., Focus on businesses in New York City with 10-50 employees"
+   676→                    className="h-9 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 rounded-lg text-sm focus-visible:ring-blue-500/30 focus-visible:border-blue-500/30 transition-all"
+   677→                    disabled={isLoading}
+   678→                  />
+   679→                )}
+   680→              </>
+   681→            )}
+   682→          </form>
+   683→
+   684→          {/* Popular industry chips */}
+   685→          <div className="mt-4 pt-4 border-t border-gray-100">
+   686→            <p className="text-xs font-medium text-gray-500 mb-2.5">Popular Industries</p>
+   687→            <div className="flex flex-wrap gap-2">
+   688→              {POPULAR_INDUSTRIES.map((chip) => (
+   689→                <button
+   690→                  key={chip}
+   691→                  onClick={() => handleChipClick(chip)}
+   692→                  disabled={isLoading}
+   693→                  className={cn(
+   694→                    'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200',
+   695→                    industry === chip
+   696→                      ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-600/20'
+   697→                      : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/50'
+   698→                  )}
+   699→                >
+   700→                  {chip}
+   701→                </button>
+   702→              ))}
+   703→            </div>
+   704→          </div>
+   705→        </CardContent>
+   706→      </Card>
+   707→
+   708→      {/* Error state */}
+   709→      {error && (
+   710→        <Card className="bg-red-50 border border-red-200/80 rounded-xl mb-6 shrink-0">
+   711→          <CardContent className="p-4 flex items-start gap-3">
+   712→            <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
+   713→              <AlertTriangle className="w-4 h-4 text-red-500" />
+   714→            </div>
+   715→            <div className="flex-1">
+   716→              <h3 className="text-sm font-semibold text-red-800">Analysis Failed</h3>
+   717→              <p className="text-sm text-red-600 mt-0.5">{error}</p>
+   718→            </div>
+   719→            <Button
+   720→              variant="ghost"
+   721→              size="sm"
+   722→              onClick={() => setError(null)}
+   723→              className="text-red-500 hover:text-red-700 hover:bg-red-100 h-8 w-8 p-0 shrink-0"
+   724→            >
+   725→              <X className="w-4 h-4" />
+   726→            </Button>
+   727→          </CardContent>
+   728→        </Card>
+   729→      )}
+   730→
+   731→      {/* Loading state */}
+   732→      {isLoading && (
+   733→        <div className="flex-1 overflow-hidden">
+   734→          <LoadingState industry={industry} />
+   735→        </div>
+   736→      )}
+   737→
+   738→      {/* Results */}
+   739→      {result && !isLoading && (
+   740→        <div className="flex-1 overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgb(203 213 225) transparent' }}>
+   741→          <ResultsView result={result} onReset={handleReset} />
+   742→        </div>
+   743→      )}
+   744→
+   745→      {/* Empty state */}
+   746→      {!result && !isLoading && !error && (
+   747→        <div className="flex-1 flex items-center justify-center">
+   748→          <div className="text-center max-w-md px-6 py-12">
+   749→            <div className="relative inline-block mb-6">
+   750→              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
+   751→                <GraduationCap className="w-8 h-8 text-blue-500" />
+   752→              </div>
+   753→              <div className="absolute -inset-2 rounded-3xl bg-blue-100/50 -z-10 blur-xl" />
+   754→            </div>
+   755→            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+   756→              Select an Industry to Analyze
+   757→            </h3>
+   758→            <p className="text-sm text-gray-500 leading-relaxed">
+   759→              Choose a popular industry above or type your own. Our AI will generate a comprehensive report covering market trends, pain points, outreach strategies, email templates, and more.
+   760→            </p>
+   761→            <div className="mt-6 flex items-center justify-center gap-6 text-xs text-gray-400">
+   762→              <div className="flex items-center gap-1.5">
+   763→                <Target className="w-3.5 h-3.5" />
+   764→                10 Report Sections
+   765→              </div>
+   766→              <div className="flex items-center gap-1.5">
+   767→                <Lightbulb className="w-3.5 h-3.5" />
+   768→                Actionable Insights
+   769→              </div>
+   770→              <div className="flex items-center gap-1.5">
+   771→                <Mail className="w-3.5 h-3.5" />
+   772→                Email Templates
+   773→              </div>
+   774→            </div>
+   775→          </div>
+   776→        </div>
+   777→      )}
+   778→    </div>
+   779→  )
+   780→}
+   781→

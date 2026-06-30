@@ -111,7 +111,7 @@ const STAGE_BG: Record<string, string> = {
   AUDITED: 'bg-sky-50 border-sky-200',
   QUALIFIED: 'bg-emerald-50 border-emerald-200',
   OUTREACH_SENT: 'bg-amber-50 border-amber-200',
-  REPLIED: 'bg-violet-50 border-violet-200',
+  REPLIED: 'bg-blue-50 border-blue-200',
   MEETING_BOOKED: 'bg-blue-50 border-blue-200',
   PROPOSAL_SENT: 'bg-orange-50 border-orange-200',
   WON: 'bg-green-50 border-green-200',
@@ -137,7 +137,7 @@ const ACTION_ICONS: Record<string, React.ElementType> = {
 }
 
 const ACTION_COLORS: Record<string, string> = {
-  LEAD_CREATED: 'bg-violet-50 text-violet-600',
+  LEAD_CREATED: 'bg-blue-50 text-blue-600',
   LEAD_AUDITED: 'bg-sky-50 text-sky-600',
   LEAD_QUALIFIED: 'bg-emerald-50 text-emerald-600',
   OUTREACH_SENT: 'bg-amber-50 text-amber-600',
@@ -203,9 +203,9 @@ export function DashboardView({ userName }: { userName?: string }) {
       label: 'Total Leads',
       value: data.totalLeads,
       icon: Users,
-      iconBg: 'bg-violet-50',
-      iconColor: 'text-violet-600',
-      accent: 'from-violet-50 to-transparent',
+      iconBg: 'bg-blue-50',
+      iconColor: 'text-blue-600',
+      accent: 'from-blue-50 to-transparent',
       trend: null,
     },
     {
@@ -272,7 +272,7 @@ export function DashboardView({ userName }: { userName?: string }) {
       label: 'Discover Leads',
       icon: Search,
       view: 'discovery' as const,
-      gradient: 'from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600',
+      gradient: 'from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600',
     },
     {
       label: 'Run Website Audit',
@@ -361,7 +361,7 @@ export function DashboardView({ userName }: { userName?: string }) {
     <div className="space-y-6">
       {/* ─── 1. Welcome Bar ────────────────────────────────────────── */}
       <div className="relative overflow-hidden rounded-xl bg-white border border-gray-200 px-6 py-5 shadow-sm">
-        <div className="absolute inset-0 bg-gradient-to-r from-violet-50 via-white to-emerald-50 opacity-60" />
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-white to-emerald-50 opacity-60" />
         <div className="relative flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-gray-900 tracking-tight">
@@ -518,7 +518,7 @@ export function DashboardView({ userName }: { userName?: string }) {
               </CardTitle>
               <Badge
                 variant="secondary"
-                className="bg-violet-500/10 text-violet-400 border-violet-500/20 text-[10px]"
+                className="bg-blue-500/10 text-blue-400 border-blue-500/20 text-[10px]"
               >
                 Top 5 by reply rate
               </Badge>

@@ -1,0 +1,732 @@
+     1→'use client'
+     2→
+     3→import { useEffect, useState } from 'react'
+     4→import { Card, CardContent } from '@/components/ui/card'
+     5→import { Button } from '@/components/ui/button'
+     6→import { Badge } from '@/components/ui/badge'
+     7→import { Input } from '@/components/ui/input'
+     8→import { Textarea } from '@/components/ui/textarea'
+     9→import { Label } from '@/components/ui/label'
+    10→import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+    11→import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+    12→import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog'
+    13→import { Skeleton } from '@/components/ui/skeleton'
+    14→import { ScrollArea } from '@/components/ui/scroll-area'
+    15→import {
+    16→  Plus, Search, Sparkles, Send, Eye, Reply, Mail, MailOpen,
+    17→  AlertTriangle, FileEdit, Loader2, Inbox, ArrowUpRight, MailCheck
+    18→} from 'lucide-react'
+    19→import { cn } from '@/lib/utils'
+    20→import { format } from 'date-fns'
+    21→import { toast } from 'sonner'
+    22→
+    23→// ─── Types ───────────────────────────────────────────────────────────
+    24→
+    25→interface EmailItem {
+    26→  id: string
+    27→  subject: string
+    28→  body: string
+    29→  status: string
+    30→  type: string
+    31→  sentAt: string | null
+    32→  openedAt: string | null
+    33→  repliedAt: string | null
+    34→  createdAt: string
+    35→  followUpNumber: number
+    36→  campaignId: string | null
+    37→  lead: {
+    38→    id: string
+    39→    decisionMaker: string | null
+    40→    decisionMakerRole: string | null
+    41→    business: { name: string; website: string | null }
+    42→  }
+    43→  campaign?: { id: string; name: string } | null
+    44→}
+    45→
+    46→interface CampaignOption {
+    47→  id: string
+    48→  name: string
+    49→}
+    50→
+    51→// ─── Config ──────────────────────────────────────────────────────────
+    52→
+    53→const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ElementType }> = {
+    54→  DRAFT: { label: 'Draft', color: 'bg-slate-500/15 text-gray-500 border-slate-500/25', icon: FileEdit },
+    55→  SENT: { label: 'Sent', color: 'bg-blue-500/15 text-blue-400 border-blue-500/25', icon: Send },
+    56→  OPENED: { label: 'Opened', color: 'bg-amber-500/15 text-amber-400 border-amber-500/25', icon: MailOpen },
+    57→  REPLIED: { label: 'Replied', color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25', icon: Reply },
+    58→  BOUNCED: { label: 'Bounced', color: 'bg-red-500/15 text-red-400 border-red-500/25', icon: AlertTriangle },
+    59→  FAILED: { label: 'Failed', color: 'bg-red-500/15 text-red-400 border-red-500/25', icon: AlertTriangle },
+    60→}
+    61→
+    62→const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
+    63→  INITIAL: { label: 'Initial', color: 'bg-violet-500/15 text-violet-400 border-violet-500/25' },
+    64→  FOLLOW_UP: { label: 'Follow-up', color: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/25' },
+    65→  REPLY: { label: 'Reply', color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25' },
+    66→}
+    67→
+    68→const TOP_STATS = [
+    69→  { key: 'total', label: 'Total Sent', icon: Mail, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+    70→  { key: 'opened', label: 'Opened', icon: MailOpen, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+    71→  { key: 'replied', label: 'Replied', icon: Reply, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    72→  { key: 'bounced', label: 'Bounced', icon: AlertTriangle, color: 'text-red-400', bg: 'bg-red-500/10' },
+    73→  { key: 'pending', label: 'Pending', icon: Inbox, color: 'text-gray-500', bg: 'bg-slate-500/10' },
+    74→]
+    75→
+    76→// ─── Main Component ──────────────────────────────────────────────────
+    77→
+    78→export function EmailCenterView() {
+    79→  const [emails, setEmails] = useState<EmailItem[]>([])
+    80→  const [campaigns, setCampaigns] = useState<CampaignOption[]>([])
+    81→  const [leads, setLeads] = useState<Array<{ id: string; business: { name: string } }>>([])
+    82→  const [loading, setLoading] = useState(true)
+    83→  const [statusTab, setStatusTab] = useState('ALL')
+    84→  const [campaignFilter, setCampaignFilter] = useState('ALL')
+    85→  const [search, setSearch] = useState('')
+    86→  const [composeOpen, setComposeOpen] = useState(false)
+    87→  const [aiGenerateOpen, setAiGenerateOpen] = useState(false)
+    88→  const [refreshKey, setRefreshKey] = useState(0)
+    89→
+    90→  useEffect(() => {
+    91→    const params = new URLSearchParams()
+    92→    if (statusTab !== 'ALL') params.set('status', statusTab)
+    93→    if (campaignFilter !== 'ALL') params.set('campaignId', campaignFilter)
+    94→    if (search) params.set('search', search)
+    95→    params.set('limit', '200')
+    96→
+    97→    Promise.all([
+    98→      fetch(`/api/outreach?${params}`, { credentials: 'same-origin' }),
+    99→      fetch('/api/campaigns?limit=100', { credentials: 'same-origin' }),
+   100→      fetch('/api/leads?limit=200', { credentials: 'same-origin' }),
+   101→    ])
+   102→      .then(([eRes, cRes, lRes]) => Promise.all([eRes.json(), cRes.json(), lRes.json()]))
+   103→      .then(([eData, cData, lData]) => {
+   104→        setEmails(eData.outreaches || [])
+   105→        setCampaigns(cData.campaigns || [])
+   106→        setLeads(lData.leads || [])
+   107→      })
+   108→      .catch(() => toast.error('Failed to load email data'))
+   109→      .finally(() => setLoading(false))
+   110→  }, [statusTab, campaignFilter, search, refreshKey])
+   111→  const refresh = () => setRefreshKey(k => k + 1)
+   112→
+   113→  // Compute stats from all emails (not filtered)
+   114→  const allEmails = emails
+   115→  const stats = {
+   116→    total: allEmails.filter(e => e.status === 'SENT' || e.status === 'OPENED' || e.status === 'REPLIED').length,
+   117→    opened: allEmails.filter(e => e.status === 'OPENED' || e.status === 'REPLIED').length,
+   118→    replied: allEmails.filter(e => e.status === 'REPLIED').length,
+   119→    bounced: allEmails.filter(e => e.status === 'BOUNCED' || e.status === 'FAILED').length,
+   120→    pending: allEmails.filter(e => e.status === 'DRAFT').length,
+   121→  }
+   122→
+   123→  const openRate = stats.total > 0 ? ((stats.opened / stats.total) * 100).toFixed(1) : '0.0'
+   124→  const replyRate = stats.total > 0 ? ((stats.replied / stats.total) * 100).toFixed(1) : '0.0'
+   125→
+   126→  return (
+   127→    <div className="space-y-5">
+   128→      {/* Header */}
+   129→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+   130→        <div>
+   131→          <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+   132→            <Mail className="w-5 h-5 text-blue-400" />
+   133→            Email Center
+   134→          </h1>
+   135→          <p className="text-sm text-gray-500 mt-0.5">
+   136→            {emails.length} emails &middot; {openRate}% open rate &middot; {replyRate}% reply rate
+   137→          </p>
+   138→        </div>
+   139→        <div className="flex items-center gap-2">
+   140→          <div className="relative">
+   141→            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+   142→            <Input
+   143→              placeholder="Search emails..."
+   144→              value={search}
+   145→              onChange={e => setSearch(e.target.value)}
+   146→              className="pl-8 w-48 h-8 text-sm bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30"
+   147→            />
+   148→          </div>
+   149→          <Select value={campaignFilter} onValueChange={setCampaignFilter}>
+   150→            <SelectTrigger className="w-44 h-8 text-sm bg-white border-gray-200 text-gray-900">
+   151→              <SelectValue placeholder="All Campaigns" />
+   152→            </SelectTrigger>
+   153→            <SelectContent className="bg-white border-gray-200">
+   154→              <SelectItem value="ALL">All Campaigns</SelectItem>
+   155→              {campaigns.map(c => (
+   156→                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+   157→              ))}
+   158→            </SelectContent>
+   159→          </Select>
+   160→        </div>
+   161→      </div>
+   162→
+   163→      {/* Stats Row */}
+   164→      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+   165→        {TOP_STATS.map(s => (
+   166→          <Card key={s.key} className="bg-white border-gray-200">
+   167→            <CardContent className="p-3 flex items-center gap-3">
+   168→              <div className={cn('p-2 rounded-lg', s.bg, s.color)}>
+   169→                <s.icon className="w-4 h-4" />
+   170→              </div>
+   171→              <div>
+   172→                <p className="text-[10px] text-gray-400 uppercase tracking-wider">{s.label}</p>
+   173→                <p className="text-lg font-semibold text-gray-900">{stats[s.key as keyof typeof stats]}</p>
+   174→              </div>
+   175→            </CardContent>
+   176→          </Card>
+   177→        ))}
+   178→      </div>
+   179→
+   180→      {/* Status Tabs + Action Buttons */}
+   181→      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+   182→        <Tabs value={statusTab} onValueChange={setStatusTab}>
+   183→          <TabsList className="bg-white border border-gray-200 h-8">
+   184→            {[
+   185→              { value: 'ALL', label: 'All' },
+   186→              { value: 'DRAFT', label: 'Draft' },
+   187→              { value: 'SENT', label: 'Sent' },
+   188→              { value: 'OPENED', label: 'Opened' },
+   189→              { value: 'REPLIED', label: 'Replied' },
+   190→              { value: 'BOUNCED', label: 'Bounced' },
+   191→            ].map(tab => (
+   192→              <TabsTrigger
+   193→                key={tab.value}
+   194→                value={tab.value}
+   195→                className="data-[state=active]:bg-gray-100 data-[state=active]:text-gray-900 text-gray-500 text-xs px-3"
+   196→              >
+   197→                {tab.label}
+   198→              </TabsTrigger>
+   199→            ))}
+   200→          </TabsList>
+   201→        </Tabs>
+   202→
+   203→        <div className="flex items-center gap-2">
+   204→          <AiEmailDialog
+   205→            open={aiGenerateOpen}
+   206→            onOpenChange={setAiGenerateOpen}
+   207→            leads={leads}
+   208→            campaigns={campaigns}
+   209→            onSaved={refresh}
+   210→          />
+   211→          <ComposeEmailDialog
+   212→            open={composeOpen}
+   213→            onOpenChange={setComposeOpen}
+   214→            leads={leads}
+   215→            campaigns={campaigns}
+   216→            onSent={refresh}
+   217→          />
+   218→        </div>
+   219→      </div>
+   220→
+   221→      {/* Email Table */}
+   222→      {loading ? (
+   223→        <Card className="bg-white border-gray-200">
+   224→          <CardContent className="p-0">
+   225→            <div className="p-4 space-y-3">
+   226→              {Array.from({ length: 6 }).map((_, i) => (
+   227→                <Skeleton key={i} className="h-14 w-full bg-gray-100" />
+   228→              ))}
+   229→            </div>
+   230→          </CardContent>
+   231→        </Card>
+   232→      ) : emails.length === 0 ? (
+   233→        <Card className="bg-white border-gray-200 border-dashed">
+   234→          <CardContent className="p-12 text-center">
+   235→            <Mail className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+   236→            <p className="text-gray-500 font-medium">No emails found</p>
+   237→            <p className="text-sm text-gray-400 mt-1">
+   238→              {statusTab !== 'ALL' ? 'Try changing your filters.' : 'Generate an AI email or compose your first outreach.'}
+   239→            </p>
+   240→            <div className="flex items-center justify-center gap-2 mt-4">
+   241→              <Button
+   242→                variant="outline"
+   243→                className="border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+   244→                onClick={() => setAiGenerateOpen(true)}
+   245→              >
+   246→                <Sparkles className="w-3.5 h-3.5 mr-1.5" />Generate AI Email
+   247→              </Button>
+   248→              <Button
+   249→                variant="outline"
+   250→                className="border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+   251→                onClick={() => setComposeOpen(true)}
+   252→              >
+   253→                <Plus className="w-3.5 h-3.5 mr-1.5" />Compose
+   254→              </Button>
+   255→            </div>
+   256→          </CardContent>
+   257→        </Card>
+   258→      ) : (
+   259→        <Card className="bg-white border-gray-200">
+   260→          <CardContent className="p-0">
+   261→            <ScrollArea className="max-h-[600px]">
+   262→              <div className="overflow-x-auto">
+   263→                <table className="w-full text-sm">
+   264→                  <thead className="sticky top-0 z-10">
+   265→                    <tr className="bg-white border-b border-gray-200">
+   266→                      <th className="text-left px-4 py-3 text-[10px] font-medium text-gray-400 uppercase tracking-wider">Subject</th>
+   267→                      <th className="text-left px-4 py-3 text-[10px] font-medium text-gray-400 uppercase tracking-wider hidden md:table-cell">Lead / Company</th>
+   268→                      <th className="text-left px-4 py-3 text-[10px] font-medium text-gray-400 uppercase tracking-wider hidden sm:table-cell">Type</th>
+   269→                      <th className="text-left px-4 py-3 text-[10px] font-medium text-gray-400 uppercase tracking-wider">Status</th>
+   270→                      <th className="text-left px-4 py-3 text-[10px] font-medium text-gray-400 uppercase tracking-wider hidden lg:table-cell">Sent Date</th>
+   271→                      <th className="w-10" />
+   272→                    </tr>
+   273→                  </thead>
+   274→                  <tbody>
+   275→                    {emails.map(email => {
+   276→                      const statusCfg = STATUS_CONFIG[email.status] || STATUS_CONFIG.DRAFT
+   277→                      const typeCfg = TYPE_CONFIG[email.type] || TYPE_CONFIG.INITIAL
+   278→                      return (
+   279→                        <tr
+   280→                          key={email.id}
+   281→                          className="border-b border-gray-200 hover:bg-gray-100/40 transition-colors group"
+   282→                        >
+   283→                          <td className="px-4 py-3 min-w-0 max-w-xs">
+   284→                            <p className="font-medium text-gray-900 truncate">{email.subject || '(No Subject)'}</p>
+   285→                            <p className="text-xs text-gray-400 truncate mt-0.5">{email.body.slice(0, 100)}</p>
+   286→                          </td>
+   287→                          <td className="px-4 py-3 hidden md:table-cell">
+   288→                            <p className="text-gray-600">{email.lead?.business?.name || '—'}</p>
+   289→                            {email.lead?.decisionMaker && (
+   290→                              <p className="text-xs text-gray-400">{email.lead.decisionMaker}</p>
+   291→                            )}
+   292→                          </td>
+   293→                          <td className="px-4 py-3 hidden sm:table-cell">
+   294→                            <Badge variant="outline" className={cn('text-[10px] font-medium', typeCfg.color)}>
+   295→                              {typeCfg.label}
+   296→                            </Badge>
+   297→                          </td>
+   298→                          <td className="px-4 py-3">
+   299→                            <Badge variant="outline" className={cn('text-[10px] font-medium', statusCfg.color)}>
+   300→                              {statusCfg.label}
+   301→                            </Badge>
+   302→                          </td>
+   303→                          <td className="px-4 py-3 text-xs text-gray-400 hidden lg:table-cell">
+   304→                            {email.sentAt
+   305→                              ? format(new Date(email.sentAt), 'MMM d, h:mm a')
+   306→                              : format(new Date(email.createdAt), 'MMM d')
+   307→                            }
+   308→                          </td>
+   309→                          <td className="px-4 py-3">
+   310→                            <Button
+   311→                              variant="ghost"
+   312→                              size="sm"
+   313→                              className="h-7 w-7 p-0 text-gray-400 hover:text-gray-900 hover:bg-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
+   314→                              onClick={() => {
+   315→                                // Could open a detail view — for now show a toast
+   316→                                toast.info(`Email: "${email.subject}" — ${email.status}`)
+   317→                              }}
+   318→                            >
+   319→                              <ArrowUpRight className="w-3.5 h-3.5" />
+   320→                            </Button>
+   321→                          </td>
+   322→                        </tr>
+   323→                      )
+   324→                    })}
+   325→                  </tbody>
+   326→                </table>
+   327→              </div>
+   328→            </ScrollArea>
+   329→          </CardContent>
+   330→        </Card>
+   331→      )}
+   332→    </div>
+   333→  )
+   334→}
+   335→
+   336→// ─── AI Email Generate Dialog ────────────────────────────────────────
+   337→
+   338→function AiEmailDialog({ open, onOpenChange, leads, campaigns, onSaved }: {
+   339→  open: boolean; onOpenChange: (o: boolean) => void
+   340→  leads: Array<{ id: string; business: { name: string } }>
+   341→  campaigns: Array<{ id: string; name: string }>
+   342→  onSaved: () => void
+   343→}) {
+   344→  const [leadId, setLeadId] = useState('')
+   345→  const [campaignId, setCampaignId] = useState('')
+   346→  const [generating, setGenerating] = useState(false)
+   347→  const [saving, setSaving] = useState(false)
+   348→  const [subject, setSubject] = useState('')
+   349→  const [body, setBody] = useState('')
+   350→  const [generated, setGenerated] = useState(false)
+   351→
+   352→  const handleGenerate = async () => {
+   353→    if (!leadId) {
+   354→      toast.error('Please select a lead')
+   355→      return
+   356→    }
+   357→    setGenerating(true)
+   358→    try {
+   359→      const params = new URLSearchParams({ leadId })
+   360→      if (campaignId) params.set('campaignId', campaignId)
+   361→      const res = await fetch(`/api/ai/email?${params}`, {
+   362→        method: 'POST',
+   363→        credentials: 'same-origin',
+   364→        headers: { 'Content-Type': 'application/json' },
+   365→      })
+   366→      if (res.ok) {
+   367→        const data = await res.json()
+   368→        setSubject(data.subject || '')
+   369→        setBody(data.body || '')
+   370→        setGenerated(true)
+   371→        toast.success('Email generated successfully')
+   372→      } else {
+   373→        const d = await res.json().catch(() => ({}))
+   374→        toast.error(d.error || 'Failed to generate email')
+   375→      }
+   376→    } catch {
+   377→      toast.error('Failed to generate email')
+   378→    }
+   379→    setGenerating(false)
+   380→  }
+   381→
+   382→  const handleSave = async () => {
+   383→    if (!leadId || !subject || !body) {
+   384→      toast.error('Subject and body are required')
+   385→      return
+   386→    }
+   387→    setSaving(true)
+   388→    try {
+   389→      const res = await fetch('/api/outreach', {
+   390→        method: 'POST',
+   391→        headers: { 'Content-Type': 'application/json' },
+   392→        credentials: 'same-origin',
+   393→        body: JSON.stringify({
+   394→          leadId,
+   395→          campaignId: campaignId || undefined,
+   396→          subject,
+   397→          body,
+   398→          type: 'INITIAL',
+   399→          status: 'DRAFT',
+   400→        }),
+   401→      })
+   402→      if (res.ok) {
+   403→        toast.success('Email saved as draft')
+   404→        reset()
+   405→        onOpenChange(false)
+   406→        onSaved()
+   407→      } else {
+   408→        toast.error('Failed to save email')
+   409→      }
+   410→    } catch {
+   411→      toast.error('Failed to save email')
+   412→    }
+   413→    setSaving(false)
+   414→  }
+   415→
+   416→  const handleSend = async () => {
+   417→    if (!leadId || !subject || !body) {
+   418→      toast.error('Subject and body are required')
+   419→      return
+   420→    }
+   421→    setSaving(true)
+   422→    try {
+   423→      const res = await fetch('/api/outreach', {
+   424→        method: 'POST',
+   425→        headers: { 'Content-Type': 'application/json' },
+   426→        credentials: 'same-origin',
+   427→        body: JSON.stringify({
+   428→          leadId,
+   429→          campaignId: campaignId || undefined,
+   430→          subject,
+   431→          body,
+   432→          type: 'INITIAL',
+   433→          status: 'SENT',
+   434→        }),
+   435→      })
+   436→      if (res.ok) {
+   437→        toast.success('Email sent successfully')
+   438→        reset()
+   439→        onOpenChange(false)
+   440→        onSaved()
+   441→      } else {
+   442→        toast.error('Failed to send email')
+   443→      }
+   444→    } catch {
+   445→      toast.error('Failed to send email')
+   446→    }
+   447→    setSaving(false)
+   448→  }
+   449→
+   450→  const reset = () => {
+   451→    setLeadId(''); setCampaignId(''); setSubject(''); setBody(''); setGenerated(false)
+   452→  }
+   453→
+   454→  return (
+   455→    <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v) }}>
+   456→      <DialogTrigger asChild>
+   457→        <Button size="sm" className="h-8 bg-blue-600 hover:bg-blue-700 text-gray-900">
+   458→          <Sparkles className="w-3.5 h-3.5 mr-1.5" />Generate AI Email
+   459→        </Button>
+   460→      </DialogTrigger>
+   461→      <DialogContent className="bg-white border-gray-200 max-w-2xl max-h-[90vh] flex flex-col">
+   462→        <DialogHeader>
+   463→          <DialogTitle className="text-gray-900 flex items-center gap-2">
+   464→            <Sparkles className="w-4 h-4 text-blue-400" />
+   465→            Generate AI Email
+   466→          </DialogTitle>
+   467→        </DialogHeader>
+   468→
+   469→        <div className="space-y-4 mt-2 flex-1 overflow-y-auto">
+   470→          {/* Lead Selection */}
+   471→          <div className="grid grid-cols-2 gap-3">
+   472→            <div>
+   473→              <Label className="text-gray-600 text-xs font-medium">Lead *</Label>
+   474→              <Select value={leadId} onValueChange={setLeadId} disabled={generated}>
+   475→                <SelectTrigger className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900">
+   476→                  <SelectValue placeholder="Select a lead..." />
+   477→                </SelectTrigger>
+   478→                <SelectContent className="bg-white border-gray-200 max-h-60">
+   479→                  {leads.map(l => (
+   480→                    <SelectItem key={l.id} value={l.id}>{l.business.name}</SelectItem>
+   481→                  ))}
+   482→                </SelectContent>
+   483→              </Select>
+   484→            </div>
+   485→            <div>
+   486→              <Label className="text-gray-600 text-xs font-medium">Campaign (optional)</Label>
+   487→              <Select value={campaignId} onValueChange={setCampaignId} disabled={generated}>
+   488→                <SelectTrigger className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900">
+   489→                  <SelectValue placeholder="No campaign" />
+   490→                </SelectTrigger>
+   491→                <SelectContent className="bg-white border-gray-200">
+   492→                  <SelectItem value="">No campaign</SelectItem>
+   493→                  {campaigns.map(c => (
+   494→                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+   495→                  ))}
+   496→                </SelectContent>
+   497→              </Select>
+   498→            </div>
+   499→          </div>
+   500→
+   501→          {/* Generate Button (shown before generation) */}
+   502→          {!generated && (
+   503→            <Button
+   504→              onClick={handleGenerate}
+   505→              disabled={generating || !leadId}
+   506→              className="w-full bg-blue-600 hover:bg-blue-700 text-gray-900"
+   507→            >
+   508→              {generating ? (
+   509→                <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />Generating with AI...</>
+   510→              ) : (
+   511→                <><Sparkles className="w-3.5 h-3.5 mr-1.5" />Generate Email</>
+   512→              )}
+   513→            </Button>
+   514→          )}
+   515→
+   516→          {/* Generated Content (editable) */}
+   517→          {generated && (
+   518→            <>
+   519→              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 flex items-center gap-2">
+   520→                <MailCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+   521→                <p className="text-xs text-emerald-400">AI-generated email ready. You can edit the content below before saving or sending.</p>
+   522→              </div>
+   523→
+   524→              <div>
+   525→                <Label className="text-gray-600 text-xs font-medium">Subject</Label>
+   526→                <Input
+   527→                  className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30"
+   528→                  value={subject}
+   529→                  onChange={e => setSubject(e.target.value)}
+   530→                  placeholder="Email subject line"
+   531→                />
+   532→              </div>
+   533→
+   534→              <div>
+   535→                <Label className="text-gray-600 text-xs font-medium">Body</Label>
+   536→                <Textarea
+   537→                  className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30 min-h-[200px] font-mono text-sm leading-relaxed"
+   538→                  value={body}
+   539→                  onChange={e => setBody(e.target.value)}
+   540→                  placeholder="Email body..."
+   541→                />
+   542→              </div>
+   543→
+   544→              <Button
+   545→                variant="ghost"
+   546→                size="sm"
+   547→                className="text-gray-500 hover:text-gray-900"
+   548→                onClick={() => { setGenerated(false); setSubject(''); setBody('') }}
+   549→              >
+   550→                Regenerate
+   551→              </Button>
+   552→            </>
+   553→          )}
+   554→        </div>
+   555→
+   556→        {generated && (
+   557→          <DialogFooter className="mt-4 gap-2">
+   558→            <Button variant="outline" onClick={() => { reset(); onOpenChange(false) }} className="border-gray-200 text-gray-600 hover:bg-gray-100">
+   559→              Discard
+   560→            </Button>
+   561→            <Button
+   562→              variant="outline"
+   563→              onClick={handleSave}
+   564→              disabled={saving || !subject || !body}
+   565→              className="border-gray-200 text-gray-600 hover:bg-gray-100"
+   566→            >
+   567→              {saving ? 'Saving...' : 'Save as Draft'}
+   568→            </Button>
+   569→            <Button
+   570→              onClick={handleSend}
+   571→              disabled={saving || !subject || !body}
+   572→              className="bg-blue-600 hover:bg-blue-700 text-gray-900"
+   573→            >
+   574→              {saving ? 'Sending...' : <><Send className="w-3.5 h-3.5 mr-1.5" />Send Now</>}
+   575→            </Button>
+   576→          </DialogFooter>
+   577→        )}
+   578→      </DialogContent>
+   579→    </Dialog>
+   580→  )
+   581→}
+   582→
+   583→// ─── Compose Email Dialog ────────────────────────────────────────────
+   584→
+   585→function ComposeEmailDialog({ open, onOpenChange, leads, campaigns, onSent }: {
+   586→  open: boolean; onOpenChange: (o: boolean) => void
+   587→  leads: Array<{ id: string; business: { name: string } }>
+   588→  campaigns: Array<{ id: string; name: string }>
+   589→  onSent: () => void
+   590→}) {
+   591→  const [leadId, setLeadId] = useState('')
+   592→  const [campaignId, setCampaignId] = useState('')
+   593→  const [subject, setSubject] = useState('')
+   594→  const [body, setBody] = useState('')
+   595→  const [type, setType] = useState('INITIAL')
+   596→  const [sendNow, setSendNow] = useState(true)
+   597→  const [loading, setLoading] = useState(false)
+   598→
+   599→  const handleSubmit = async () => {
+   600→    if (!leadId || !subject || !body) {
+   601→      toast.error('Lead, subject, and message are required')
+   602→      return
+   603→    }
+   604→    setLoading(true)
+   605→    try {
+   606→      const res = await fetch('/api/outreach', {
+   607→        method: 'POST',
+   608→        headers: { 'Content-Type': 'application/json' },
+   609→        credentials: 'same-origin',
+   610→        body: JSON.stringify({
+   611→          leadId,
+   612→          campaignId: campaignId || undefined,
+   613→          subject,
+   614→          body,
+   615→          type,
+   616→          status: sendNow ? 'SENT' : 'DRAFT',
+   617→        }),
+   618→      })
+   619→      if (res.ok) {
+   620→        toast.success(sendNow ? 'Email sent' : 'Draft saved')
+   621→        reset()
+   622→        onOpenChange(false)
+   623→        onSent()
+   624→      } else {
+   625→        toast.error('Failed to save email')
+   626→      }
+   627→    } catch {
+   628→      toast.error('Failed to save email')
+   629→    }
+   630→    setLoading(false)
+   631→  }
+   632→
+   633→  const reset = () => {
+   634→    setLeadId(''); setCampaignId(''); setSubject(''); setBody('')
+   635→    setType('INITIAL'); setSendNow(true)
+   636→  }
+   637→
+   638→  return (
+   639→    <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v) }}>
+   640→      <DialogTrigger asChild>
+   641→        <Button size="sm" variant="outline" className="h-8 border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900">
+   642→          <Plus className="w-3.5 h-3.5 mr-1.5" />Compose
+   643→        </Button>
+   644→      </DialogTrigger>
+   645→      <DialogContent className="bg-white border-gray-200 max-w-lg max-h-[90vh] flex flex-col">
+   646→        <DialogHeader>
+   647→          <DialogTitle className="text-gray-900">Compose Email</DialogTitle>
+   648→        </DialogHeader>
+   649→
+   650→        <div className="space-y-4 mt-2 flex-1 overflow-y-auto">
+   651→          <div className="grid grid-cols-2 gap-3">
+   652→            <div>
+   653→              <Label className="text-gray-600 text-xs font-medium">Lead *</Label>
+   654→              <Select value={leadId} onValueChange={setLeadId}>
+   655→                <SelectTrigger className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900">
+   656→                  <SelectValue placeholder="Select a lead..." />
+   657→                </SelectTrigger>
+   658→                <SelectContent className="bg-white border-gray-200 max-h-60">
+   659→                  {leads.map(l => (
+   660→                    <SelectItem key={l.id} value={l.id}>{l.business.name}</SelectItem>
+   661→                  ))}
+   662→                </SelectContent>
+   663→              </Select>
+   664→            </div>
+   665→            <div>
+   666→              <Label className="text-gray-600 text-xs font-medium">Campaign</Label>
+   667→              <Select value={campaignId} onValueChange={setCampaignId}>
+   668→                <SelectTrigger className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900">
+   669→                  <SelectValue placeholder="No campaign" />
+   670→                </SelectTrigger>
+   671→                <SelectContent className="bg-white border-gray-200">
+   672→                  <SelectItem value="">No campaign</SelectItem>
+   673→                  {campaigns.map(c => (
+   674→                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+   675→                  ))}
+   676→                </SelectContent>
+   677→              </Select>
+   678→            </div>
+   679→          </div>
+   680→
+   681→          <div className="grid grid-cols-2 gap-3">
+   682→            <div>
+   683→              <Label className="text-gray-600 text-xs font-medium">Type</Label>
+   684→              <Select value={type} onValueChange={setType}>
+   685→                <SelectTrigger className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900">
+   686→                  <SelectValue />
+   687→                </SelectTrigger>
+   688→                <SelectContent className="bg-white border-gray-200">
+   689→                  <SelectItem value="INITIAL">Initial</SelectItem>
+   690→                  <SelectItem value="FOLLOW_UP">Follow-up</SelectItem>
+   691→                  <SelectItem value="REPLY">Reply</SelectItem>
+   692→                </SelectContent>
+   693→              </Select>
+   694→            </div>
+   695→            <div>
+   696→              <Label className="text-gray-600 text-xs font-medium">Subject *</Label>
+   697→              <Input
+   698→                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30"
+   699→                value={subject}
+   700→                onChange={e => setSubject(e.target.value)}
+   701→                placeholder="Email subject"
+   702→              />
+   703→            </div>
+   704→          </div>
+   705→
+   706→          <div>
+   707→            <Label className="text-gray-600 text-xs font-medium">Message *</Label>
+   708→            <Textarea
+   709→              className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30 min-h-[160px]"
+   710→              value={body}
+   711→              onChange={e => setBody(e.target.value)}
+   712→              placeholder="Write your personalized message..."
+   713→            />
+   714→          </div>
+   715→        </div>
+   716→
+   717→        <DialogFooter className="mt-4 gap-2">
+   718→          <Button variant="outline" onClick={() => { reset(); onOpenChange(false) }} className="border-gray-200 text-gray-600 hover:bg-gray-100">
+   719→            Cancel
+   720→          </Button>
+   721→          <Button
+   722→            onClick={handleSubmit}
+   723→            disabled={loading || !leadId || !subject || !body}
+   724→            className="bg-blue-600 hover:bg-blue-700 text-gray-900"
+   725→          >
+   726→            {loading ? 'Saving...' : sendNow ? <><Send className="w-3.5 h-3.5 mr-1.5" />Send Now</> : 'Save Draft'}
+   727→          </Button>
+   728→        </DialogFooter>
+   729→      </DialogContent>
+   730→    </Dialog>
+   731→  )
+   732→}

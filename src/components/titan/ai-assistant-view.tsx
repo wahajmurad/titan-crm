@@ -59,9 +59,9 @@ const QUICK_ACTIONS = [
     label: 'Pricing Strategy',
     icon: DollarSign,
     prompt: 'What should I charge for AI automation services?',
-    gradient: 'from-violet-500/20 to-purple-500/20',
-    iconColor: 'text-violet-400',
-    borderColor: 'border-violet-500/20',
+    gradient: 'from-blue-500/20 to-purple-500/20',
+    iconColor: 'text-blue-400',
+    borderColor: 'border-blue-500/20',
   },
   {
     id: 'emails',
@@ -126,7 +126,7 @@ function renderMarkdown(text: string) {
       const content = trimmed.replace(/^[-*•]\s+/, '')
       elements.push(
         <div key={key++} className="flex gap-2 ml-1">
-          <span className="text-violet-400 mt-0.5 shrink-0">•</span>
+          <span className="text-blue-400 mt-0.5 shrink-0">•</span>
           <span className="text-gray-600 text-sm leading-relaxed">
             {processInlineFormatting(content)}
           </span>
@@ -140,7 +140,7 @@ function renderMarkdown(text: string) {
     if (numberedMatch) {
       elements.push(
         <div key={key++} className="flex gap-2 ml-1">
-          <span className="text-violet-400 text-sm font-medium shrink-0">{numberedMatch[1]}.</span>
+          <span className="text-blue-400 text-sm font-medium shrink-0">{numberedMatch[1]}.</span>
           <span className="text-gray-600 text-sm leading-relaxed">
             {processInlineFormatting(numberedMatch[2])}
           </span>
@@ -190,14 +190,14 @@ function processInlineFormatting(text: string): React.ReactNode {
 function TypingIndicator() {
   return (
     <div className="flex items-start gap-3 px-4 py-2">
-      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center shrink-0 shadow-lg shadow-violet-500/10">
+      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-fuchsia-600 flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/10">
         <Bot className="w-4 h-4 text-gray-900" />
       </div>
       <div className="bg-gray-100 border border-gray-200 rounded-2xl rounded-tl-md px-4 py-3">
         <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-violet-400 animate-bounce [animation-delay:0ms]" />
+          <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce [animation-delay:0ms]" />
           <span className="w-2 h-2 rounded-full bg-fuchsia-400 animate-bounce [animation-delay:150ms]" />
-          <span className="w-2 h-2 rounded-full bg-violet-400 animate-bounce [animation-delay:300ms]" />
+          <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce [animation-delay:300ms]" />
         </div>
       </div>
     </div>
@@ -208,10 +208,10 @@ function WelcomeState({ onQuickAction }: { onQuickAction: (prompt: string) => vo
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
       <div className="relative mb-6">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-600 via-fuchsia-600 to-pink-600 flex items-center justify-center shadow-lg shadow-violet-500/15">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 via-fuchsia-600 to-pink-600 flex items-center justify-center shadow-lg shadow-blue-500/15">
           <Sparkles className="w-8 h-8 text-gray-900" />
         </div>
-        <div className="absolute -inset-2 rounded-3xl bg-gradient-to-br from-violet-600/20 via-fuchsia-600/20 to-pink-600/20 -z-10 blur-xl" />
+        <div className="absolute -inset-2 rounded-3xl bg-gradient-to-br from-blue-600/20 via-fuchsia-600/20 to-pink-600/20 -z-10 blur-xl" />
       </div>
       <h2 className="text-xl font-bold text-gray-900 mb-2">TITAN AI Consultant</h2>
       <p className="text-gray-500 text-sm text-center max-w-md mb-8 leading-relaxed">
@@ -334,7 +334,7 @@ export function AIAssistantView() {
         >
           <div className="p-4 flex items-center justify-between border-b border-gray-200">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-fuchsia-600 flex items-center justify-center">
                 <Sparkles className="w-3.5 h-3.5 text-gray-900" />
               </div>
               <span className="text-sm font-semibold text-gray-900">Quick Actions</span>
@@ -406,7 +406,7 @@ export function AIAssistantView() {
               </div>
             </div>
             <div className="flex items-center gap-1">
-              <Badge className="bg-violet-500/10 text-violet-400 border-violet-500/20 hover:bg-violet-500/20 text-[10px] px-2">
+              <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20 text-[10px] px-2">
                 <Sparkles className="w-3 h-3 mr-1" />
                 GPT-Powered
               </Badge>
@@ -450,7 +450,7 @@ export function AIAssistantView() {
                       >
                         {/* Avatar */}
                         {msg.role === 'assistant' ? (
-                          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center shrink-0 shadow-lg shadow-violet-500/10">
+                          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-fuchsia-600 flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/10">
                             <Bot className="w-4 h-4 text-gray-900" />
                           </div>
                         ) : (
@@ -463,7 +463,7 @@ export function AIAssistantView() {
                         <div
                           className={`max-w-[75%] sm:max-w-[70%] rounded-2xl px-4 py-3 ${
                             msg.role === 'user'
-                              ? 'bg-gradient-to-br from-violet-600 to-fuchsia-600 text-gray-900 rounded-tr-md shadow-lg shadow-violet-500/10'
+                              ? 'bg-gradient-to-br from-blue-600 to-fuchsia-600 text-gray-900 rounded-tr-md shadow-lg shadow-blue-500/10'
                               : 'bg-gray-100 border border-gray-200 rounded-tl-md'
                           }`}
                         >
@@ -507,14 +507,14 @@ export function AIAssistantView() {
                   placeholder="Ask me anything about B2B growth strategy..."
                   disabled={isTyping}
                   rows={1}
-                  className="min-h-[44px] max-h-[120px] resize-none bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 rounded-xl px-4 py-3 pr-12 text-sm focus-visible:ring-violet-500/30 focus-visible:border-violet-500/30 transition-all"
+                  className="min-h-[44px] max-h-[120px] resize-none bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 rounded-xl px-4 py-3 pr-12 text-sm focus-visible:ring-blue-500/30 focus-visible:border-blue-500/30 transition-all"
                   style={{ fieldSizing: 'content' } as React.CSSProperties}
                 />
               </div>
               <Button
                 type="submit"
                 disabled={!input.trim() || isTyping}
-                className="h-11 w-11 p-0 rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 shadow-lg shadow-violet-500/10 shrink-0 disabled:opacity-40 disabled:shadow-none"
+                className="h-11 w-11 p-0 rounded-xl bg-gradient-to-br from-blue-600 to-fuchsia-600 hover:from-blue-500 hover:to-fuchsia-500 shadow-lg shadow-blue-500/10 shrink-0 disabled:opacity-40 disabled:shadow-none"
               >
                 <Send className="w-4 h-4" />
                 <span className="sr-only">Send message</span>

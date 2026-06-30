@@ -86,7 +86,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string 
 
 const STAT_ITEMS = [
   { key: 'leadCount' as const, label: 'Leads', icon: Users, color: 'text-blue-400' },
-  { key: 'sentCount' as const, label: 'Sent', icon: Send, color: 'text-violet-400' },
+  { key: 'sentCount' as const, label: 'Sent', icon: Send, color: 'text-blue-400' },
   { key: 'replyCount' as const, label: 'Replies', icon: Reply, color: 'text-amber-400' },
   { key: 'meetingCount' as const, label: 'Meetings', icon: Calendar, color: 'text-cyan-400' },
   { key: 'wonCount' as const, label: 'Won', icon: Trophy, color: 'text-emerald-400' },
@@ -188,7 +188,7 @@ export function CampaignsView() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-            <Target className="w-5 h-5 text-violet-400" />
+            <Target className="w-5 h-5 text-blue-400" />
             Campaigns
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">
@@ -202,7 +202,7 @@ export function CampaignsView() {
               placeholder="Search campaigns..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-8 w-52 h-8 text-sm bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
+              className="pl-8 w-52 h-8 text-sm bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30"
             />
           </div>
           <CreateCampaignDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={refresh} />
@@ -491,7 +491,7 @@ function CreateCampaignDialog({ open, onOpenChange, onCreated }: {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button size="sm" className="h-8 bg-violet-600 hover:bg-violet-700 text-gray-900">
+        <Button size="sm" className="h-8 bg-blue-600 hover:bg-blue-700 text-gray-900">
           <Plus className="w-3.5 h-3.5 mr-1.5" />New Campaign
         </Button>
       </DialogTrigger>
@@ -504,7 +504,7 @@ function CreateCampaignDialog({ open, onOpenChange, onCreated }: {
           <div>
             <Label className="text-gray-600 text-xs font-medium">Campaign Name *</Label>
             <Input
-              className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
+              className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30"
               value={form.name}
               onChange={e => update('name', e.target.value)}
               placeholder="e.g. NYC Law Firms Q4 Outreach"
@@ -516,7 +516,7 @@ function CreateCampaignDialog({ open, onOpenChange, onCreated }: {
             <div>
               <Label className="text-gray-600 text-xs font-medium">Target Industry</Label>
               <Input
-                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
+                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30"
                 value={form.industry}
                 onChange={e => update('industry', e.target.value)}
                 placeholder="e.g. Legal, Healthcare"
@@ -525,7 +525,7 @@ function CreateCampaignDialog({ open, onOpenChange, onCreated }: {
             <div>
               <Label className="text-gray-600 text-xs font-medium">Service Offering</Label>
               <Input
-                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
+                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30"
                 value={form.serviceOffering}
                 onChange={e => update('serviceOffering', e.target.value)}
                 placeholder="e.g. Web Design, SEO"
@@ -538,7 +538,7 @@ function CreateCampaignDialog({ open, onOpenChange, onCreated }: {
             <div>
               <Label className="text-gray-600 text-xs font-medium">Target Location</Label>
               <Input
-                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
+                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30"
                 value={form.targetLocation}
                 onChange={e => update('targetLocation', e.target.value)}
                 placeholder="e.g. United States"
@@ -547,7 +547,7 @@ function CreateCampaignDialog({ open, onOpenChange, onCreated }: {
             <div>
               <Label className="text-gray-600 text-xs font-medium">Target City</Label>
               <Input
-                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
+                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30"
                 value={form.targetCity}
                 onChange={e => update('targetCity', e.target.value)}
                 placeholder="e.g. New York"
@@ -579,7 +579,7 @@ function CreateCampaignDialog({ open, onOpenChange, onCreated }: {
                 type="number"
                 min={1}
                 max={200}
-                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
+                className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30"
                 value={form.dailyLimit}
                 onChange={e => update('dailyLimit', e.target.value)}
               />
@@ -605,7 +605,7 @@ function CreateCampaignDialog({ open, onOpenChange, onCreated }: {
           <div>
             <Label className="text-gray-600 text-xs font-medium">Notes</Label>
             <Textarea
-              className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30 min-h-[80px]"
+              className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30 min-h-[80px]"
               value={form.notes}
               onChange={e => update('notes', e.target.value)}
               placeholder="Additional notes about this campaign..."
@@ -620,7 +620,7 @@ function CreateCampaignDialog({ open, onOpenChange, onCreated }: {
           <Button
             onClick={handleCreate}
             disabled={loading || !form.name.trim()}
-            className="bg-violet-600 hover:bg-violet-700 text-gray-900"
+            className="bg-blue-600 hover:bg-blue-700 text-gray-900"
           >
             {loading ? 'Creating...' : 'Create Campaign'}
           </Button>
@@ -686,7 +686,7 @@ function EditCampaignDialog({ open, onOpenChange, campaign, onUpdated }: {
           <div>
             <Label className="text-gray-600 text-xs font-medium">Campaign Name *</Label>
             <Input
-              className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30"
+              className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30"
               value={form.name}
               onChange={e => update('name', e.target.value)}
             />
@@ -694,21 +694,21 @@ function EditCampaignDialog({ open, onOpenChange, campaign, onUpdated }: {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-gray-600 text-xs font-medium">Target Industry</Label>
-              <Input className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30" value={form.industry} onChange={e => update('industry', e.target.value)} />
+              <Input className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30" value={form.industry} onChange={e => update('industry', e.target.value)} />
             </div>
             <div>
               <Label className="text-gray-600 text-xs font-medium">Service Offering</Label>
-              <Input className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30" value={form.serviceOffering} onChange={e => update('serviceOffering', e.target.value)} />
+              <Input className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30" value={form.serviceOffering} onChange={e => update('serviceOffering', e.target.value)} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-gray-600 text-xs font-medium">Target Location</Label>
-              <Input className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30" value={form.targetLocation} onChange={e => update('targetLocation', e.target.value)} />
+              <Input className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30" value={form.targetLocation} onChange={e => update('targetLocation', e.target.value)} />
             </div>
             <div>
               <Label className="text-gray-600 text-xs font-medium">Target City</Label>
-              <Input className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30" value={form.targetCity} onChange={e => update('targetCity', e.target.value)} />
+              <Input className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30" value={form.targetCity} onChange={e => update('targetCity', e.target.value)} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -730,7 +730,7 @@ function EditCampaignDialog({ open, onOpenChange, campaign, onUpdated }: {
             </div>
             <div>
               <Label className="text-gray-600 text-xs font-medium">Daily Limit</Label>
-              <Input type="number" min={1} max={200} className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30" value={form.dailyLimit} onChange={e => update('dailyLimit', e.target.value)} />
+              <Input type="number" min={1} max={200} className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30" value={form.dailyLimit} onChange={e => update('dailyLimit', e.target.value)} />
             </div>
           </div>
           <div>
@@ -744,12 +744,12 @@ function EditCampaignDialog({ open, onOpenChange, campaign, onUpdated }: {
           </div>
           <div>
             <Label className="text-gray-600 text-xs font-medium">Notes</Label>
-            <Textarea className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30 min-h-[80px]" value={form.notes} onChange={e => update('notes', e.target.value)} />
+            <Textarea className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30 min-h-[80px]" value={form.notes} onChange={e => update('notes', e.target.value)} />
           </div>
         </div>
         <DialogFooter className="mt-4 gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)} className="border-gray-200 text-gray-600 hover:bg-gray-100">Cancel</Button>
-          <Button onClick={handleUpdate} disabled={loading || !form.name.trim()} className="bg-violet-600 hover:bg-violet-700 text-gray-900">
+          <Button onClick={handleUpdate} disabled={loading || !form.name.trim()} className="bg-blue-600 hover:bg-blue-700 text-gray-900">
             {loading ? 'Saving...' : 'Save Changes'}
           </Button>
         </DialogFooter>

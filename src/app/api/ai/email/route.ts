@@ -49,10 +49,17 @@ export async function POST(req: NextRequest) {
       })
       if (audit) {
         resolvedAuditFindings = [
-          audit.designDetails,
-          audit.technicalDetails,
-          audit.businessDetails,
+          audit.uiDetails,
+          audit.uxDetails,
+          audit.seoDetails,
+          audit.performanceDetails,
+          audit.accessibilityDetails,
+          audit.mobileDetails,
+          audit.securityDetails,
+          audit.aiReadinessDetails,
           audit.automationDetails,
+          audit.conversionDetails,
+          audit.problemsFound,
         ].filter(Boolean).join('\n\n')
         resolvedOpportunities = resolvedOpportunities || audit.opportunities || undefined
       }

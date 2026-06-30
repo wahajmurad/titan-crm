@@ -193,23 +193,41 @@ model Campaign {
 }
 
 model WebsiteAudit {
-  id                String   @id @default(uuid())
-  businessId        String   @unique
-  url               String
-  designScore       Int      @default(0)
-  technicalScore    Int      @default(0)
-  businessScore     Int      @default(0)
-  automationScore   Int      @default(0)
-  overallScore      Int      @default(0)
-  designDetails     String?
-  technicalDetails  String?
-  businessDetails   String?
-  automationDetails String?
-  opportunities     String?
-  recommendations   String?
-  talkingPoints     String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                  String   @id @default(uuid())
+  businessId          String   @unique
+  url                 String
+  // New 10-category scoring
+  uiScore             Int      @default(0)
+  uxScore             Int      @default(0)
+  seoScore            Int      @default(0)
+  performanceScore    Int      @default(0)
+  accessibilityScore  Int      @default(0)
+  mobileScore         Int      @default(0)
+  securityScore       Int      @default(0)
+  aiReadinessScore    Int      @default(0)
+  automationScore     Int      @default(0)
+  conversionScore     Int      @default(0)
+  overallScore        Int      @default(0)
+  // Detailed analysis (each is a long text with specific findings)
+  uiDetails           String?
+  uxDetails           String?
+  seoDetails          String?
+  performanceDetails  String?
+  accessibilityDetails String?
+  mobileDetails       String?
+  securityDetails     String?
+  aiReadinessDetails  String?
+  automationDetails   String?
+  conversionDetails   String?
+  // Business intelligence
+  executiveSummary    String?
+  problemsFound       String?
+  opportunities       String?
+  recommendations     String?
+  pitchStrategy       String?
+  talkingPoints       String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 

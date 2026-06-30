@@ -1,0 +1,860 @@
+     1→'use client'
+     2→
+     3→import { useEffect, useState, useCallback } from 'react'
+     4→import { useAppStore } from '@/lib/store'
+     5→import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+     6→import { Button } from '@/components/ui/button'
+     7→import { Input } from '@/components/ui/input'
+     8→import { Badge } from '@/components/ui/badge'
+     9→import { Skeleton } from '@/components/ui/skeleton'
+    10→import { Separator } from '@/components/ui/separator'
+    11→import { Progress } from '@/components/ui/progress'
+    12→import { Label } from '@/components/ui/label'
+    13→import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+    14→import { ScrollArea } from '@/components/ui/scroll-area'
+    15→import {
+    16→  Collapsible,
+    17→  CollapsibleContent,
+    18→  CollapsibleTrigger,
+    19→} from '@/components/ui/collapsible'
+    20→import {
+    21→  Globe,
+    22→  Sparkles,
+    23→  Loader2,
+    24→  ChevronDown,
+    25→  ChevronRight,
+    26→  ExternalLink,
+    27→  Target,
+    28→  Lightbulb,
+    29→  MessageSquare,
+    30→  Palette,
+    31→  Code2,
+    32→  Briefcase,
+    33→  Bot,
+    34→  Mail,
+    35→  CheckCircle2,
+    36→  ArrowRight,
+    37→  Clock,
+    38→  ScanSearch,
+    39→  Shield,
+    40→  TrendingUp,
+    41→  Zap,
+    42→  BarChart3,
+    43→  FileText,
+    44→  Star,
+    45→} from 'lucide-react'
+    46→import { cn } from '@/lib/utils'
+    47→import type { AuditScores, AuditDetails } from '@/lib/types'
+    48→
+    49→/* ──────────── types ──────────── */
+    50→
+    51→interface AuditResult {
+    52→  id?: string
+    53→  url: string
+    54→  domain: string
+    55→  scores: AuditScores
+    56→  details: AuditDetails
+    57→  opportunities: string[]
+    58→  recommendations: string[]
+    59→  talkingPoints: string[]
+    60→  createdAt?: string
+    61→}
+    62→
+    63→interface RecentAudit {
+    64→  id: string
+    65→  url: string
+    66→  domain: string
+    67→  scores: AuditScores
+    68→  createdAt: string
+    69→  lead?: {
+    70→    id: string
+    71→    business: { name: string }
+    72→  }
+    73→}
+    74→
+    75→/* ──────────── helpers ──────────── */
+    76→
+    77→function getScoreColor(score: number): string {
+    78→  if (score >= 80) return 'text-emerald-600'
+    79→  if (score >= 60) return 'text-cyan-600'
+    80→  if (score >= 40) return 'text-amber-600'
+    81→  return 'text-red-600'
+    82→}
+    83→
+    84→function getScoreBarColor(score: number): string {
+    85→  if (score >= 80) return 'bg-emerald-500'
+    86→  if (score >= 60) return 'bg-cyan-500'
+    87→  if (score >= 40) return 'bg-amber-500'
+    88→  return 'bg-red-500'
+    89→}
+    90→
+    91→function getScoreLabel(score: number): string {
+    92→  if (score >= 80) return 'Excellent'
+    93→  if (score >= 60) return 'Good'
+    94→  if (score >= 40) return 'Needs Work'
+    95→  return 'Critical'
+    96→}
+    97→
+    98→function getScoreRingColor(score: number): string {
+    99→  if (score >= 80) return 'stroke-emerald-500'
+   100→  if (score >= 60) return 'stroke-cyan-500'
+   101→  if (score >= 40) return 'stroke-amber-500'
+   102→  return 'stroke-red-500'
+   103→}
+   104→
+   105→function getOverallLabel(score: number): string {
+   106→  if (score >= 90) return 'Outstanding'
+   107→  if (score >= 80) return 'Excellent'
+   108→  if (score >= 70) return 'Good'
+   109→  if (score >= 55) return 'Average'
+   110→  if (score >= 40) return 'Below Average'
+   111→  return 'Poor'
+   112→}
+   113→
+   114→/* ──────────── Circular Score Component ──────────── */
+   115→
+   116→function CircularScore({ score, size = 140 }: { score: number; size?: number }) {
+   117→  const strokeWidth = 10
+   118→  const radius = (size - strokeWidth) / 2
+   119→  const circumference = 2 * Math.PI * radius
+   120→  const offset = circumference - (score / 100) * circumference
+   121→
+   122→  return (
+   123→    <div className="relative inline-flex items-center justify-center">
+   124→      <svg width={size} height={size} className="-rotate-90">
+   125→        {/* Background ring */}
+   126→        <circle
+   127→          cx={size / 2}
+   128→          cy={size / 2}
+   129→          r={radius}
+   130→          fill="none"
+   131→          strokeWidth={strokeWidth}
+   132→          className="stroke-gray-200"
+   133→        />
+   134→        {/* Score ring */}
+   135→        <circle
+   136→          cx={size / 2}
+   137→          cy={size / 2}
+   138→          r={radius}
+   139→          fill="none"
+   140→          strokeWidth={strokeWidth}
+   141→          strokeLinecap="round"
+   142→          className={cn('transition-all duration-1000 ease-out', getScoreRingColor(score))}
+   143→          strokeDasharray={circumference}
+   144→          strokeDashoffset={offset}
+   145→        />
+   146→      </svg>
+   147→      <div className="absolute inset-0 flex flex-col items-center justify-center">
+   148→        <span className={cn('text-3xl font-bold', getScoreColor(score))}>{score}</span>
+   149→        <span className="text-[10px] text-gray-400 uppercase tracking-wider">Score</span>
+   150→      </div>
+   151→    </div>
+   152→  )
+   153→}
+   154→
+   155→/* ──────────── Score Card Component ──────────── */
+   156→
+   157→function ScoreCard({
+   158→  title,
+   159→  score,
+   160→  icon: Icon,
+   161→  gradient,
+   162→  details,
+   163→}: {
+   164→  title: string
+   165→  score: number
+   166→  icon: React.ElementType
+   167→  gradient: string
+   168→  details: string
+   169→}) {
+   170→  const [open, setOpen] = useState(false)
+   171→
+   172→  return (
+   173→    <Card className="bg-white border-gray-200 overflow-hidden">
+   174→      <CardContent className="p-4">
+   175→        <div className="flex items-center gap-3 mb-3">
+   176→          <div className={cn('p-2 rounded-lg', gradient)}>
+   177→            <Icon className="w-4 h-4" />
+   178→          </div>
+   179→          <div className="flex-1">
+   180→            <p className="text-sm font-medium text-gray-600">{title}</p>
+   181→            <p className={cn('text-xs', getScoreColor(score))}>{getScoreLabel(score)}</p>
+   182→          </div>
+   183→          <span className={cn('text-2xl font-bold', getScoreColor(score))}>{score}</span>
+   184→        </div>
+   185→
+   186→        {/* Progress bar */}
+   187→        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mb-3">
+   188→          <div
+   189→            className={cn('h-full rounded-full transition-all duration-1000 ease-out', getScoreBarColor(score))}
+   190→            style={{ width: `${score}%` }}
+   191→          />
+   192→        </div>
+   193→
+   194→        {/* Expandable details */}
+   195→        <Collapsible open={open} onOpenChange={setOpen}>
+   196→          <CollapsibleTrigger className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors w-full">
+   197→            {open ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+   198→            {open ? 'Hide details' : 'View details'}
+   199→          </CollapsibleTrigger>
+   200→          <CollapsibleContent className="mt-2">
+   201→            <div className="text-xs text-gray-500 leading-relaxed bg-gray-50 rounded-lg p-3 border border-gray-200">
+   202→              {details}
+   203→            </div>
+   204→          </CollapsibleContent>
+   205→        </Collapsible>
+   206→      </CardContent>
+   207→    </Card>
+   208→  )
+   209→}
+   210→
+   211→/* ──────────── Main Audit View ──────────── */
+   212→
+   213→export function AuditView() {
+   214→  const { setView } = useAppStore()
+   215→
+   216→  // Quick audit form
+   217→  const [url, setUrl] = useState('')
+   218→  const [auditing, setAuditing] = useState(false)
+   219→  const [auditProgress, setAuditProgress] = useState(0)
+   220→
+   221→  // Current audit result
+   222→  const [currentAudit, setCurrentAudit] = useState<AuditResult | null>(null)
+   223→
+   224→  // Recent audits
+   225→  const [recentAudits, setRecentAudits] = useState<RecentAudit[]>([])
+   226→  const [auditsLoading, setAuditsLoading] = useState(true)
+   227→
+   228→  // Campaign select for "Add to Campaign" action
+   229→  const [campaigns, setCampaigns] = useState<{ id: string; name: string }[]>([])
+   230→  const [addCampaignOpen, setAddCampaignOpen] = useState(false)
+   231→  const [selectedCampaignId, setSelectedCampaignId] = useState('')
+   232→
+   233→  // Fetch recent audits + campaigns on mount
+   234→  useEffect(() => {
+   235→    let cancelled = false
+   236→
+   237→    Promise.all([
+   238→      fetch('/api/audit', { credentials: 'same-origin' })
+   239→        .then((r) => (r.ok ? r.json() : []))
+   240→        .then((d) => {
+   241→          if (!cancelled) setRecentAudits(Array.isArray(d) ? d : d.audits || [])
+   242→        })
+   243→        .catch(() => {}),
+   244→      fetch('/api/campaigns', { credentials: 'same-origin' })
+   245→        .then((r) => (r.ok ? r.json() : []))
+   246→        .then((d) => {
+   247→          if (!cancelled) setCampaigns(Array.isArray(d) ? d : d.campaigns || [])
+   248→        })
+   249→        .catch(() => {}),
+   250→    ]).finally(() => {
+   251→      if (!cancelled) setAuditsLoading(false)
+   252→    })
+   253→
+   254→    return () => {
+   255→      cancelled = true
+   256→    }
+   257→  }, [])
+   258→
+   259→  const handleAudit = useCallback(async () => {
+   260→    if (!url.trim()) return
+   261→
+   262→    let normalizedUrl = url.trim()
+   263→    if (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://')) {
+   264→      normalizedUrl = 'https://' + normalizedUrl
+   265→    }
+   266→
+   267→    setAuditing(true)
+   268→    setAuditProgress(0)
+   269→    setCurrentAudit(null)
+   270→
+   271→    // Simulate progress
+   272→    const steps = [
+   273→      { at: 15, label: 'Fetching page...' },
+   274→      { at: 35, label: 'Analyzing design...' },
+   275→      { at: 55, label: 'Checking technical SEO...' },
+   276→      { at: 75, label: 'Evaluating business model...' },
+   277→      { at: 90, label: 'Generating insights...' },
+   278→    ]
+   279→    let stepIdx = 0
+   280→    const progressInterval = setInterval(() => {
+   281→      if (stepIdx < steps.length) {
+   282→        setAuditProgress(steps[stepIdx].at)
+   283→        stepIdx++
+   284→      } else {
+   285→        clearInterval(progressInterval)
+   286→      }
+   287→    }, 1200)
+   288→
+   289→    try {
+   290→      const res = await fetch('/api/audit', {
+   291→        method: 'POST',
+   292→        headers: { 'Content-Type': 'application/json' },
+   293→        credentials: 'same-origin',
+   294→        body: JSON.stringify({ url: normalizedUrl }),
+   295→      })
+   296→
+   297→      clearInterval(progressInterval)
+   298→      setAuditProgress(100)
+   299→
+   300→      if (res.ok) {
+   301→        const data = await res.json()
+   302→        setCurrentAudit({
+   303→          id: data.id,
+   304→          url: normalizedUrl,
+   305→          domain: data.domain || new URL(normalizedUrl).hostname,
+   306→          scores: data.scores || { design: 0, technical: 0, business: 0, automation: 0, overall: 0 },
+   307→          details: data.details || { design: '', technical: '', business: '', automation: '' },
+   308→          opportunities: data.opportunities || [],
+   309→          recommendations: data.recommendations || [],
+   310→          talkingPoints: data.talkingPoints || [],
+   311→          createdAt: data.createdAt,
+   312→        })
+   313→      }
+   314→    } catch {
+   315→      clearInterval(progressInterval)
+   316→    } finally {
+   317→      setAuditing(false)
+   318→    }
+   319→  }, [url])
+   320→
+   321→  const handleLoadAudit = useCallback((audit: RecentAudit) => {
+   322→    setUrl(audit.url)
+   323→    setCurrentAudit({
+   324→      id: audit.id,
+   325→      url: audit.url,
+   326→      domain: audit.domain,
+   327→      scores: audit.scores,
+   328→      details: { design: '', technical: '', business: '', automation: '' },
+   329→      opportunities: [],
+   330→      recommendations: [],
+   331→      talkingPoints: [],
+   332→      createdAt: audit.createdAt,
+   333→    })
+   334→    // Fetch full audit details
+   335→    fetch(`/api/audit?id=${audit.id}`, { credentials: 'same-origin' })
+   336→      .then((r) => r.json())
+   337→      .then((d) => {
+   338→        setCurrentAudit({
+   339→          id: d.id,
+   340→          url: d.url || audit.url,
+   341→          domain: d.domain || audit.domain,
+   342→          scores: d.scores || audit.scores,
+   343→          details: d.details || { design: '', technical: '', business: '', automation: '' },
+   344→          opportunities: d.opportunities || [],
+   345→          recommendations: d.recommendations || [],
+   346→          talkingPoints: d.talkingPoints || [],
+   347→          createdAt: d.createdAt,
+   348→        })
+   349→      })
+   350→      .catch(() => {})
+   351→  }, [])
+   352→
+   353→  const handleAddToCampaign = useCallback(async () => {
+   354→    if (!currentAudit || !selectedCampaignId) return
+   355→    try {
+   356→      await fetch('/api/campaigns/add-lead', {
+   357→        method: 'POST',
+   358→        headers: { 'Content-Type': 'application/json' },
+   359→        credentials: 'same-origin',
+   360→        body: JSON.stringify({
+   361→          auditId: currentAudit.id,
+   362→          campaignId: selectedCampaignId,
+   363→        }),
+   364→      })
+   365→      setAddCampaignOpen(false)
+   366→    } catch {}
+   367→  }, [currentAudit, selectedCampaignId])
+   368→
+   369→  const resetAudit = useCallback(() => {
+   370→    setCurrentAudit(null)
+   371→    setUrl('')
+   372→    setAuditProgress(0)
+   373→  }, [])
+   374→
+   375→  return (
+   376→    <div className="space-y-6">
+   377→      {/* ── Header ── */}
+   378→      <div className="flex items-start justify-between">
+   379→        <div>
+   380→          <div className="flex items-center gap-2.5 mb-1">
+   381→            <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-emerald-500/20 border border-cyan-500/20">
+   382→              <ScanSearch className="w-5 h-5 text-cyan-400" />
+   383→            </div>
+   384→            <h1 className="text-xl font-semibold text-gray-900">AI Website Intelligence</h1>
+   385→          </div>
+   386→          <p className="text-sm text-gray-500 mt-1 ml-1">
+   387→            Analyze any website with AI — get scores, opportunities, and sales talking points
+   388→          </p>
+   389→        </div>
+   390→      </div>
+   391→
+   392→      {/* ── Quick Audit Card ── */}
+   393→      <Card className="bg-white border-gray-200 overflow-hidden">
+   394→        <div className="h-1 bg-gradient-to-r from-cyan-600 via-emerald-500 to-teal-400" />
+   395→        <CardHeader className="pb-4">
+   396→          <CardTitle className="text-gray-900 text-base flex items-center gap-2">
+   397→            <Globe className="w-4 h-4 text-cyan-400" />
+   398→            Quick Website Audit
+   399→          </CardTitle>
+   400→        </CardHeader>
+   401→        <CardContent>
+   402→          <div className="flex flex-col sm:flex-row gap-3">
+   403→            <div className="relative flex-1">
+   404→              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+   405→              <Input
+   406→                placeholder="Enter website URL (e.g. acme.com)"
+   407→                value={url}
+   408→                onChange={(e) => setUrl(e.target.value)}
+   409→                onKeyDown={(e) => e.key === 'Enter' && handleAudit()}
+   410→                disabled={auditing}
+   411→                className="pl-10 bg-gray-50 border-gray-200 text-gray-900 h-11 placeholder:text-gray-400"
+   412→              />
+   413→            </div>
+   414→            <Button
+   415→              onClick={handleAudit}
+   416→              disabled={!url.trim() || auditing}
+   417→              className={cn(
+   418→                'h-11 px-6 font-medium transition-all duration-300',
+   419→                'bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500',
+   420→                'text-white shadow-lg shadow-cyan-500/20',
+   421→                'disabled:opacity-50 disabled:cursor-not-allowed'
+   422→              )}
+   423→            >
+   424→              {auditing ? (
+   425→                <>
+   426→                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+   427→                  Analyzing...
+   428→                </>
+   429→              ) : (
+   430→                <>
+   431→                  <Sparkles className="w-4 h-4 mr-2" />
+   432→                  Analyze Website
+   433→                </>
+   434→              )}
+   435→            </Button>
+   436→          </div>
+   437→
+   438→          {/* Progress steps */}
+   439→          {auditing && (
+   440→            <div className="mt-4 space-y-3">
+   441→              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+   442→                <div
+   443→                  className="h-full bg-gradient-to-r from-cyan-500 via-emerald-500 to-teal-400 rounded-full transition-all duration-700 ease-out"
+   444→                  style={{ width: `${auditProgress}%` }}
+   445→                />
+   446→              </div>
+   447→              <div className="flex items-center justify-between">
+   448→                <div className="flex items-center gap-2 text-xs text-gray-500">
+   449→                  <Loader2 className="w-3 h-3 animate-spin text-cyan-500" />
+   450→                  {auditProgress < 15
+   451→                    ? 'Connecting to website...'
+   452→                    : auditProgress < 35
+   453→                    ? 'Fetching page content...'
+   454→                    : auditProgress < 55
+   455→                    ? 'Analyzing design patterns...'
+   456→                    : auditProgress < 75
+   457→                    ? 'Checking technical infrastructure...'
+   458→                    : auditProgress < 90
+   459→                    ? 'Evaluating business signals...'
+   460→                    : auditProgress < 100
+   461→                    ? 'Generating AI insights...'
+   462→                    : 'Finalizing report...'}
+   463→                </div>
+   464→                <span className="text-xs text-gray-400">{auditProgress}%</span>
+   465→              </div>
+   466→            </div>
+   467→          )}
+   468→        </CardContent>
+   469→      </Card>
+   470→
+   471→      {/* ── Audit Results ── */}
+   472→      {currentAudit && (
+   473→        <div className="space-y-5">
+   474→          {/* Domain header */}
+   475→          <div className="flex items-center justify-between">
+   476→            <div className="flex items-center gap-3">
+   477→              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-emerald-500/20 border border-cyan-500/20 flex items-center justify-center">
+   478→                <Globe className="w-5 h-5 text-cyan-400" />
+   479→              </div>
+   480→              <div>
+   481→                <p className="text-gray-900 font-medium">{currentAudit.domain}</p>
+   482→                <p className="text-xs text-gray-400 truncate max-w-xs">{currentAudit.url}</p>
+   483→              </div>
+   484→            </div>
+   485→            <Button
+   486→              variant="outline"
+   487→              size="sm"
+   488→              onClick={resetAudit}
+   489→              className="border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+   490→            >
+   491→              New Audit
+   492→            </Button>
+   493→          </div>
+   494→
+   495→          {/* Overall Score + Score Cards */}
+   496→          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+   497→            {/* Overall Score - Left column */}
+   498→            <Card className="bg-white border-gray-200 lg:col-span-4">
+   499→              <CardContent className="p-6 flex flex-col items-center">
+   500→                <p className="text-xs text-gray-400 uppercase tracking-wider font-medium mb-4">Overall Score</p>
+   501→                <CircularScore score={currentAudit.scores.overall} />
+   502→                <p className={cn('text-sm font-medium mt-3', getScoreColor(currentAudit.scores.overall))}>
+   503→                  {getOverallLabel(currentAudit.scores.overall)}
+   504→                </p>
+   505→                <p className="text-xs text-gray-400 mt-1">
+   506→                  {currentAudit.scores.overall >= 70
+   507→                    ? 'Strong candidate for outreach'
+   508→                    : currentAudit.scores.overall >= 50
+   509→                    ? 'Moderate potential — review opportunities'
+   510→                    : 'Low priority — may need nurturing'}
+   511→                </p>
+   512→
+   513→                <Separator className="my-4 bg-gray-100" />
+   514→
+   515→                {/* Quick stats */}
+   516→                <div className="w-full space-y-2.5">
+   517→                  <div className="flex items-center justify-between text-xs">
+   518→                    <span className="text-gray-500">Design</span>
+   519→                    <span className={cn('font-medium', getScoreColor(currentAudit.scores.design))}>
+   520→                      {currentAudit.scores.design}
+   521→                    </span>
+   522→                  </div>
+   523→                  <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+   524→                    <div
+   525→                      className={cn('h-full rounded-full', getScoreBarColor(currentAudit.scores.design))}
+   526→                      style={{ width: `${currentAudit.scores.design}%` }}
+   527→                    />
+   528→                  </div>
+   529→
+   530→                  <div className="flex items-center justify-between text-xs">
+   531→                    <span className="text-gray-500">Technical</span>
+   532→                    <span className={cn('font-medium', getScoreColor(currentAudit.scores.technical))}>
+   533→                      {currentAudit.scores.technical}
+   534→                    </span>
+   535→                  </div>
+   536→                  <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+   537→                    <div
+   538→                      className={cn('h-full rounded-full', getScoreBarColor(currentAudit.scores.technical))}
+   539→                      style={{ width: `${currentAudit.scores.technical}%` }}
+   540→                    />
+   541→                  </div>
+   542→
+   543→                  <div className="flex items-center justify-between text-xs">
+   544→                    <span className="text-gray-500">Business</span>
+   545→                    <span className={cn('font-medium', getScoreColor(currentAudit.scores.business))}>
+   546→                      {currentAudit.scores.business}
+   547→                    </span>
+   548→                  </div>
+   549→                  <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+   550→                    <div
+   551→                      className={cn('h-full rounded-full', getScoreBarColor(currentAudit.scores.business))}
+   552→                      style={{ width: `${currentAudit.scores.business}%` }}
+   553→                    />
+   554→                  </div>
+   555→
+   556→                  <div className="flex items-center justify-between text-xs">
+   557→                    <span className="text-gray-500">Automation</span>
+   558→                    <span className={cn('font-medium', getScoreColor(currentAudit.scores.automation))}>
+   559→                      {currentAudit.scores.automation}
+   560→                    </span>
+   561→                  </div>
+   562→                  <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+   563→                    <div
+   564→                      className={cn('h-full rounded-full', getScoreBarColor(currentAudit.scores.automation))}
+   565→                      style={{ width: `${currentAudit.scores.automation}%` }}
+   566→                    />
+   567→                  </div>
+   568→                </div>
+   569→              </CardContent>
+   570→            </Card>
+   571→
+   572→            {/* Score Cards - Right column */}
+   573→            <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+   574→              <ScoreCard
+   575→                title="Design & UX"
+   576→                score={currentAudit.scores.design}
+   577→                icon={Palette}
+   578→                gradient="bg-violet-50 text-violet-600"
+   579→                details={currentAudit.details.design || 'Design analysis details will appear here after a full audit.'}
+   580→              />
+   581→              <ScoreCard
+   582→                title="Technical"
+   583→                score={currentAudit.scores.technical}
+   584→                icon={Code2}
+   585→                gradient="bg-cyan-50 text-cyan-600"
+   586→                details={currentAudit.details.technical || 'Technical analysis details will appear here after a full audit.'}
+   587→              />
+   588→              <ScoreCard
+   589→                title="Business Model"
+   590→                score={currentAudit.scores.business}
+   591→                icon={Briefcase}
+   592→                gradient="bg-amber-50 text-amber-600"
+   593→                details={currentAudit.details.business || 'Business model analysis details will appear here after a full audit.'}
+   594→              />
+   595→              <ScoreCard
+   596→                title="Automation"
+   597→                score={currentAudit.scores.automation}
+   598→                icon={Bot}
+   599→                gradient="bg-emerald-50 text-emerald-600"
+   600→                details={currentAudit.details.automation || 'Automation analysis details will appear here after a full audit.'}
+   601→              />
+   602→            </div>
+   603→          </div>
+   604→
+   605→          {/* AI Insights Row */}
+   606→          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+   607→            {/* Opportunities */}
+   608→            <Card className="bg-white border-gray-200">
+   609→              <CardHeader className="pb-3">
+   610→                <CardTitle className="text-sm font-medium text-gray-900 flex items-center gap-2">
+   611→                  <div className="p-1.5 rounded-md bg-emerald-50">
+   612→                    <Lightbulb className="w-3.5 h-3.5 text-emerald-600" />
+   613→                  </div>
+   614→                  Opportunities
+   615→                </CardTitle>
+   616→              </CardHeader>
+   617→              <CardContent>
+   618→                {currentAudit.opportunities.length > 0 ? (
+   619→                  <div className="space-y-2">
+   620→                    {currentAudit.opportunities.map((opp, i) => (
+   621→                      <div key={i} className="flex items-start gap-2 text-xs text-gray-600 leading-relaxed">
+   622→                        <div className="w-4 h-4 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center shrink-0 mt-0.5">
+   623→                          <Zap className="w-2 h-2 text-emerald-600" />
+   624→                        </div>
+   625→                        <span>{opp}</span>
+   626→                      </div>
+   627→                    ))}
+   628→                  </div>
+   629→                ) : (
+   630→                  <p className="text-xs text-gray-400 py-4 text-center">Run a full audit to discover opportunities</p>
+   631→                )}
+   632→              </CardContent>
+   633→            </Card>
+   634→
+   635→            {/* Recommendations */}
+   636→            <Card className="bg-white border-gray-200">
+   637→              <CardHeader className="pb-3">
+   638→                <CardTitle className="text-sm font-medium text-gray-900 flex items-center gap-2">
+   639→                  <div className="p-1.5 rounded-md bg-cyan-50">
+   640→                    <Target className="w-3.5 h-3.5 text-cyan-600" />
+   641→                  </div>
+   642→                  Recommendations
+   643→                </CardTitle>
+   644→              </CardHeader>
+   645→              <CardContent>
+   646→                {currentAudit.recommendations.length > 0 ? (
+   647→                  <div className="space-y-2">
+   648→                    {currentAudit.recommendations.map((rec, i) => (
+   649→                      <div key={i} className="flex items-start gap-2 text-xs text-gray-600 leading-relaxed">
+   650→                        <div className="w-4 h-4 rounded-full bg-cyan-50 border border-cyan-200 flex items-center justify-center shrink-0 mt-0.5">
+   651→                          <Target className="w-2 h-2 text-cyan-600" />
+   652→                        </div>
+   653→                        <span>{rec}</span>
+   654→                      </div>
+   655→                    ))}
+   656→                  </div>
+   657→                ) : (
+   658→                  <p className="text-xs text-gray-400 py-4 text-center">Run a full audit to get recommendations</p>
+   659→                )}
+   660→              </CardContent>
+   661→            </Card>
+   662→
+   663→            {/* Talking Points */}
+   664→            <Card className="bg-white border-gray-200">
+   665→              <CardHeader className="pb-3">
+   666→                <CardTitle className="text-sm font-medium text-gray-900 flex items-center gap-2">
+   667→                  <div className="p-1.5 rounded-md bg-violet-50">
+   668→                    <MessageSquare className="w-3.5 h-3.5 text-violet-600" />
+   669→                  </div>
+   670→                  Sales Talking Points
+   671→                </CardTitle>
+   672→              </CardHeader>
+   673→              <CardContent>
+   674→                {currentAudit.talkingPoints.length > 0 ? (
+   675→                  <div className="space-y-2">
+   676→                    {currentAudit.talkingPoints.map((tp, i) => (
+   677→                      <div key={i} className="flex items-start gap-2 text-xs text-gray-600 leading-relaxed">
+   678→                        <div className="w-4 h-4 rounded-full bg-violet-50 border border-violet-200 flex items-center justify-center shrink-0 mt-0.5">
+   679→                          <MessageSquare className="w-2 h-2 text-violet-600" />
+   680→                        </div>
+   681→                        <span>{tp}</span>
+   682→                      </div>
+   683→                    ))}
+   684→                  </div>
+   685→                ) : (
+   686→                  <p className="text-xs text-gray-400 py-4 text-center">Run a full audit to generate talking points</p>
+   687→                )}
+   688→              </CardContent>
+   689→            </Card>
+   690→          </div>
+   691→
+   692→          {/* Action Buttons */}
+   693→          <Card className="bg-white border-gray-200">
+   694→            <CardContent className="p-4">
+   695→              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+   696→                <Button
+   697→                  className={cn(
+   698→                    'flex-1 sm:flex-none h-10 px-5',
+   699→                    'bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500',
+   700→                    'text-white shadow-lg shadow-violet-500/15'
+   701→                  )}
+   702→                  onClick={() => setView('email-center')}
+   703→                >
+   704→                  <Mail className="w-4 h-4 mr-2" />
+   705→                  Generate Email
+   706→                </Button>
+   707→
+   708→                <Button
+   709→                  variant="outline"
+   710→                  className="flex-1 sm:flex-none h-10 px-5 border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+   711→                  onClick={() => setView('leads')}
+   712→                >
+   713→                  <CheckCircle2 className="w-4 h-4 mr-2" />
+   714→                  Qualify Lead
+   715→                </Button>
+   716→
+   717→                {/* Add to Campaign */}
+   718→                {campaigns.length > 0 ? (
+   719→                  <div className="flex-1 sm:flex-none">
+   720→                    <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
+   721→                      <SelectTrigger className="h-10 w-full sm:w-auto bg-gray-50 border-gray-200 text-gray-600">
+   722→                        <SelectValue placeholder="Add to Campaign..." />
+   723→                      </SelectTrigger>
+   724→                      <SelectContent className="bg-white border-gray-200">
+   725→                        {campaigns.map((c) => (
+   726→                          <SelectItem key={c.id} value={c.id} className="text-gray-700 focus:bg-gray-50 focus:text-gray-900">
+   727→                            {c.name}
+   728→                          </SelectItem>
+   729→                        ))}
+   730→                      </SelectContent>
+   731→                    </Select>
+   732→                  </div>
+   733→                ) : null}
+   734→                {selectedCampaignId && (
+   735→                  <Button
+   736→                    variant="outline"
+   737→                    className="h-10 px-5 border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+   738→                    onClick={handleAddToCampaign}
+   739→                  >
+   740→                    <ArrowRight className="w-4 h-4 mr-2" />
+   741→                    Add
+   742→                  </Button>
+   743→                )}
+   744→
+   745→                <div className="flex-1" />
+   746→              </div>
+   747→            </CardContent>
+   748→          </Card>
+   749→        </div>
+   750→      )}
+   751→
+   752→      {/* ── Recent Audits ── */}
+   753→      {!currentAudit && (
+   754→        <Card className="bg-white border-gray-200">
+   755→          <CardHeader className="pb-3">
+   756→            <CardTitle className="text-sm font-medium text-gray-900 flex items-center gap-2">
+   757→              <Clock className="w-4 h-4 text-gray-500" />
+   758→              Recent Audits
+   759→            </CardTitle>
+   760→          </CardHeader>
+   761→          <CardContent>
+   762→            {auditsLoading ? (
+   763→              <div className="space-y-3">
+   764→                {Array.from({ length: 3 }).map((_, i) => (
+   765→                  <div key={i} className="flex items-center gap-4 p-3 rounded-lg bg-gray-50">
+   766→                    <Skeleton className="h-9 w-9 rounded-lg bg-gray-100" />
+   767→                    <div className="flex-1 space-y-2">
+   768→                      <Skeleton className="h-3.5 w-40 bg-gray-100" />
+   769→                      <Skeleton className="h-3 w-60 bg-gray-200" />
+   770→                    </div>
+   771→                    <Skeleton className="h-6 w-12 bg-gray-100" />
+   772→                  </div>
+   773→                ))}
+   774→              </div>
+   775→            ) : recentAudits.length > 0 ? (
+   776→              <ScrollArea className="max-h-96">
+   777→                <div className="space-y-2">
+   778→                  {recentAudits.map((audit) => (
+   779→                    <button
+   780→                      key={audit.id}
+   781→                      onClick={() => handleLoadAudit(audit)}
+   782→                      className="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all text-left group"
+   783→                    >
+   784→                      {/* Mini score circle */}
+   785→                      <div className="relative w-9 h-9 shrink-0">
+   786→                        <svg className="w-9 h-9 -rotate-90">
+   787→                          <circle cx="18" cy="18" r="14" fill="none" strokeWidth="3" className="stroke-gray-200" />
+   788→                          <circle
+   789→                            cx="18"
+   790→                            cy="18"
+   791→                            r="14"
+   792→                            fill="none"
+   793→                            strokeWidth="3"
+   794→                            strokeLinecap="round"
+   795→                            className={getScoreRingColor(audit.scores.overall)}
+   796→                            strokeDasharray={`${2 * Math.PI * 14}`}
+   797→                            strokeDashoffset={`${2 * Math.PI * 14 - (audit.scores.overall / 100) * 2 * Math.PI * 14}`}
+   798→                          />
+   799→                        </svg>
+   800→                        <span className={cn('absolute inset-0 flex items-center justify-center text-[10px] font-bold', getScoreColor(audit.scores.overall))}>
+   801→                          {audit.scores.overall}
+   802→                        </span>
+   803→                      </div>
+   804→
+   805→                      <div className="flex-1 min-w-0">
+   806→                        <div className="flex items-center gap-2">
+   807→                          <p className="text-sm text-gray-900 font-medium truncate">{audit.domain}</p>
+   808→                          {audit.lead && (
+   809→                            <Badge variant="outline" className="bg-gray-200/70 border-gray-300 text-gray-500 text-[10px] px-1.5 py-0 shrink-0">
+   810→                              {audit.lead.business.name}
+   811→                            </Badge>
+   812→                          )}
+   813→                        </div>
+   814→                        <p className="text-xs text-gray-400 mt-0.5">
+   815→                          {audit.createdAt
+   816→                            ? new Date(audit.createdAt).toLocaleDateString('en-US', {
+   817→                                month: 'short',
+   818→                                day: 'numeric',
+   819→                                hour: '2-digit',
+   820→                                minute: '2-digit',
+   821→                              })
+   822→                            : '—'}
+   823→                        </p>
+   824→                      </div>
+   825→
+   826→                      <div className="flex items-center gap-3 shrink-0">
+   827→                        {/* Mini score badges */}
+   828→                        <div className="hidden sm:flex items-center gap-1.5">
+   829→                          <span className={cn('text-[10px] font-medium', getScoreColor(audit.scores.design))}>{audit.scores.design}</span>
+   830→                          <span className="text-[10px] text-gray-400">/</span>
+   831→                          <span className={cn('text-[10px] font-medium', getScoreColor(audit.scores.technical))}>{audit.scores.technical}</span>
+   832→                          <span className="text-[10px] text-gray-400">/</span>
+   833→                          <span className={cn('text-[10px] font-medium', getScoreColor(audit.scores.business))}>{audit.scores.business}</span>
+   834→                          <span className="text-[10px] text-gray-400">/</span>
+   835→                          <span className={cn('text-[10px] font-medium', getScoreColor(audit.scores.automation))}>{audit.scores.automation}</span>
+   836→                        </div>
+   837→                        <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-gray-500 transition-colors" />
+   838→                      </div>
+   839→                    </button>
+   840→                  ))}
+   841→                </div>
+   842→              </ScrollArea>
+   843→            ) : (
+   844→              <div className="py-10 text-center">
+   845→                <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
+   846→                  <ScanSearch className="w-7 h-7 text-gray-400" />
+   847→                </div>
+   848→                <p className="text-gray-900 font-medium">No audits yet</p>
+   849→                <p className="text-sm text-gray-500 mt-1">
+   850→                  Enter a website URL above to run your first AI-powered website audit
+   851→                </p>
+   852→              </div>
+   853→            )}
+   854→          </CardContent>
+   855→        </Card>
+   856→      )}
+   857→    </div>
+   858→  )
+   859→}
+   860→

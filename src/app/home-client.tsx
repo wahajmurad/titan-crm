@@ -8,7 +8,7 @@ import { SetupView } from '@/components/titan/setup-view'
 import { LoginView } from '@/components/titan/login-view'
 import { Toaster } from 'sonner'
 import { cn } from '@/lib/utils'
-import { Bell } from 'lucide-react'
+import { Bell, Zap } from 'lucide-react'
 import type { PermissionMap } from '@/lib/types'
 
 const DashboardView = dynamic(() => import('@/components/titan/dashboard-view').then(m => ({ default: m.DashboardView })), { loading: () => <PageSkeleton /> })
@@ -24,6 +24,7 @@ const AIAssistantView = dynamic(() => import('@/components/titan/ai-assistant-vi
 const PromptsView = dynamic(() => import('@/components/titan/prompts-view').then(m => ({ default: m.PromptsView })), { loading: () => <PageSkeleton /> })
 const TeamView = dynamic(() => import('@/components/titan/team-view').then(m => ({ default: m.TeamView })), { loading: () => <PageSkeleton /> })
 const SettingsView = dynamic(() => import('@/components/titan/settings-view').then(m => ({ default: m.SettingsView })), { loading: () => <PageSkeleton /> })
+const IndustryExpertView = dynamic(() => import('@/components/titan/industry-expert-view').then(m => ({ default: m.IndustryExpertView })), { loading: () => <PageSkeleton /> })
 
 function PageSkeleton() {
   return (
@@ -87,12 +88,23 @@ export default function HomeClient() {
 
   if (state === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-violet-500/20">
-            <span className="text-gray-900 font-bold text-sm">T</span>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative w-12 h-12">
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 animate-pulse opacity-60" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Zap className="w-5 h-5 text-white" />
+            </div>
           </div>
-          <span className="text-sm text-gray-500">Loading...</span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-gray-900 tracking-tight">TITAN</span>
+            <span className="text-[10px] bg-blue-500 text-white px-1.5 py-0.5 rounded-full font-semibold">AI</span>
+          </div>
+          <div className="flex items-center gap-1.5 mt-1">
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-300 animate-bounce" style={{ animationDelay: '300ms' }} />
+          </div>
         </div>
       </div>
     )
@@ -124,12 +136,13 @@ export default function HomeClient() {
       case 'prompts': return <PromptsView />
       case 'team': return <TeamView />
       case 'settings': return <SettingsView />
+      case 'industry-expert': return <IndustryExpertView />
       default: return <DashboardView />
     }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
+    <div className="min-h-screen bg-[#FAFBFC] text-gray-900">
       <Sidebar userName={user.name} userRole={user.role} onLogout={handleLogout} />
       <main
         className={cn(
@@ -137,7 +150,7 @@ export default function HomeClient() {
           sidebarOpen ? 'ml-60' : 'ml-[68px]'
         )}
       >
-        <header className="h-14 bg-white/80 backdrop-blur-sm border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-30">
+        <header className="h-14 bg-white/80 backdrop-blur-xl border-b border-gray-200/60 flex items-center justify-between px-6 sticky top-0 z-30">
           <div className="flex items-center gap-3">
             <h1 className="text-sm font-medium text-gray-900 capitalize">{currentView.replace(/-/g, ' ')}</h1>
             {currentView === 'dashboard' && (

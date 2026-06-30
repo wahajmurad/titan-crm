@@ -52,10 +52,10 @@ export type CampaignStatus = typeof CAMPAIGN_STATUS[number]
 
 export const STAGE_COLORS: Record<string, string> = {
   DISCOVERED: 'bg-gray-100 text-gray-600 border-gray-200',
-  AUDITED: 'bg-sky-50 text-sky-700 border-sky-200',
+  AUDITED: 'bg-blue-50 text-blue-700 border-blue-200',
   QUALIFIED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   OUTREACH_SENT: 'bg-amber-50 text-amber-700 border-amber-200',
-  REPLIED: 'bg-violet-50 text-violet-700 border-violet-200',
+  REPLIED: 'bg-indigo-50 text-indigo-700 border-indigo-200',
   MEETING_BOOKED: 'bg-blue-50 text-blue-700 border-blue-200',
   PROPOSAL_SENT: 'bg-orange-50 text-orange-700 border-orange-200',
   WON: 'bg-green-100 text-green-800 border-green-200',
@@ -64,10 +64,10 @@ export const STAGE_COLORS: Record<string, string> = {
 
 export const STAGE_DOT_COLORS: Record<string, string> = {
   DISCOVERED: 'bg-slate-400',
-  AUDITED: 'bg-sky-500',
+  AUDITED: 'bg-blue-500',
   QUALIFIED: 'bg-emerald-500',
   OUTREACH_SENT: 'bg-amber-500',
-  REPLIED: 'bg-violet-500',
+  REPLIED: 'bg-indigo-500',
   MEETING_BOOKED: 'bg-blue-500',
   PROPOSAL_SENT: 'bg-orange-500',
   WON: 'bg-green-600',

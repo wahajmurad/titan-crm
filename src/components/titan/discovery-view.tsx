@@ -64,18 +64,15 @@ interface DiscoveredLead {
 }
 
 interface AuditResult {
-  designScore: number
-  technicalScore: number
-  businessScore: number
-  automationScore: number
   overallScore: number
-  designDetails: string
-  technicalDetails: string
-  businessDetails: string
-  automationDetails: string
-  opportunities: string
-  recommendations: string
-  talkingPoints: string
+  scores: Record<string, number>
+  details: Record<string, string>
+  executiveSummary: string
+  problemsFound: string[]
+  opportunities: string[]
+  recommendations: string[]
+  talkingPoints: string[]
+  pitchStrategy: string
 }
 
 /* ──────────── Helpers ──────────── */
@@ -297,7 +294,17 @@ export function DiscoveryView() {
         return
       }
 
-      setAuditResult(auditData.audit)
+      setAuditResult({
+        overallScore: auditData.overallScore || 0,
+        scores: auditData.scores || {},
+        details: auditData.details || {},
+        executiveSummary: auditData.executiveSummary || '',
+        problemsFound: auditData.problemsFound || [],
+        opportunities: auditData.opportunities || [],
+        recommendations: auditData.recommendations || [],
+        talkingPoints: auditData.talkingPoints || [],
+        pitchStrategy: auditData.pitchStrategy || '',
+      })
     } catch {
       setAuditError('Network error during audit. Please try again.')
     } finally {
@@ -312,8 +319,8 @@ export function DiscoveryView() {
       {/* ── Header ── */}
       <div>
         <div className="flex items-center gap-2.5 mb-1">
-          <div className="p-2 rounded-lg bg-violet-50 border border-violet-200/60">
-            <Radar className="w-5 h-5 text-violet-600" />
+          <div className="p-2 rounded-lg bg-blue-50 border border-blue-200/60">
+            <Radar className="w-5 h-5 text-blue-600" />
           </div>
           <h1 className="text-xl font-semibold text-gray-900">Lead Discovery</h1>
         </div>
@@ -334,7 +341,7 @@ export function DiscoveryView() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  className="pl-9 h-10 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30 focus-visible:border-violet-400"
+                  className="pl-9 h-10 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30 focus-visible:border-blue-400"
                   disabled={searching}
                 />
               </div>
@@ -347,7 +354,7 @@ export function DiscoveryView() {
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  className="pl-9 h-10 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-violet-500/30 focus-visible:border-violet-400"
+                  className="pl-9 h-10 bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30 focus-visible:border-blue-400"
                   disabled={searching}
                 />
               </div>
@@ -355,7 +362,7 @@ export function DiscoveryView() {
             <Button
               onClick={handleSearch}
               disabled={searching || !query.trim() || !location.trim()}
-              className="h-10 px-6 bg-violet-600 hover:bg-violet-700 text-white font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+              className="h-10 px-6 bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
             >
               {searching ? (
                 <>
@@ -388,10 +395,10 @@ export function DiscoveryView() {
           <CardContent className="p-8">
             <div className="flex flex-col items-center justify-center py-6 space-y-4">
               <div className="relative w-16 h-16">
-                <div className="absolute inset-0 rounded-full border-2 border-violet-200 animate-ping" style={{ animationDuration: '2s' }} />
-                <div className="absolute inset-2 rounded-full border-2 border-violet-300 animate-ping" style={{ animationDuration: '1.5s', animationDelay: '0.3s' }} />
+                <div className="absolute inset-0 rounded-full border-2 border-blue-200 animate-ping" style={{ animationDuration: '2s' }} />
+                <div className="absolute inset-2 rounded-full border-2 border-blue-300 animate-ping" style={{ animationDuration: '1.5s', animationDelay: '0.3s' }} />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <Radar className="w-7 h-7 text-violet-500 animate-pulse" />
+                  <Radar className="w-7 h-7 text-blue-500 animate-pulse" />
                 </div>
               </div>
               <div className="text-center">
@@ -460,7 +467,7 @@ export function DiscoveryView() {
                         {lead.phone ? (
                           <a
                             href={`tel:${lead.phone}`}
-                            className="text-xs text-gray-700 hover:text-violet-600 transition-colors flex items-center gap-1"
+                            className="text-xs text-gray-700 hover:text-blue-600 transition-colors flex items-center gap-1"
                           >
                             <Phone className="w-3 h-3 shrink-0" />
                             <span>{lead.phone}</span>
@@ -475,7 +482,7 @@ export function DiscoveryView() {
                             href={lead.website}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-violet-600 hover:text-violet-700 transition-colors flex items-center gap-1 max-w-[180px]"
+                            className="text-xs text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-1 max-w-[180px]"
                           >
                             <Globe className="w-3 h-3 shrink-0" />
                             <span className="truncate">{lead.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}</span>
@@ -505,7 +512,7 @@ export function DiscoveryView() {
                             variant="outline"
                             onClick={() => handleAudit(lead)}
                             disabled={!lead.website}
-                            className="h-8 px-3 text-xs border-gray-200 text-gray-600 hover:bg-violet-50 hover:text-violet-700 hover:border-violet-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="h-8 px-3 text-xs border-gray-200 text-gray-600 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 disabled:opacity-40 disabled:cursor-not-allowed"
                             title={!lead.website ? 'No website available for audit' : 'Run AI website audit'}
                           >
                             <Sparkles className="w-3 h-3 mr-1" />
@@ -520,7 +527,7 @@ export function DiscoveryView() {
                               'h-8 px-3 text-xs transition-colors disabled:opacity-60 disabled:cursor-not-allowed',
                               isAdded(lead)
                                 ? 'border-emerald-200 bg-emerald-50 text-emerald-700 cursor-default'
-                                : 'border-gray-200 text-gray-600 hover:bg-violet-50 hover:text-violet-700 hover:border-violet-300',
+                                : 'border-gray-200 text-gray-600 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300',
                             )}
                           >
                             {isAdded(lead) ? (
@@ -573,13 +580,13 @@ export function DiscoveryView() {
                     {lead.phone && (
                       <div className="flex items-center gap-1.5 text-gray-600">
                         <Phone className="w-3 h-3 text-gray-400" />
-                        <a href={`tel:${lead.phone}`} className="hover:text-violet-600 transition-colors">{lead.phone}</a>
+                        <a href={`tel:${lead.phone}`} className="hover:text-blue-600 transition-colors">{lead.phone}</a>
                       </div>
                     )}
                     {lead.website && (
                       <div className="flex items-center gap-1.5 text-gray-600">
                         <Globe className="w-3 h-3 text-gray-400" />
-                        <a href={lead.website} target="_blank" rel="noopener noreferrer" className="hover:text-violet-600 transition-colors truncate">
+                        <a href={lead.website} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 transition-colors truncate">
                           {lead.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
                           <ExternalLink className="w-2.5 h-2.5 inline ml-1 opacity-50" />
                         </a>
@@ -594,7 +601,7 @@ export function DiscoveryView() {
                       variant="outline"
                       onClick={() => handleAudit(lead)}
                       disabled={!lead.website}
-                      className="flex-1 h-8 text-xs border-gray-200 text-gray-600 hover:bg-violet-50 hover:text-violet-700 hover:border-violet-300 disabled:opacity-40"
+                      className="flex-1 h-8 text-xs border-gray-200 text-gray-600 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 disabled:opacity-40"
                     >
                       <Sparkles className="w-3 h-3 mr-1" />
                       Audit
@@ -608,7 +615,7 @@ export function DiscoveryView() {
                         'flex-1 h-8 text-xs transition-colors disabled:opacity-60',
                         isAdded(lead)
                           ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                          : 'border-gray-200 text-gray-600 hover:bg-violet-50 hover:text-violet-700 hover:border-violet-300',
+                          : 'border-gray-200 text-gray-600 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300',
                       )}
                     >
                       {isAdded(lead) ? (
@@ -645,15 +652,15 @@ export function DiscoveryView() {
             </p>
             <div className="flex items-center justify-center gap-6 mt-6">
               <div className="flex items-center gap-2 text-sm text-gray-400">
-                <Search className="w-4 h-4 text-violet-500" />
+                <Search className="w-4 h-4 text-blue-500" />
                 Google Maps
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-400">
-                <Sparkles className="w-4 h-4 text-violet-500" />
+                <Sparkles className="w-4 h-4 text-blue-500" />
                 AI Audits
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-400">
-                <Target className="w-4 h-4 text-violet-500" />
+                <Target className="w-4 h-4 text-blue-500" />
                 Real Businesses
               </div>
             </div>
@@ -685,13 +692,13 @@ export function DiscoveryView() {
               <div className="p-6 pb-0">
                 <DialogHeader>
                   <DialogTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-violet-600" />
+                    <Sparkles className="w-5 h-5 text-blue-600" />
                     AI Website Audit
                   </DialogTitle>
                   <DialogDescription className="text-sm text-gray-500 mt-1">
                     {auditLead.name}
                     {auditLead.website && (
-                      <a href={auditLead.website} target="_blank" rel="noopener noreferrer" className="text-violet-600 hover:underline ml-2">
+                      <a href={auditLead.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-2">
                         ({auditLead.website.replace(/^https?:\/\//, '').replace(/\/$/, '')})
                       </a>
                     )}
@@ -705,9 +712,9 @@ export function DiscoveryView() {
                   <div className="p-8 space-y-5">
                     <div className="flex flex-col items-center justify-center py-8 space-y-4">
                       <div className="relative w-14 h-14">
-                        <div className="absolute inset-0 rounded-full border-2 border-violet-200 animate-ping" style={{ animationDuration: '2s' }} />
+                        <div className="absolute inset-0 rounded-full border-2 border-blue-200 animate-ping" style={{ animationDuration: '2s' }} />
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <Bot className="w-6 h-6 text-violet-500 animate-pulse" />
+                          <Bot className="w-6 h-6 text-blue-500 animate-pulse" />
                         </div>
                       </div>
                       <div className="text-center">
@@ -740,7 +747,7 @@ export function DiscoveryView() {
 
                 {/* Audit results */}
                 {!auditLoading && auditResult && (
-                  <div className="p-6 pt-2 space-y-6">
+                  <div className="p-6 pt-2 space-y-5">
                     {/* Overall Score */}
                     <div className="flex items-center gap-5">
                       <div className={cn('w-20 h-20 rounded-2xl border-2 flex flex-col items-center justify-center shrink-0', scoreBg(auditResult.overallScore))}>
@@ -749,51 +756,41 @@ export function DiscoveryView() {
                         </span>
                         <span className="text-[10px] text-gray-500 mt-0.5">/ 100</span>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Overall Score</p>
-                        <p className="text-xs text-gray-500 mt-0.5">
-                          {auditResult.overallScore >= 70
-                            ? 'Strong online presence — good opportunity for partnership'
-                            : auditResult.overallScore >= 40
-                              ? 'Moderate presence — clear room for improvement'
-                              : 'Significant gaps — strong pitch opportunity'}
-                        </p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900">Overall Website Score</p>
+                        {auditResult.executiveSummary && (
+                          <p className="text-xs text-gray-500 mt-1 line-clamp-3">{auditResult.executiveSummary}</p>
+                        )}
                       </div>
                     </div>
 
-                    {/* Category Scores */}
-                    <div className="grid grid-cols-2 gap-3">
-                      {[
-                        { label: 'Design', score: auditResult.designScore, icon: Shield, details: auditResult.designDetails },
-                        { label: 'Technical', score: auditResult.technicalScore, icon: Cpu, details: auditResult.technicalDetails },
-                        { label: 'Business', score: auditResult.businessScore, icon: Briefcase, details: auditResult.businessDetails },
-                        { label: 'Automation', score: auditResult.automationScore, icon: Bot, details: auditResult.automationDetails },
-                      ].map((cat) => (
-                        <div key={cat.label} className="p-3 rounded-xl bg-gray-50 border border-gray-100 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1.5 text-xs font-medium text-gray-700">
-                              <cat.icon className="w-3.5 h-3.5 text-gray-400" />
-                              {cat.label}
+                    {/* Category Scores Grid */}
+                    {auditResult.scores && Object.keys(auditResult.scores).length > 0 && (
+                      <div className="grid grid-cols-2 gap-2.5">
+                        {Object.entries(auditResult.scores).map(([key, score]) => {
+                          const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase())
+                          return (
+                            <div key={key} className="p-3 rounded-xl bg-gray-50 border border-gray-100 space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-medium text-gray-700">{label}</span>
+                                <span className={cn('text-sm font-bold', scoreColor(score))}>{score}</span>
+                              </div>
+                              <Progress value={score} className={cn('h-1.5 bg-gray-200/60', progressBarColor(score))} />
                             </div>
-                            <span className={cn('text-sm font-bold', scoreColor(cat.score))}>{cat.score}</span>
-                          </div>
-                          <Progress value={cat.score} className={cn('h-1.5 bg-gray-200/60', progressBarColor(cat.score))} />
-                          {cat.details && (
-                            <p className="text-[11px] text-gray-500 leading-relaxed line-clamp-3">{cat.details}</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                          )
+                        })}
+                      </div>
+                    )}
 
-                    {/* Key Problems */}
-                    {auditResult.recommendations && (
+                    {/* Problems */}
+                    {auditResult.problemsFound && auditResult.problemsFound.length > 0 && (
                       <div className="space-y-2">
                         <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
                           <AlertTriangle className="w-4 h-4 text-amber-500" />
-                          Key Problems Found
+                          Problems Found ({auditResult.problemsFound.length})
                         </h3>
                         <div className="space-y-1.5">
-                          {parseNumberedList(auditResult.recommendations).map((item, i) => (
+                          {auditResult.problemsFound.map((item, i) => (
                             <div key={i} className="flex gap-2 text-xs text-gray-600 leading-relaxed">
                               <span className="text-amber-500 font-semibold shrink-0">{i + 1}.</span>
                               <span>{item}</span>
@@ -804,14 +801,14 @@ export function DiscoveryView() {
                     )}
 
                     {/* Opportunities */}
-                    {auditResult.opportunities && (
+                    {auditResult.opportunities && auditResult.opportunities.length > 0 && (
                       <div className="space-y-2">
                         <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
                           <TrendingUp className="w-4 h-4 text-emerald-500" />
                           Opportunities
                         </h3>
                         <div className="space-y-1.5">
-                          {parseNumberedList(auditResult.opportunities).map((item, i) => (
+                          {auditResult.opportunities.map((item, i) => (
                             <div key={i} className="flex gap-2 text-xs text-gray-600 leading-relaxed">
                               <span className="text-emerald-500 font-semibold shrink-0">{i + 1}.</span>
                               <span>{item}</span>
@@ -825,13 +822,13 @@ export function DiscoveryView() {
                     {auditResult.talkingPoints && (
                       <div className="space-y-2">
                         <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
-                          <MessageSquare className="w-4 h-4 text-violet-500" />
+                          <MessageSquare className="w-4 h-4 text-blue-500" />
                           How to Pitch
                         </h3>
                         <div className="space-y-1.5">
-                          {parseNumberedList(auditResult.talkingPoints).map((item, i) => (
+                          {Array.isArray(auditResult.talkingPoints) ? auditResult.talkingPoints : parseNumberedList(auditResult.talkingPoints || '').map((item, i) => (
                             <div key={i} className="flex gap-2 text-xs text-gray-600 leading-relaxed">
-                              <span className="text-violet-500 font-semibold shrink-0">{i + 1}.</span>
+                              <span className="text-blue-500 font-semibold shrink-0">{i + 1}.</span>
                               <span>{item}</span>
                             </div>
                           ))}
@@ -847,7 +844,7 @@ export function DiscoveryView() {
                           setAuditResult(null)
                           setView('leads')
                         }}
-                        className="w-full h-9 bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium"
+                        className="w-full h-9 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium"
                       >
                         View in Leads Pipeline
                       </Button>
