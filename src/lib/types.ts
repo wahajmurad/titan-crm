@@ -81,18 +81,30 @@ export const TEMP_COLORS: Record<string, string> = {
 }
 
 export interface AuditScores {
-  design: number
-  technical: number
-  business: number
+  ui: number
+  ux: number
+  seo: number
+  performance: number
+  accessibility: number
+  mobile: number
+  security: number
+  aiReadiness: number
   automation: number
+  conversion: number
   overall: number
 }
 
 export interface AuditDetails {
-  design: string
-  technical: string
-  business: string
+  ui: string
+  ux: string
+  seo: string
+  performance: string
+  accessibility: string
+  mobile: string
+  security: string
+  aiReadiness: string
   automation: string
+  conversion: string
 }
 
 export const PROMPT_CATEGORIES = [

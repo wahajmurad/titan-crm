@@ -385,7 +385,7 @@ export function DashboardView({ userName }: { userName?: string }) {
           return (
             <Card
               key={card.label}
-              className="bg-white border-gray-200 hover:border-gray-300/60 transition-all duration-200 group relative overflow-hidden"
+              className="bg-white border-gray-200 hover:border-gray-300/60 transition-all duration-200 group relative overflow-hidden shadow-sm hover:shadow-md transition-shadow"
             >
               <div className={`absolute inset-0 bg-gradient-to-br ${card.accent} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
               <CardContent className="p-4 relative">
@@ -444,7 +444,7 @@ export function DashboardView({ userName }: { userName?: string }) {
       </div>
 
       {/* ─── 3. Lead Pipeline ──────────────────────────────────────── */}
-      <Card className="bg-white border-gray-200">
+      <Card className="bg-white border-gray-200 shadow-sm">
         <CardHeader className="pb-3 px-5 pt-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold text-gray-900 flex items-center gap-2">
@@ -567,7 +567,7 @@ export function DashboardView({ userName }: { userName?: string }) {
                                 {i + 1}
                               </span>
                               <div className="min-w-0">
-                                <p className="text-xs font-medium text-slate-200 truncate max-w-[140px]">
+                                <p className="text-xs font-medium text-gray-200 truncate max-w-[140px]">
                                   {c.name}
                                 </p>
                                 {c.industry && (
@@ -640,7 +640,7 @@ export function DashboardView({ userName }: { userName?: string }) {
                       ACTION_ICONS[a.action] || ArrowUpRight
                     const actionColor =
                       ACTION_COLORS[a.action] ||
-                      'bg-slate-700/40 text-gray-500'
+                      'bg-gray-700/40 text-gray-500'
                     return (
                       <div
                         key={a.id}
@@ -661,7 +661,7 @@ export function DashboardView({ userName }: { userName?: string }) {
                             </span>
                             {a.lead?.business?.name && (
                               <>
-                                <span className="text-[10px] text-slate-700">
+                                <span className="text-[10px] text-gray-700">
                                   ·
                                 </span>
                                 <span className="text-[10px] text-gray-400 truncate">
@@ -669,7 +669,7 @@ export function DashboardView({ userName }: { userName?: string }) {
                                 </span>
                               </>
                             )}
-                            <span className="text-[10px] text-slate-700">·</span>
+                            <span className="text-[10px] text-gray-700">·</span>
                             <span className="text-[10px] text-gray-300">
                               {formatDistanceToNow(new Date(a.createdAt), {
                                 addSuffix: true,

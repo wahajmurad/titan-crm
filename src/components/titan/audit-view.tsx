@@ -143,10 +143,10 @@ function getScoreColor(score: number): string {
 }
 
 function getScoreBarColor(score: number): string {
-  if (score >= 80) return 'bg-emerald-500'
+  if (score >= 80) return 'bg-blue-500'
   if (score >= 60) return 'bg-blue-500'
-  if (score >= 40) return 'bg-amber-500'
-  return 'bg-red-500'
+  if (score >= 40) return 'bg-blue-300'
+  return 'bg-blue-200'
 }
 
 function getScoreBgColor(score: number): string {
@@ -157,10 +157,10 @@ function getScoreBgColor(score: number): string {
 }
 
 function getScoreRingColor(score: number): string {
-  if (score >= 80) return 'stroke-emerald-500'
+  if (score >= 80) return 'stroke-blue-400'
   if (score >= 60) return 'stroke-blue-500'
-  if (score >= 40) return 'stroke-amber-500'
-  return 'stroke-red-500'
+  if (score >= 40) return 'stroke-blue-300'
+  return 'stroke-blue-200'
 }
 
 function getScoreLabel(score: number): string {

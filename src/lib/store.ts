@@ -12,6 +12,8 @@ export type AppView =
   | 'meetings'
   | 'ai-assistant'
   | 'industry-expert'
+  | 'strategy-assistant'
+  | 'lead-providers'
   | 'prompts'
   | 'team'
   | 'settings'

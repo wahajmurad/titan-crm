@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import {
   LayoutDashboard, Search, Globe2, Users, Target, Mail, Inbox,
   Calendar, Brain, BookOpen, UserCog, Settings, LogOut,
-  ChevronLeft, ChevronRight, Zap, GraduationCap
+  ChevronLeft, ChevronRight, Zap, GraduationCap, Plug, Lightbulb
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
@@ -35,6 +35,7 @@ const NAV_SECTIONS = [
     items: [
       { view: 'ai-assistant' as AppView, label: 'AI Assistant', icon: Brain },
       { view: 'industry-expert' as AppView, label: 'Industry Expert', icon: GraduationCap },
+      { view: 'strategy-assistant' as AppView, label: 'Strategy AI', icon: Lightbulb },
       { view: 'prompts' as AppView, label: 'Prompt Library', icon: BookOpen },
     ],
   },
@@ -42,6 +43,7 @@ const NAV_SECTIONS = [
     label: 'Operations',
     items: [
       { view: 'meetings' as AppView, label: 'Meetings', icon: Calendar },
+      { view: 'lead-providers' as AppView, label: 'Lead Providers', icon: Plug },
       { view: 'team' as AppView, label: 'Team', icon: UserCog },
       { view: 'settings' as AppView, label: 'Settings', icon: Settings },
     ],

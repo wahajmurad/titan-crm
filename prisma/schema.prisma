@@ -235,6 +235,31 @@ model WebsiteAudit {
   @@index([overallScore])
 }
 
+model LeadProvider {
+  id          String   @id @default(uuid())
+  name        String
+  type        String   @default("custom") // google_places, yelp, custom, serper, scraping
+  apiUrl      String?
+  apiKey      String?
+  authType    String   @default("none") // none, bearer, basic, header, query
+  authHeader  String?  // e.g. "X-API-Key"
+  authValue   String?
+  headers     String?  // JSON string of additional headers
+  params      String?  // JSON string of query params
+  isActive    Boolean  @default(true)
+  isDefault   Boolean  @default(false)
+  priority    Int      @default(0)
+  lastUsedAt  DateTime?
+  successCount Int     @default(0)
+  failCount   Int      @default(0)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([type])
+  @@index([isActive])
+}
+
 model PromptTemplate {
   id        String   @id @default(uuid())
   name      String

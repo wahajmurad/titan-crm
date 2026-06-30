@@ -330,7 +330,7 @@ export function DiscoveryView() {
       </div>
 
       {/* ── Search Form ── */}
-      <Card className="bg-white border-gray-200 shadow-sm">
+      <Card className="glass-card border-gray-200/60 shadow-sm">
         <CardContent className="p-5">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1">

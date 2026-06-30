@@ -289,7 +289,7 @@ export function SettingsView() {
       </div>
 
       {/* ── Lead Providers ── */}
-      <Card className="border-slate-200">
+      <Card className="border-gray-200/60 shadow-sm rounded-xl">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -339,7 +339,7 @@ export function SettingsView() {
               {providers.map(provider => (
                 <div
                   key={provider.id}
-                  className="group flex items-start justify-between p-3 rounded-lg border border-slate-100 hover:border-slate-200 bg-slate-50/50 transition-colors"
+                  className="group flex items-start justify-between p-3 rounded-lg border border-gray-100 hover:border-gray-200 bg-gray-50/50 transition-colors"
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
@@ -570,7 +570,7 @@ export function SettingsView() {
       </Dialog>
 
       {/* Profile */}
-      <Card className="border-slate-200">
+      <Card className="border-gray-200/60 shadow-sm rounded-xl">
         <CardHeader className="pb-3"><CardTitle className="text-sm font-semibold">Profile</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div><Label>Display Name</Label><Input className="mt-1" value={name} onChange={e => setName(e.target.value)} /></div>
@@ -581,7 +581,7 @@ export function SettingsView() {
       </Card>
 
       {/* Password */}
-      <Card className="border-slate-200">
+      <Card className="border-gray-200/60 shadow-sm rounded-xl">
         <CardHeader className="pb-3"><CardTitle className="text-sm font-semibold">Change Password</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div><Label>Current Password</Label><Input type="password" className="mt-1" value={currentPass} onChange={e => setCurrentPass(e.target.value)} /></div>
@@ -591,7 +591,7 @@ export function SettingsView() {
       </Card>
 
       {/* SMTP */}
-      <Card className="border-slate-200">
+      <Card className="border-gray-200/60 shadow-sm rounded-xl">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold">Email (SMTP)</CardTitle>
           <p className="text-xs text-gray-500">Configure your outgoing email server</p>
@@ -610,7 +610,7 @@ export function SettingsView() {
       </Card>
 
       {/* AI Configuration */}
-      <Card className="border-slate-200">
+      <Card className="border-gray-200/60 shadow-sm rounded-xl">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold">AI Configuration</CardTitle>
           <p className="text-xs text-gray-500">API keys for AI-powered features</p>
@@ -626,7 +626,7 @@ export function SettingsView() {
       </Card>
 
       {/* Follow-up Configuration */}
-      <Card className="border-slate-200">
+      <Card className="border-gray-200/60 shadow-sm rounded-xl">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold">Follow-up Schedule</CardTitle>
           <p className="text-xs text-gray-500">Configure automated follow-up timing (days)</p>

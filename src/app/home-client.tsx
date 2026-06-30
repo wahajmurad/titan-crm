@@ -25,6 +25,8 @@ const PromptsView = dynamic(() => import('@/components/titan/prompts-view').then
 const TeamView = dynamic(() => import('@/components/titan/team-view').then(m => ({ default: m.TeamView })), { loading: () => <PageSkeleton /> })
 const SettingsView = dynamic(() => import('@/components/titan/settings-view').then(m => ({ default: m.SettingsView })), { loading: () => <PageSkeleton /> })
 const IndustryExpertView = dynamic(() => import('@/components/titan/industry-expert-view').then(m => ({ default: m.IndustryExpertView })), { loading: () => <PageSkeleton /> })
+const StrategyAssistantView = dynamic(() => import('@/components/titan/strategy-assistant-view').then(m => ({ default: m.StrategyAssistantView })), { loading: () => <PageSkeleton /> })
+const LeadProvidersView = dynamic(() => import('@/components/titan/lead-providers-view').then(m => ({ default: m.LeadProvidersView })), { loading: () => <PageSkeleton /> })
 
 function PageSkeleton() {
   return (
@@ -91,7 +93,7 @@ export default function HomeClient() {
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-4">
           <div className="relative w-12 h-12">
-            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 animate-pulse opacity-60" />
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 animate-pulse opacity-60 shadow-lg shadow-blue-500/20" />
             <div className="absolute inset-0 flex items-center justify-center">
               <Zap className="w-5 h-5 text-white" />
             </div>
@@ -133,16 +135,18 @@ export default function HomeClient() {
       case 'inbox': return <InboxView />
       case 'meetings': return <MeetingsView />
       case 'ai-assistant': return <AIAssistantView />
+      case 'industry-expert': return <IndustryExpertView />
+      case 'strategy-assistant': return <StrategyAssistantView />
+      case 'lead-providers': return <LeadProvidersView />
       case 'prompts': return <PromptsView />
       case 'team': return <TeamView />
       case 'settings': return <SettingsView />
-      case 'industry-expert': return <IndustryExpertView />
       default: return <DashboardView />
     }
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFBFC] text-gray-900">
+    <div className="min-h-screen bg-[#FAFBFC] text-gray-900 font-sans antialiased">
       <Sidebar userName={user.name} userRole={user.role} onLogout={handleLogout} />
       <main
         className={cn(

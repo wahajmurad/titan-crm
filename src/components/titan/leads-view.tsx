@@ -11,9 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { LEAD_STAGES, STAGE_COLORS, STAGE_DOT_COLORS, type LeadStage } from '@/lib/types'
-import { Plus, Search, List, Columns3, ChevronRight, ExternalLink, Phone, Mail, Globe } from 'lucide-react'
+import { Plus, Search, List, Columns3, ChevronRight, ExternalLink, Phone, Mail, Globe, Globe2, Target, Loader2, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
+import { toast } from 'sonner'
 
 interface Lead {
   id: string
@@ -43,6 +44,8 @@ export function LeadsView() {
   const [stageFilter, setStageFilter] = useState<string>('ALL')
   const [addOpen, setAddOpen] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [processingLeads, setProcessingLeads] = useState<Set<string>>(new Set())
+  const [completedLeads, setCompletedLeads] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const params = new URLSearchParams()
@@ -57,6 +60,64 @@ export function LeadsView() {
 
   const refresh = () => setRefreshKey(k => k + 1)
   const stages = LEAD_STAGES.filter(s => s !== 'LOST')
+
+  const handleAudit = useCallback(async (lead: Lead) => {
+    if (!lead.business.website || processingLeads.has(lead.id)) return
+    setProcessingLeads(prev => new Set(prev).add(lead.id))
+    setCompletedLeads(prev => { const next = new Set(prev); next.delete(lead.id); return next })
+    try {
+      const res = await fetch('/api/audit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ website: lead.business.website }),
+      })
+      if (res.ok) {
+        toast.success('Audit completed!', { description: `${lead.business.name} has been audited` })
+        setCompletedLeads(prev => new Set(prev).add(lead.id))
+        setTimeout(() => setCompletedLeads(prev => { const next = new Set(prev); next.delete(lead.id); return next }), 2000)
+        refresh()
+      } else {
+        toast.error('Audit failed', { description: 'Could not complete the audit' })
+      }
+    } catch {
+      toast.error('Audit failed', { description: 'Network error' })
+    } finally {
+      setProcessingLeads(prev => { const next = new Set(prev); next.delete(lead.id); return next })
+    }
+  }, [processingLeads, refresh])
+
+  const handleQualify = useCallback(async (lead: Lead) => {
+    if (processingLeads.has(lead.id)) return
+    setProcessingLeads(prev => new Set(prev).add(lead.id))
+    setCompletedLeads(prev => { const next = new Set(prev); next.delete(lead.id); return next })
+    try {
+      const res = await fetch('/api/ai/qualify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          companyName: lead.business.name,
+          website: lead.business.website,
+          industry: lead.business.industry,
+          auditScore: lead.score || undefined,
+        }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        const temperature = data.temperature?.toUpperCase() || 'WARM'
+        const score = data.score ?? data.qualificationScore ?? '—'
+        toast.success(`Qualified as ${temperature} (score: ${score}/100)`, { description: `${lead.business.name} — ${data.summary || data.reason || ''}` })
+        setCompletedLeads(prev => new Set(prev).add(lead.id))
+        setTimeout(() => setCompletedLeads(prev => { const next = new Set(prev); next.delete(lead.id); return next }), 2000)
+        refresh()
+      } else {
+        toast.error('Qualification failed', { description: data.error || 'Could not qualify lead' })
+      }
+    } catch {
+      toast.error('Qualification failed', { description: 'Network error' })
+    } finally {
+      setProcessingLeads(prev => { const next = new Set(prev); next.delete(lead.id); return next })
+    }
+  }, [processingLeads, refresh])
 
   return (
     <div className="space-y-4">
@@ -82,11 +143,11 @@ export function LeadsView() {
               {LEAD_STAGES.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>)}
             </SelectContent>
           </Select>
-          <div className="flex border border-slate-200 rounded-lg overflow-hidden">
-            <button onClick={() => setViewMode('table')} className={cn('p-1.5', viewMode === 'table' ? 'bg-slate-100' : 'hover:bg-slate-50')}>
+          <div className="flex border border-gray-200 rounded-lg overflow-hidden">
+            <button onClick={() => setViewMode('table')} className={cn('p-1.5', viewMode === 'table' ? 'bg-gray-100' : 'hover:bg-gray-50')}>
               <List className="w-3.5 h-3.5 text-gray-300" />
             </button>
-            <button onClick={() => setViewMode('board')} className={cn('p-1.5', viewMode === 'board' ? 'bg-slate-100' : 'hover:bg-slate-50')}>
+            <button onClick={() => setViewMode('board')} className={cn('p-1.5', viewMode === 'board' ? 'bg-gray-100' : 'hover:bg-gray-50')}>
               <Columns3 className="w-3.5 h-3.5 text-gray-300" />
             </button>
           </div>
@@ -95,28 +156,29 @@ export function LeadsView() {
       </div>
 
       {loading ? (
-        <Card><CardContent className="p-8"><div className="h-48 bg-slate-100 rounded-lg animate-pulse" /></CardContent></Card>
+        <Card><CardContent className="p-8"><div className="h-48 bg-gray-100 rounded-lg animate-pulse" /></CardContent></Card>
       ) : viewMode === 'table' ? (
-        <Card className="border-slate-200">
+        <Card className="border-gray-200 shadow-sm">
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-100">
+                  <tr className="border-b border-gray-100">
                     <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Business</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Industry</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Stage</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Emails</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Updated</th>
                     <th className="w-8" />
                   </tr>
                 </thead>
                 <tbody>
                   {leads.length === 0 ? (
-                    <tr><td colSpan={7} className="px-4 py-12 text-center text-gray-500">No leads yet. Add your first lead to get started.</td></tr>
+                    <tr><td colSpan={8} className="px-4 py-12 text-center text-gray-500">No leads yet. Add your first lead to get started.</td></tr>
                   ) : leads.map(lead => (
-                    <tr key={lead.id} className="border-b border-slate-50 hover:bg-slate-50/50 cursor-pointer transition-colors" onClick={() => setView('lead-detail', lead.id)}>
+                    <tr key={lead.id} className="border-b border-gray-50 hover:bg-gray-50/50 cursor-pointer transition-colors" onClick={() => setView('lead-detail', lead.id)}>
                       <td className="px-4 py-3">
                         <div className="font-medium text-gray-900">{lead.business.name}</div>
                         {lead.business.city && <div className="text-xs text-gray-500 mt-0.5">{lead.business.city}{lead.business.country ? `, ${lead.business.country}` : ''}</div>}
@@ -128,12 +190,46 @@ export function LeadsView() {
                       <td className="px-4 py-3">
                         {lead.decisionMaker ? (
                           <div>
-                            <div className="text-slate-700">{lead.decisionMaker}</div>
+                            <div className="text-gray-700">{lead.decisionMaker}</div>
                             {lead.decisionMakerRole && <div className="text-xs text-gray-500">{lead.decisionMakerRole}</div>}
                           </div>
                         ) : <span className="text-gray-600">—</span>}
                       </td>
                       <td className="px-4 py-3 text-gray-300">{lead._count.outreaches}</td>
+                      <td className="px-4 py-3">
+                        {processingLeads.has(lead.id) ? (
+                          <div className="flex items-center gap-1.5">
+                            <Loader2 className="w-3 h-3 animate-spin text-blue-500" />
+                            <span className="text-xs text-gray-500">Analyzing...</span>
+                          </div>
+                        ) : completedLeads.has(lead.id) ? (
+                          <div className="flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                            <span className="text-xs text-emerald-600">Done</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={e => { e.stopPropagation(); handleAudit(lead) }}
+                              disabled={!lead.business.website || processingLeads.has(lead.id)}
+                              className="inline-flex items-center gap-1 h-7 px-2 text-xs font-medium rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
+                              title={!lead.business.website ? 'No website' : 'Audit website'}
+                            >
+                              {processingLeads.has(lead.id) ? <Loader2 className="w-3 h-3 animate-spin" /> : <Globe2 className="w-3 h-3" />}
+                              Audit
+                            </button>
+                            <button
+                              onClick={e => { e.stopPropagation(); handleQualify(lead) }}
+                              disabled={processingLeads.has(lead.id)}
+                              className="inline-flex items-center gap-1 h-7 px-2 text-xs font-medium rounded-md bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
+                              title="Qualify lead with AI"
+                            >
+                              {processingLeads.has(lead.id) ? <Loader2 className="w-3 h-3 animate-spin" /> : <Target className="w-3 h-3" />}
+                              Qualify
+                            </button>
+                          </div>
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-gray-500 text-xs">{format(new Date(lead.updatedAt), 'MMM d')}</td>
                       <td className="px-4 py-3"><ChevronRight className="w-4 h-4 text-gray-600" /></td>
                     </tr>
@@ -159,24 +255,32 @@ export function LeadsView() {
                   {stageLeads.map(lead => (
                     <Card
                       key={lead.id}
-                      className="border-slate-200 cursor-pointer hover:shadow-sm transition-shadow"
+                      className="border-gray-200 cursor-pointer hover:shadow-md transition-shadow"
                       onClick={() => setView('lead-detail', lead.id)}
                     >
                       <CardContent className="p-3">
                         <p className="text-sm font-medium text-gray-900 truncate">{lead.business.name}</p>
                         {lead.business.industry && <p className="text-xs text-gray-500 mt-1">{lead.business.industry}</p>}
                         {lead.decisionMaker && <p className="text-xs text-gray-400 mt-1.5">{lead.decisionMaker}</p>}
-                        <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-50">
-                          <Mail className="w-3 h-3 text-gray-600" />
+                        <div className="flex items-center gap-1 mt-2 pt-2 border-t border-gray-100">
+                          <button onClick={e => { e.stopPropagation(); handleAudit(lead) }} className="p-1 rounded hover:bg-blue-50 transition-all duration-150" title="Audit" disabled={!lead.business.website || processingLeads.has(lead.id)}>
+                            {processingLeads.has(lead.id) ? <Loader2 className="w-3.5 h-3.5 text-blue-500 animate-spin" /> : <Globe2 className="w-3.5 h-3.5 text-blue-500" />}
+                          </button>
+                          <button onClick={e => { e.stopPropagation(); handleQualify(lead) }} className="p-1 rounded hover:bg-emerald-50 transition-all duration-150" title="Qualify" disabled={processingLeads.has(lead.id)}>
+                            {processingLeads.has(lead.id) ? <Loader2 className="w-3.5 h-3.5 text-emerald-500 animate-spin" /> : <Target className="w-3.5 h-3.5 text-emerald-500" />}
+                          </button>
+                          {completedLeads.has(lead.id) && <CheckCircle2 className="w-3 h-3 text-emerald-500" />}
+                          <div className="flex-1" />
+                          <Mail className="w-3 h-3 text-gray-400" />
                           <span className="text-xs text-gray-500">{lead._count.outreaches}</span>
-                          <Calendar className="w-3 h-3 text-gray-600 ml-2" />
+                          <Calendar className="w-3 h-3 text-gray-400 ml-1" />
                           <span className="text-xs text-gray-500">{lead._count.meetings}</span>
                         </div>
                       </CardContent>
                     </Card>
                   ))}
                   {stageLeads.length === 0 && (
-                    <div className="border-2 border-dashed border-slate-100 rounded-xl p-4 text-center">
+                    <div className="border-2 border-dashed border-gray-100 rounded-xl p-4 text-center">
                       <p className="text-xs text-gray-600">No leads</p>
                     </div>
                   )}
@@ -229,7 +333,7 @@ function AddLeadDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpe
           <div><Label>Country</Label><Input className="mt-1" value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))} placeholder="USA" /></div>
           <div><Label>Phone</Label><Input className="mt-1" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="+1 555-0123" /></div>
           <div><Label>Email</Label><Input className="mt-1" type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="info@company.com" /></div>
-          <div className="col-span-2 border-t border-slate-100 pt-3 mt-1"><p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Decision Maker</p></div>
+          <div className="col-span-2 border-t border-gray-100 pt-3 mt-1"><p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Decision Maker</p></div>
           <div><Label>Name</Label><Input className="mt-1" value={form.decisionMaker} onChange={e => setForm(f => ({ ...f, decisionMaker: e.target.value }))} placeholder="John Smith" /></div>
           <div><Label>Role</Label><Input className="mt-1" value={form.decisionMakerRole} onChange={e => setForm(f => ({ ...f, decisionMakerRole: e.target.value }))} placeholder="CEO" /></div>
           <div className="col-span-2"><Label>Email</Label><Input className="mt-1" type="email" value={form.decisionMakerEmail} onChange={e => setForm(f => ({ ...f, decisionMakerEmail: e.target.value }))} placeholder="john@company.com" /></div>
