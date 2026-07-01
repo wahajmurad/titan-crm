@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { motion, AnimatePresence, useSpring, useTransform } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useAppStore } from '@/lib/store'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -239,20 +239,24 @@ function formatDate(iso: string | undefined): string {
 /* ──────────── animated counter hook ──────────── */
 
 function useAnimatedScore(target: number, duration = 1200) {
-  const spring = useSpring(target, { duration, bounce: 0 })
-  const display = useTransform(spring, (v) => Math.round(v))
   const ref = useRef<HTMLSpanElement>(null)
 
   useEffect(() => {
-    const unsub = display.on('change', (v) => {
-      if (ref.current) ref.current.textContent = String(v)
-    })
-    return unsub
-  }, [display])
+    const el = ref.current
+    if (!el) return
 
-  useEffect(() => {
-    spring.set(target)
-  }, [spring, target])
+    let start = 0
+    const startTime = performance.now()
+    const animate = (now: number) => {
+      const elapsed = now - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      const current = Math.round(eased * target)
+      el.textContent = String(current)
+      if (progress < 1) requestAnimationFrame(animate)
+    }
+    requestAnimationFrame(animate)
+  }, [target, duration])
 
   return ref
 }
@@ -878,9 +882,18 @@ export function AuditView() {
                     <div className="flex-1">
                       <p className="text-sm font-semibold text-red-800">Analysis Error</p>
                       <p className="text-sm text-red-600 mt-0.5">{error}</p>
-                      <Button variant="ghost" size="sm" className="mt-2 text-red-700 hover:text-red-900 hover:bg-red-100/50" onClick={() => setError(null)}>
-                        Dismiss
-                      </Button>
+                      <div className="flex items-center gap-2 mt-3">
+                        <Button
+                          size="sm"
+                          className="h-8 px-3 rounded-lg bg-red-600 text-white hover:bg-red-700 text-xs font-semibold"
+                          onClick={() => { setError(null); handleAnalyze() }}
+                        >
+                          <RefreshCw className="mr-1.5 h-3 w-3" />Retry
+                        </Button>
+                        <Button variant="ghost" size="sm" className="h-8 text-red-600 hover:text-red-800 hover:bg-red-100/50 text-xs" onClick={() => setError(null)}>
+                          Dismiss
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

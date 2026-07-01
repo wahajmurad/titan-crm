@@ -469,7 +469,10 @@ export function StrategyAssistantView() {
         }),
       })
 
-      if (!res.ok) throw new Error('Failed to get AI response')
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({ error: `Request failed (${res.status})` }))
+        throw new Error(errData.error || `AI request failed (${res.status}). Please try again in 30 seconds.`)
+      }
 
       const data = await res.json()
       const content = data.response || data.message || data.content || ''
