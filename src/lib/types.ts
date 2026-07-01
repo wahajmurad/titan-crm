@@ -117,3 +117,108 @@ export const PROMPT_CATEGORIES = [
   'campaign_analysis',
 ] as const
 export type PromptCategory = typeof PROMPT_CATEGORIES[number]
+
+// ── Workflow Types ──
+export type WorkflowStatus = 'DRAFT' | 'ACTIVE' | 'PAUSED' | 'ARCHIVED'
+export type WorkflowRunStatus = 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
+export type TriggerType = 'manual' | 'schedule' | 'webhook' | 'event'
+
+export interface WorkflowNode {
+  id: string
+  type: string
+  position: { x: number; y: number }
+  data: Record<string, unknown>
+}
+
+export interface WorkflowEdge {
+  id: string
+  source: string
+  target: string
+  sourceHandle?: string
+  targetHandle?: string
+  label?: string
+}
+
+// ── AI Agent Types ──
+export type AgentType = 
+  | 'lead_discovery'
+  | 'research'
+  | 'website_intel'
+  | 'business_intel'
+  | 'industry_expert'
+  | 'solution_architect'
+  | 'offer_generator'
+  | 'personalization'
+  | 'campaign_strategy'
+  | 'learning'
+
+export interface AgentConfig {
+  id: AgentType
+  name: string
+  description: string
+  systemPrompt: string
+  inputSchema: string[]
+  outputFormat: string
+  temperature: number
+  maxTokens: number
+}
+
+// ── Company Intel ──
+export interface CompanyIntelReport {
+  businessOverview: string
+  coreServices: string
+  idealCustomers: string
+  uniqueSellingProp: string
+  strengths: string[]
+  weaknesses: string[]
+  painPoints: string[]
+  growthOpportunities: string[]
+  automationOpportunities: string[]
+  aiOpportunities: string[]
+  trustSignals: string[]
+  websiteQuality: string
+  estimatedRevenue: string
+  recommendedOutreachStyle: string
+  personalizationNotes: string
+  techStack?: string[]
+  competitors?: string[]
+  socialProfiles?: Record<string, string>
+  teamInfo?: { name: string; role: string; email?: string }[]
+}
+
+// ── Personalization Types ──
+export interface PersonalizationMetrics {
+  overallScore: number
+  specificityScore: number
+  relevanceScore: number
+  valueScore: number
+  toneScore: number
+  ctaScore: number
+}
+
+// ── AI Memory Types ──
+export type MemoryCategory = 'lead_behavior' | 'email_performance' | 'industry_insight' | 'user_preference' | 'system_learning'
+
+// ── Command Center Types ──
+export type CommandAction = 
+  | 'discover_leads'
+  | 'audit_website'
+  | 'qualify_lead'
+  | 'generate_email'
+  | 'create_campaign'
+  | 'run_analysis'
+  | 'generate_intel'
+  | 'create_workflow'
+  | 'generate_report'
+  | 'custom'
+
+export interface CommandResult {
+  success: boolean
+  message: string
+  action: CommandAction
+  data?: Record<string, unknown>
+  steps?: string[]
+}
+
+// ── Asset Types ──
+export type AssetType = 'pdf_audit_report' | 'html_demo' | 'growth_blueprint' | 'roi_calculation' | 'sales_pitch'

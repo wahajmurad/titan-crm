@@ -5,7 +5,8 @@ import { cn } from '@/lib/utils'
 import {
   LayoutDashboard, Search, Globe2, Users, Target, Mail, Inbox,
   Calendar, Brain, BookOpen, UserCog, Settings, LogOut,
-  ChevronLeft, ChevronRight, Zap, GraduationCap, Plug, Lightbulb
+  ChevronLeft, ChevronRight, Zap, GraduationCap, Plug, Lightbulb,
+  Terminal, Workflow, Sparkles
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
@@ -18,6 +19,7 @@ const NAV_SECTIONS = [
     label: 'Main',
     items: [
       { view: 'dashboard' as AppView, label: 'Dashboard', icon: LayoutDashboard },
+      { view: 'command-center' as AppView, label: 'AI Command Center', icon: Terminal },
       { view: 'discovery' as AppView, label: 'Lead Discovery', icon: Search },
       { view: 'audit' as AppView, label: 'Website Audit', icon: Globe2 },
       { view: 'leads' as AppView, label: 'Leads', icon: Users },
@@ -35,6 +37,7 @@ const NAV_SECTIONS = [
     label: 'Intelligence',
     items: [
       { view: 'ai-assistant' as AppView, label: 'AI Assistant', icon: Brain },
+      { view: 'ai-agents' as AppView, label: 'AI Agents', icon: Sparkles },
       { view: 'industry-expert' as AppView, label: 'Industry Expert', icon: GraduationCap },
       { view: 'strategy-assistant' as AppView, label: 'Strategy AI', icon: Lightbulb },
       { view: 'prompts' as AppView, label: 'Prompt Library', icon: BookOpen },
@@ -43,6 +46,7 @@ const NAV_SECTIONS = [
   {
     label: 'Operations',
     items: [
+      { view: 'workflows' as AppView, label: 'Workflow Builder', icon: Workflow },
       { view: 'meetings' as AppView, label: 'Meetings', icon: Calendar },
       { view: 'lead-providers' as AppView, label: 'Lead Providers', icon: Plug },
       { view: 'team' as AppView, label: 'Team', icon: UserCog },
@@ -65,7 +69,7 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
       <motion.aside
         animate={{ width: sidebarOpen ? 260 : 72 }}
         transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-        className="fixed left-0 top-0 h-screen bg-white border-r border-gray-200/60 z-40 flex flex-col overflow-hidden"
+        className="fixed left-0 top-0 h-screen bg-white dark:bg-gray-950 border-r border-gray-200/60 dark:border-gray-800 z-40 flex flex-col overflow-hidden"
       >
         {/* Logo */}
         <div className="h-14 flex items-center px-4 shrink-0">
@@ -86,7 +90,7 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
                   transition={{ duration: 0.2, ease: 'easeOut' }}
                   className="flex items-center gap-1.5 whitespace-nowrap"
                 >
-                  <span className="font-bold text-[#0F172A] text-sm tracking-tight">TITAN</span>
+                  <span className="font-bold text-[#0F172A] dark:text-gray-100 text-sm tracking-tight">TITAN</span>
                   <span className="text-[10px] bg-gradient-to-r from-[#2563EB] to-[#3B82F6] text-white font-bold rounded-md px-1.5 py-0.5 leading-none shadow-sm shadow-blue-500/20">AI</span>
                 </motion.div>
               )}
@@ -215,8 +219,8 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
                   transition={{ duration: 0.15 }}
                   className="flex-1 min-w-0"
                 >
-                  <p className="text-sm font-medium text-[#0F172A] truncate">{userName}</p>
-                  <p className="text-[11px] text-[#94A3B8] truncate">{userRole}</p>
+                  <p className="text-sm font-medium text-[#0F172A] dark:text-gray-100 truncate">{userName}</p>
+                  <p className="text-[11px] text-[#94A3B8] dark:text-gray-500 truncate">{userRole}</p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -241,7 +245,7 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
           onClick={() => setSidebarOpen(!sidebarOpen)}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="absolute -right-3.5 top-16 w-7 h-7 bg-white border border-gray-200/80 rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow duration-200"
+          className="absolute -right-3.5 top-16 w-7 h-7 bg-white dark:bg-gray-800 border border-gray-200/80 dark:border-gray-700 rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow duration-200"
         >
           <motion.div
             animate={{ rotate: sidebarOpen ? 0 : 180 }}

@@ -183,15 +183,15 @@ export function CampaignsView() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 dark:bg-gray-950 dark:text-gray-100">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
             <Target className="w-5 h-5 text-blue-400" />
             Campaigns
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
             {filtered.length} campaign{filtered.length !== 1 ? 's' : ''} in pipeline
           </p>
         </div>
@@ -202,7 +202,7 @@ export function CampaignsView() {
               placeholder="Search campaigns..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-8 w-52 h-8 text-sm bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30"
+              className="pl-8 w-52 h-8 text-sm bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus-visible:ring-blue-500/30"
             />
           </div>
           <CreateCampaignDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={refresh} />
@@ -213,14 +213,14 @@ export function CampaignsView() {
       {!loading && filtered.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {STAT_ITEMS.map(s => (
-            <Card key={s.key} className="bg-white border-gray-200">
+            <Card key={s.key} className="glass-card bg-white dark:bg-gray-900/80 border-gray-200 dark:border-gray-700/50">
               <CardContent className="p-3 flex items-center gap-3">
-                <div className={cn('p-2 rounded-lg bg-gray-100/80', s.color)}>
+                <div className={cn('p-2 rounded-lg bg-gray-100/80 dark:bg-gray-800/80', s.color)}>
                   <s.icon className="w-4 h-4" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400">{s.label}</p>
-                  <p className="text-lg font-semibold text-gray-900">{totals[s.key]}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">{s.label}</p>
+                  <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">{totals[s.key]}</p>
                 </div>
               </CardContent>
             </Card>
@@ -230,28 +230,28 @@ export function CampaignsView() {
 
       {/* Status Tabs */}
       <Tabs value={statusTab} onValueChange={setStatusTab}>
-        <TabsList className="bg-white border border-gray-200">
-          <TabsTrigger value="ALL" className="data-[state=active]:bg-gray-100 data-[state=active]:text-gray-900 text-gray-500 text-xs">
+        <TabsList className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+          <TabsTrigger value="ALL" className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:text-gray-900 dark:data-[state=active]:text-gray-100 text-gray-500 dark:text-gray-400 text-xs">
             All
-            <Badge variant="secondary" className="ml-1.5 h-4 min-w-4 px-1 text-[10px] bg-gray-100 text-gray-500">
+            <Badge variant="secondary" className="ml-1.5 h-4 min-w-4 px-1 text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
               {campaigns.length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="ACTIVE" className="data-[state=active]:bg-emerald-500/15 data-[state=active]:text-emerald-400 text-gray-500 text-xs">
+          <TabsTrigger value="ACTIVE" className="data-[state=active]:bg-emerald-500/15 data-[state=active]:text-emerald-400 text-gray-500 dark:text-gray-400 text-xs">
             Active
-            <Badge variant="secondary" className="ml-1.5 h-4 min-w-4 px-1 text-[10px] bg-gray-100 text-gray-500">
+            <Badge variant="secondary" className="ml-1.5 h-4 min-w-4 px-1 text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
               {campaigns.filter(c => c.status === 'ACTIVE').length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="PAUSED" className="data-[state=active]:bg-amber-500/15 data-[state=active]:text-amber-400 text-gray-500 text-xs">
+          <TabsTrigger value="PAUSED" className="data-[state=active]:bg-amber-500/15 data-[state=active]:text-amber-400 text-gray-500 dark:text-gray-400 text-xs">
             Paused
-            <Badge variant="secondary" className="ml-1.5 h-4 min-w-4 px-1 text-[10px] bg-gray-100 text-gray-500">
+            <Badge variant="secondary" className="ml-1.5 h-4 min-w-4 px-1 text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
               {campaigns.filter(c => c.status === 'PAUSED').length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="COMPLETED" className="data-[state=active]:bg-gray-200 data-[state=active]:text-gray-600 text-gray-500 text-xs">
+          <TabsTrigger value="COMPLETED" className="data-[state=active]:bg-gray-200 dark:data-[state=active]:bg-gray-800 data-[state=active]:text-gray-600 dark:data-[state=active]:text-gray-300 text-gray-500 dark:text-gray-400 text-xs">
             Completed
-            <Badge variant="secondary" className="ml-1.5 h-4 min-w-4 px-1 text-[10px] bg-gray-100 text-gray-500">
+            <Badge variant="secondary" className="ml-1.5 h-4 min-w-4 px-1 text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
               {campaigns.filter(c => c.status === 'COMPLETED').length}
             </Badge>
           </TabsTrigger>
@@ -262,18 +262,18 @@ export function CampaignsView() {
       {loading ? (
         <div className="grid gap-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i} className="bg-white border-gray-200">
+            <Card key={i} className="bg-white dark:bg-gray-900/80 border-gray-200 dark:border-gray-700/50">
               <CardContent className="p-5">
                 <div className="flex items-start justify-between">
                   <div className="space-y-2 flex-1">
-                    <Skeleton className="h-5 w-48 bg-gray-100" />
-                    <Skeleton className="h-3 w-32 bg-gray-100" />
+                    <Skeleton className="h-5 w-48 bg-gray-100 dark:bg-gray-800" />
+                    <Skeleton className="h-3 w-32 bg-gray-100 dark:bg-gray-800" />
                   </div>
-                  <Skeleton className="h-8 w-24 bg-gray-100" />
+                  <Skeleton className="h-8 w-24 bg-gray-100 dark:bg-gray-800" />
                 </div>
                 <div className="flex gap-4 mt-4">
                   {Array.from({ length: 5 }).map((_, j) => (
-                    <Skeleton key={j} className="h-10 flex-1 bg-gray-100" />
+                    <Skeleton key={j} className="h-10 flex-1 bg-gray-100 dark:bg-gray-800" />
                   ))}
                 </div>
               </CardContent>
@@ -281,14 +281,14 @@ export function CampaignsView() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <Card className="bg-white border-gray-200 border-dashed">
+        <Card className="bg-white dark:bg-gray-900/80 border-gray-200 dark:border-gray-700/50 border-dashed">
           <CardContent className="p-12 text-center">
-            <FolderOpen className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 font-medium">No campaigns found</p>
-            <p className="text-sm text-gray-400 mt-1">Create your first campaign to start outbound outreach at scale.</p>
+            <FolderOpen className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+            <p className="text-gray-500 dark:text-gray-400 font-medium">No campaigns found</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Create your first campaign to start outbound outreach at scale.</p>
             <Button
               variant="outline"
-              className="mt-4 border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+              className="mt-4 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900"
               onClick={() => setCreateOpen(true)}
             >
               <Plus className="w-3.5 h-3.5 mr-1.5" />New Campaign
@@ -304,7 +304,7 @@ export function CampaignsView() {
             return (
               <Card
                 key={campaign.id}
-                className="bg-white border-gray-200 hover:border-gray-200 transition-colors cursor-pointer group"
+                className="bg-white dark:bg-gray-900/80 border-gray-200 dark:border-gray-700/50 hover:border-gray-200 dark:hover:border-gray-600 transition-colors cursor-pointer group"
                 onClick={() => openDetail(campaign)}
               >
                 <CardContent className="p-5">
@@ -312,24 +312,24 @@ export function CampaignsView() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2.5">
-                        <h3 className="text-sm font-semibold text-gray-900 truncate">{campaign.name}</h3>
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{campaign.name}</h3>
                         <Badge variant="outline" className={cn('text-[10px] font-medium shrink-0', statusCfg.color)}>
                           <span className={cn('w-1.5 h-1.5 rounded-full mr-1.5', statusCfg.dot)} />
                           {statusCfg.label}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-400">
+                      <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-400 dark:text-gray-500">
                         {campaign.industry && <span>{campaign.industry}</span>}
                         {campaign.targetCity && (
                           <>
-                            <span className="text-slate-700">•</span>
+                            <span className="text-slate-700 dark:text-slate-500">•</span>
                             <span>{campaign.targetCity}</span>
                           </>
                         )}
                         {campaign.serviceOffering && (
                           <>
-                            <span className="text-slate-700">•</span>
-                            <span className="text-gray-500">{campaign.serviceOffering}</span>
+                            <span className="text-slate-700 dark:text-slate-500">•</span>
+                            <span className="text-gray-500 dark:text-gray-400">{campaign.serviceOffering}</span>
                           </>
                         )}
                       </div>
@@ -341,7 +341,7 @@ export function CampaignsView() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 w-7 p-0 text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+                          className="h-7 w-7 p-0 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
                           onClick={(e) => { e.stopPropagation(); handleToggleStatus(campaign) }}
                           title={campaign.status === 'ACTIVE' ? 'Pause campaign' : 'Resume campaign'}
                         >
@@ -352,32 +352,32 @@ export function CampaignsView() {
                       {/* Dropdown actions */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-500 hover:text-gray-900 hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 opacity-0 group-hover:opacity-100 transition-opacity">
                             <MoreHorizontal className="w-3.5 h-3.5" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-white border-gray-200">
-                          <DropdownMenuItem onClick={() => openDetail(campaign)} className="text-gray-600 focus:bg-gray-100 focus:text-gray-900">
+                        <DropdownMenuContent align="end" className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                          <DropdownMenuItem onClick={() => openDetail(campaign)} className="text-gray-600 dark:text-gray-300 focus:bg-gray-100 dark:focus:bg-gray-700 focus:text-gray-900 dark:focus:text-gray-100">
                             <Eye className="w-3.5 h-3.5 mr-2" />View Details
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={(e) => openEdit(campaign, e)}
-                            className="text-gray-600 focus:bg-gray-100 focus:text-gray-900"
+                            className="text-gray-600 dark:text-gray-300 focus:bg-gray-100 dark:focus:bg-gray-700 focus:text-gray-900 dark:focus:text-gray-100"
                           >
                             <Pencil className="w-3.5 h-3.5 mr-2" />Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={(e) => { e.stopPropagation(); setView('leads') }}
-                            className="text-gray-600 focus:bg-gray-100 focus:text-gray-900"
+                            className="text-gray-600 dark:text-gray-300 focus:bg-gray-100 dark:focus:bg-gray-700 focus:text-gray-900 dark:focus:text-gray-100"
                           >
                             <UsersRound className="w-3.5 h-3.5 mr-2" />View Leads
                           </DropdownMenuItem>
                           {campaign.status !== 'COMPLETED' && (
                             <>
-                              <DropdownMenuSeparator className="bg-gray-100" />
+                              <DropdownMenuSeparator className="bg-gray-100 dark:bg-gray-700" />
                               <DropdownMenuItem
                                 onClick={(e) => { e.stopPropagation(); handleToggleStatus(campaign) }}
-                                className="text-gray-600 focus:bg-gray-100 focus:text-gray-900"
+                                className="text-gray-600 dark:text-gray-300 focus:bg-gray-100 dark:focus:bg-gray-700 focus:text-gray-900 dark:focus:text-gray-100"
                               >
                                 {campaign.status === 'ACTIVE' ? (
                                   <><Pause className="w-3.5 h-3.5 mr-2" />Pause</>

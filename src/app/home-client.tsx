@@ -9,6 +9,8 @@ import { LoginView } from '@/components/titan/login-view'
 import { Toaster } from 'sonner'
 import { cn } from '@/lib/utils'
 import { Bell, Zap, Search, Command } from 'lucide-react'
+import { useTheme } from 'next-themes'
+import { Moon, Sun } from 'lucide-react'
 import { CommandPalette } from '@/components/titan/command-palette'
 import { NotificationBell } from '@/components/titan/notification-bell'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -30,6 +32,9 @@ const SettingsView = dynamic(() => import('@/components/titan/settings-view').th
 const IndustryExpertView = dynamic(() => import('@/components/titan/industry-expert-view').then(m => ({ default: m.IndustryExpertView })), { loading: () => <PageSkeleton /> })
 const StrategyAssistantView = dynamic(() => import('@/components/titan/strategy-assistant-view').then(m => ({ default: m.StrategyAssistantView })), { loading: () => <PageSkeleton /> })
 const LeadProvidersView = dynamic(() => import('@/components/titan/lead-providers-view').then(m => ({ default: m.LeadProvidersView })), { loading: () => <PageSkeleton /> })
+const CommandCenterView = dynamic(() => import('@/components/titan/command-center-view').then(m => ({ default: m.CommandCenterView })), { loading: () => <PageSkeleton /> })
+const WorkflowBuilderView = dynamic(() => import('@/components/titan/workflow-builder-view').then(m => ({ default: m.WorkflowBuilderView })), { loading: () => <PageSkeleton /> })
+const AIAgentsView = dynamic(() => import('@/components/titan/ai-agents-view').then(m => ({ default: m.AIAgentsView })), { loading: () => <PageSkeleton /> })
 
 function PageSkeleton() {
   return (
@@ -55,6 +60,7 @@ export default function HomeClient() {
   const [state, setState] = useState<'loading' | 'setup' | 'login' | 'app'>('loading')
   const [user, setUser] = useState<UserData | null>(null)
   const [commandOpen, setCommandOpen] = useState(false)
+  const { theme, setTheme } = useTheme()
 
   useEffect(() => {
     let cancelled = false
@@ -159,6 +165,9 @@ export default function HomeClient() {
       case 'industry-expert': return <IndustryExpertView />
       case 'strategy-assistant': return <StrategyAssistantView />
       case 'lead-providers': return <LeadProvidersView />
+      case 'command-center': return <CommandCenterView />
+      case 'workflows': return <WorkflowBuilderView />
+      case 'ai-agents': return <AIAgentsView />
       case 'prompts': return <PromptsView />
       case 'team': return <TeamView />
       case 'settings': return <SettingsView />
@@ -169,7 +178,7 @@ export default function HomeClient() {
   const viewLabel = currentView.replace(/-/g, ' ')
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] font-sans antialiased">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-gray-950 text-[#0F172A] dark:text-gray-100 font-sans antialiased">
       <Sidebar userName={user.name} userRole={user.role} onLogout={handleLogout} />
       <motion.main
         animate={{ marginLeft: sidebarOpen ? 260 : 72 }}
@@ -177,9 +186,9 @@ export default function HomeClient() {
         className="min-h-screen"
       >
         {/* Premium Header */}
-        <header className="h-14 bg-white/80 backdrop-blur-xl border-b border-gray-200/60 flex items-center justify-between px-6 sticky top-0 z-30">
+        <header className="h-14 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200/60 dark:border-gray-700/40 flex items-center justify-between px-6 sticky top-0 z-30">
           <div className="flex items-center gap-3">
-            <h1 className="text-sm font-semibold text-[#0F172A] capitalize">{viewLabel}</h1>
+            <h1 className="text-sm font-semibold text-[#0F172A] dark:text-gray-100 capitalize">{viewLabel}</h1>
             {currentView === 'dashboard' && (
               <span className="text-sm text-[#94A3B8] hidden sm:inline">Welcome back, {user.name.split(' ')[0]}</span>
             )}
@@ -196,6 +205,14 @@ export default function HomeClient() {
             {/* Search button */}
             <button className="p-2 rounded-xl hover:bg-gray-100 transition-colors duration-150">
               <Search className="w-4 h-4 text-[#475569]" />
+            </button>
+            {/* Theme toggle */}
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-150"
+            >
+              <Sun className="w-4 h-4 text-gray-500 hidden dark:block" />
+              <Moon className="w-4 h-4 text-gray-500 block dark:hidden" />
             </button>
             {/* Notification bell */}
             <NotificationBell />

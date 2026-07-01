@@ -17,26 +17,51 @@ export type AppView =
   | 'prompts'
   | 'team'
   | 'settings'
+  | 'workflows'        // NEW
+  | 'command-center'   // NEW
+  | 'ai-agents'        // NEW
 
 interface AppState {
   currentView: AppView
   selectedLeadId: string | null
   selectedCampaignId: string | null
+  selectedWorkflowId: string | null
   sidebarOpen: boolean
   pendingAiQuery: string | null
-  setView: (view: AppView, leadId?: string | null, campaignId?: string | null) => void
+  commandCenterOpen: boolean
+  // Live dashboard data
+  liveStats: {
+    leadsFound: number
+    leadsQualified: number
+    auditsCompleted: number
+    emailsSent: number
+    replyRate: number
+    meetingsBooked: number
+    revenuePotential: number
+    activeCampaigns: number
+  } | null
+  setView: (view: AppView, leadId?: string | null, campaignId?: string | null, workflowId?: string | null) => void
   setSidebarOpen: (open: boolean) => void
   setPendingAiQuery: (query: string | null) => void
+  setCommandCenterOpen: (open: boolean) => void
+  updateLiveStats: (stats: Partial<AppState['liveStats']>) => void
 }
 
 export const useAppStore = create<AppState>((set) => ({
   currentView: 'dashboard',
   selectedLeadId: null,
   selectedCampaignId: null,
+  selectedWorkflowId: null,
   sidebarOpen: true,
   pendingAiQuery: null,
-  setView: (view, leadId = null, campaignId = null) =>
-    set({ currentView: view, selectedLeadId: leadId, selectedCampaignId: campaignId }),
+  commandCenterOpen: false,
+  liveStats: null,
+  setView: (view, leadId = null, campaignId = null, workflowId = null) =>
+    set({ currentView: view, selectedLeadId: leadId, selectedCampaignId: campaignId, selectedWorkflowId: workflowId }),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
   setPendingAiQuery: (query) => set({ pendingAiQuery: query }),
+  setCommandCenterOpen: (open) => set({ commandCenterOpen: open }),
+  updateLiveStats: (stats) => set((state) => ({
+    liveStats: state.liveStats ? { ...state.liveStats, ...stats } : stats as AppState['liveStats']
+  })),
 }))

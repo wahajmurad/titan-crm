@@ -60,6 +60,8 @@ model Business {
 
   lead   Lead?
   audit  WebsiteAudit?
+  intel  CompanyIntel?
+  assets GeneratedAsset[]
 
   @@index([industry])
   @@index([country])
@@ -187,6 +189,7 @@ model Campaign {
   ownerId   String
   leads     Lead[]
   outreaches Outreach[]
+  analytics  CampaignAnalytics[]
 
   @@index([ownerId])
   @@index([status])
@@ -287,4 +290,147 @@ model Notification {
 
   @@index([userId, read])
   @@index([createdAt])
+}
+
+model Workflow {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  status      String   @default("DRAFT") // DRAFT, ACTIVE, PAUSED, ARCHIVED
+  triggerType String?  // manual, schedule, webhook, event
+  triggerConfig String? // JSON config for trigger
+  nodesJson   String?  // JSON - React Flow nodes
+  edgesJson   String?  // JSON - React Flow edges
+  version     Int      @default(1)
+  lastRunAt   DateTime?
+  runCount    Int      @default(0)
+  errorCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  runs     WorkflowRun[]
+  
+  @@index([status])
+}
+
+model WorkflowRun {
+  id           String   @id @default(uuid())
+  workflowId   String
+  status       String   @default("RUNNING") // RUNNING, COMPLETED, FAILED, CANCELLED
+  startedAt    DateTime @default(now())
+  completedAt  DateTime?
+  nodeId       String?  // current/failed node
+  inputData    String?  // JSON input
+  outputData   String?  // JSON output
+  errorMessage String?
+  duration     Int?     // ms
+  workflow     Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@index([workflowId])
+  @@index([status])
+}
+
+model CompanyIntel {
+  id                      String   @id @default(uuid())
+  businessId              String   @unique
+  businessOverview        String?
+  coreServices            String?
+  idealCustomers          String?
+  uniqueSellingProp       String?
+  strengths               String?  // JSON array
+  weaknesses              String?  // JSON array
+  painPoints              String?  // JSON array
+  growthOpportunities     String?  // JSON array
+  automationOpportunities String?  // JSON array
+  aiOpportunities         String?  // JSON array
+  trustSignals            String?  // JSON array
+  websiteQuality          String?
+  estimatedRevenue        String?
+  recommendedOutreachStyle String?
+  personalizationNotes    String?
+  techStack               String?  // JSON array
+  competitors             String?  // JSON array
+  socialProfiles          String?  // JSON
+  teamInfo                String?  // JSON
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+model PersonalizationScore {
+  id              String   @id @default(uuid())
+  businessId      String
+  emailId         String?
+  overallScore    Int      @default(0) // 0-100
+  specificityScore Int     @default(0)
+  relevanceScore  Int      @default(0)
+  valueScore      Int      @default(0)
+  toneScore       Int      @default(0)
+  ctaScore        Int      @default(0)
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  @@index([businessId])
+  @@index([emailId])
+}
+
+model AIMemory {
+  id          String   @id @default(uuid())
+  userId      String?
+  businessId  String?
+  category    String   // lead_behavior, email_performance, industry_insight, user_preference, system_learning
+  key         String
+  value       String   // JSON
+  confidence  Float    @default(0.5)
+  source      String?  // manual, auto, system
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([category, key])
+  @@index([userId])
+  @@index([businessId])
+  @@index([category])
+}
+
+model CampaignAnalytics {
+  id             String   @id @default(uuid())
+  campaignId     String
+  date           String   // YYYY-MM-DD
+  leadsAdded     Int      @default(0)
+  emailsSent     Int      @default(0)
+  emailsOpened   Int      @default(0)
+  emailsReplied  Int      @default(0)
+  emailsBounced  Int      @default(0)
+  meetingsBooked Int      @default(0)
+  dealsWon       Int      @default(0)
+  revenue        Float    @default(0)
+  createdAt      DateTime @default(now())
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, date])
+  @@index([campaignId])
+  @@index([date])
+}
+
+model GeneratedAsset {
+  id          String   @id @default(uuid())
+  businessId  String?
+  leadId      String?
+  type        String   // pdf_audit_report, html_demo, growth_blueprint, roi_calculation, sales_pitch
+  title       String
+  content     String   // HTML/JSON content
+  filePath    String?  // path to stored file
+  metadata    String?  // JSON
+  createdAt   DateTime @default(now())
+
+  business Business? @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([leadId])
+  @@index([type])
 }

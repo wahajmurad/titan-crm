@@ -498,11 +498,11 @@ export function PromptsView() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="space-y-4">
+      <div className="space-y-4 dark:text-gray-100">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">Prompt Library</h1>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Prompt Library</h1>
             <p className="text-sm text-gray-500 mt-0.5">
               Manage AI prompt templates for your workflows
             </p>
