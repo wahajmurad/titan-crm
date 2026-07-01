@@ -175,3 +175,64 @@ export async function aiQualifyLead(context: {
     },
   ])
 }
+
+export async function aiGenerateSolutions(context: {
+  companyName: string
+  industry?: string
+  website?: string
+  problems?: string
+  auditFindings?: string
+  opportunities?: string
+}): Promise<string> {
+  const { companyName, industry, website, problems, auditFindings, opportunities } = context
+  return aiChatCompletions([
+    {
+      role: 'system',
+      content: 'You are an AI Solution Architect who converts business problems into AI solutions. For each problem, recommend a specific AI solution with implementation approach, business value, and estimated ROI. Always respond in valid JSON format. Return JSON array: [{"problem": "...", "solution": "...", "implementation": "...", "businessValue": "...", "estimatedROI": "...", "priority": "High|Medium|Low", "category": "AI Chatbot|AI Automation|AI Analytics|AI Lead Gen|Voice AI|AI Scheduling|Other"}]. Return ONLY valid JSON, no markdown.',
+    },
+    {
+      role: 'user',
+      content: `Generate AI solutions for:\nCompany: ${companyName}\nIndustry: ${industry || 'N/A'}\nWebsite: ${website || 'N/A'}\nProblems: ${problems || 'N/A'}\nAudit Findings: ${auditFindings || 'N/A'}\nOpportunities: ${opportunities || 'N/A'}\n\nProvide 4-6 specific, actionable AI solutions.`,
+    },
+  ], { maxTokens: 4000, temperature: 0.7 })
+}
+
+export async function aiGenerateOffer(context: {
+  companyName: string
+  industry?: string
+  decisionMaker?: string
+  solutions?: string
+  auditFindings?: string
+  estimatedDealSize?: string
+}): Promise<string> {
+  const { companyName, industry, decisionMaker, solutions, auditFindings, estimatedDealSize } = context
+  return aiChatCompletions([
+    {
+      role: 'system',
+      content: 'You are an expert B2B sales strategist who creates irresistible offers. Instead of selling technology, sell outcomes and transformations. Generate a complete offer package. Always respond in valid JSON format. Return JSON: {"primaryOffer": {"headline": "...", "description": "...", "valueProposition": "..."}, "secondaryOffer": {"headline": "...", "description": "..."}, "upsellOffer": {"headline": "...", "description": "..."}, "expectedROI": "...", "timeSavings": "...", "revenueIncrease": "...", "riskReduction": "...", "pricingRecommendation": "...", "talkingPoints": ["point1", "point2", "point3", "point4", "point5"], "closingStrategy": "..."}. Return ONLY valid JSON, no markdown.',
+    },
+    {
+      role: 'user',
+      content: `Generate an irresistible offer for:\nCompany: ${companyName}\nIndustry: ${industry || 'N/A'}\nDecision Maker: ${decisionMaker || 'N/A'}\nAI Solutions: ${solutions || 'N/A'}\nAudit Findings: ${auditFindings || 'N/A'}\nEstimated Deal Size: ${estimatedDealSize || 'N/A'}\n\nThe offer should sell OUTCOMES not technology. Make it feel custom-built for this company.`,
+    },
+  ], { maxTokens: 4000, temperature: 0.7 })
+}
+
+export async function aiCompanyIntelligence(context: {
+  companyName: string
+  website?: string
+  industry?: string
+  location?: string
+}): Promise<string> {
+  const { companyName, website, industry, location } = context
+  return aiChatCompletions([
+    {
+      role: 'system',
+      content: 'You are a senior business intelligence analyst. Analyze the given company and produce a comprehensive Company Intelligence Report. Always respond in valid JSON format. Return JSON: {"businessOverview": "...", "coreServices": "...", "idealCustomers": "...", "uniqueSellingProposition": "...", "strengths": ["..."], "weaknesses": ["..."], "painPoints": ["..."], "growthOpportunities": ["..."], "automationOpportunities": ["..."], "aiOpportunities": ["..."], "trustSignals": ["..."], "websiteQuality": "...", "estimatedRevenue": "...", "recommendedOutreachStyle": "...", "personalizationNotes": "..."}. Return ONLY valid JSON, no markdown. Be specific and insightful, not generic.',
+    },
+    {
+      role: 'user',
+      content: `Generate a Company Intelligence Report for:\nCompany: ${companyName}\nWebsite: ${website || 'N/A'}\nIndustry: ${industry || 'N/A'}\nLocation: ${location || 'N/A'}\n\nProvide deep, specific insights. Do NOT use generic descriptions.`,
+    },
+  ], { maxTokens: 4000, temperature: 0.5 })
+}

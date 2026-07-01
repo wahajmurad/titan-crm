@@ -22,6 +22,7 @@ model User {
   activities     Activity[]
   assignedLeads  Lead[] @relation("AssignedTo")
   campaigns      Campaign[]
+  notifications  Notification[]
 
   @@index([email])
   @@index([role])
@@ -270,4 +271,20 @@ model PromptTemplate {
   updatedAt DateTime @updatedAt
 
   @@index([category])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("info")
+  read      Boolean  @default(false)
+  link      String?
+  linkId    String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([createdAt])
 }

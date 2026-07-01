@@ -9,6 +9,8 @@ import { LoginView } from '@/components/titan/login-view'
 import { Toaster } from 'sonner'
 import { cn } from '@/lib/utils'
 import { Bell, Zap, Search, Command } from 'lucide-react'
+import { CommandPalette } from '@/components/titan/command-palette'
+import { NotificationBell } from '@/components/titan/notification-bell'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { PermissionMap } from '@/lib/types'
 
@@ -52,6 +54,7 @@ export default function HomeClient() {
   const { currentView, sidebarOpen } = useAppStore()
   const [state, setState] = useState<'loading' | 'setup' | 'login' | 'app'>('loading')
   const [user, setUser] = useState<UserData | null>(null)
+  const [commandOpen, setCommandOpen] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -183,7 +186,10 @@ export default function HomeClient() {
           </div>
           <div className="flex items-center gap-1.5">
             {/* Command-K hint pill */}
-            <button className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-gray-200/80 text-[#94A3B8] text-xs hover:border-gray-300 hover:text-[#475569] transition-colors duration-150">
+            <button
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-gray-200/80 text-[#94A3B8] text-xs hover:border-gray-300 hover:text-[#475569] transition-colors duration-150"
+              onClick={() => setCommandOpen(true)}
+            >
               <Command className="w-3 h-3" />
               <span>K</span>
             </button>
@@ -192,10 +198,7 @@ export default function HomeClient() {
               <Search className="w-4 h-4 text-[#475569]" />
             </button>
             {/* Notification bell */}
-            <button className="relative p-2 rounded-xl hover:bg-gray-100 transition-colors duration-150">
-              <Bell className="w-4 h-4 text-[#475569]" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#2563EB] rounded-full ring-2 ring-white" />
-            </button>
+            <NotificationBell />
           </div>
         </header>
 
@@ -215,6 +218,7 @@ export default function HomeClient() {
         </div>
       </motion.main>
       <Toaster position="top-right" />
+      <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
     </div>
   )
 }

@@ -23,8 +23,10 @@ interface AppState {
   selectedLeadId: string | null
   selectedCampaignId: string | null
   sidebarOpen: boolean
+  pendingAiQuery: string | null
   setView: (view: AppView, leadId?: string | null, campaignId?: string | null) => void
   setSidebarOpen: (open: boolean) => void
+  setPendingAiQuery: (query: string | null) => void
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -32,7 +34,9 @@ export const useAppStore = create<AppState>((set) => ({
   selectedLeadId: null,
   selectedCampaignId: null,
   sidebarOpen: true,
+  pendingAiQuery: null,
   setView: (view, leadId = null, campaignId = null) =>
     set({ currentView: view, selectedLeadId: leadId, selectedCampaignId: campaignId }),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
+  setPendingAiQuery: (query) => set({ pendingAiQuery: query }),
 }))
