@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import {
   Search, Globe, Bot, Brain, Lightbulb, Wrench, Gift, PenTool, Target,
   GraduationCap, Play, Zap, ChevronRight, Activity, Sparkles, RefreshCw,
-  BarChart3, Clock, CheckCircle2, AlertCircle, Loader2, Settings2
+  BarChart3, Clock, CheckCircle2, AlertCircle, Loader2, Settings2, Send
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -31,9 +31,10 @@ const AGENTS: AgentCard[] = [
   { id: 'industry_expert', name: 'Industry Expert', description: 'Deep industry knowledge — trends, problems, AI opportunities, outreach strategies, objections, and closing tactics', icon: Lightbulb, color: 'text-amber-600', bgColor: 'bg-amber-50', borderColor: 'border-amber-200', status: 'ready', runCount: 8, avgDuration: '6.2s' },
   { id: 'solution_architect', name: 'Solution Architect', description: 'Converts business problems into specific AI solutions with implementation plans, ROI estimates, and priority levels', icon: Wrench, color: 'text-cyan-600', bgColor: 'bg-cyan-50', borderColor: 'border-cyan-200', status: 'ready', runCount: 12, avgDuration: '3.8s' },
   { id: 'offer_generator', name: 'Offer Generator', description: 'Creates irresistible outcome-based offers. Sells transformations, not technology. Primary, secondary, and upsell offers', icon: Gift, color: 'text-rose-600', bgColor: 'bg-rose-50', borderColor: 'border-rose-200', status: 'ready', runCount: 10, avgDuration: '4.0s' },
-  { id: 'personalization', name: 'Personalization Agent', description: 'Generates hyper-personalized outreach using all gathered intelligence. Scores personalization quality across 6 dimensions', icon: PenTool, color: 'text-pink-600', bgColor: 'bg-pink-50', borderColor: 'border-pink-200', status: 'ready', runCount: 35, avgDuration: '2.9s' },
-  { id: 'campaign_strategy', name: 'Campaign Strategy', description: 'Designs multi-step campaign sequences with AI decision nodes, timing optimization, and success criteria', icon: Target, color: 'text-orange-600', bgColor: 'bg-orange-50', borderColor: 'border-orange-200', status: 'ready', runCount: 6, avgDuration: '5.1s' },
-  { id: 'learning', name: 'Learning Agent', description: 'Self-learning system that analyzes patterns from performance data and continuously improves future outputs', icon: GraduationCap, color: 'text-teal-600', bgColor: 'bg-teal-50', borderColor: 'border-teal-200', status: 'ready', runCount: 3, avgDuration: '4.5s' },
+  { id: 'personalization', name: 'Hyper-Personalization', description: 'HIGHEST PRIORITY. Makes every outreach feel handcrafted. 90% quality threshold — regenerates if below. Never uses templates.', icon: PenTool, color: 'text-pink-600', bgColor: 'bg-pink-50', borderColor: 'border-pink-200', status: 'ready', runCount: 35, avgDuration: '2.9s' },
+  { id: 'campaign_strategy', name: 'Campaign Strategy', description: 'Automatically builds data-driven multi-step campaigns with AI decision nodes, follow-up strategy, and success metrics', icon: Target, color: 'text-orange-600', bgColor: 'bg-orange-50', borderColor: 'border-orange-200', status: 'ready', runCount: 6, avgDuration: '5.1s' },
+  { id: 'outreach', name: 'Outreach Agent', description: 'Executes personalized outreach across email, LinkedIn, and phone. Finalizes content, validates quality, prepares for sending.', icon: Send, color: 'text-sky-600', bgColor: 'bg-sky-50', borderColor: 'border-sky-200', status: 'ready', runCount: 42, avgDuration: '1.5s' },
+  { id: 'learning', name: 'Continuous Learning', description: 'Self-learning from every interaction — tracks best emails, open rates, conversions, and auto-optimizes future campaigns', icon: GraduationCap, color: 'text-teal-600', bgColor: 'bg-teal-50', borderColor: 'border-teal-200', status: 'ready', runCount: 3, avgDuration: '4.5s' },
 ]
 
 const container = {

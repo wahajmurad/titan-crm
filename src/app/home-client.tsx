@@ -35,6 +35,7 @@ const LeadProvidersView = dynamic(() => import('@/components/titan/lead-provider
 const CommandCenterView = dynamic(() => import('@/components/titan/command-center-view').then(m => ({ default: m.CommandCenterView })), { loading: () => <PageSkeleton /> })
 const WorkflowBuilderView = dynamic(() => import('@/components/titan/workflow-builder-view').then(m => ({ default: m.WorkflowBuilderView })), { loading: () => <PageSkeleton /> })
 const AIAgentsView = dynamic(() => import('@/components/titan/ai-agents-view').then(m => ({ default: m.AIAgentsView })), { loading: () => <PageSkeleton /> })
+const PersonalizationView = dynamic(() => import('@/components/titan/personalization-view').then(m => ({ default: m.PersonalizationView })), { loading: () => <PageSkeleton /> })
 
 function PageSkeleton() {
   return (
@@ -168,6 +169,7 @@ export default function HomeClient() {
       case 'command-center': return <CommandCenterView />
       case 'workflows': return <WorkflowBuilderView />
       case 'ai-agents': return <AIAgentsView />
+      case 'personalization': return <PersonalizationView />
       case 'prompts': return <PromptsView />
       case 'team': return <TeamView />
       case 'settings': return <SettingsView />

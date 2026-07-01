@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Search, Globe2, Users, Target, Mail, Inbox,
   Calendar, Brain, BookOpen, UserCog, Settings, LogOut,
   ChevronLeft, ChevronRight, Zap, GraduationCap, Plug, Lightbulb,
-  Terminal, Workflow, Sparkles
+  Terminal, Workflow, Sparkles, Heart
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
@@ -46,6 +46,7 @@ const NAV_SECTIONS = [
   {
     label: 'Operations',
     items: [
+      { view: 'personalization' as AppView, label: 'Hyper-Personalization', icon: Heart },
       { view: 'workflows' as AppView, label: 'Workflow Builder', icon: Workflow },
       { view: 'meetings' as AppView, label: 'Meetings', icon: Calendar },
       { view: 'lead-providers' as AppView, label: 'Lead Providers', icon: Plug },

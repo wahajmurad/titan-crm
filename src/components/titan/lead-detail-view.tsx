@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { LEAD_STAGES, STAGE_COLORS, STAGE_DOT_COLORS } from '@/lib/types'
-import { ArrowLeft, ExternalLink, Phone, Mail, Globe, MapPin, Building2, Send, Calendar, Trash2 } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Phone, Mail, Globe, MapPin, Building2, Send, Calendar, Trash2, Heart } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { motion } from 'framer-motion'
@@ -501,6 +501,24 @@ export function LeadDetailView() {
           {/* Score Gauge */}
           <motion.div variants={fadeUp}>
             <ScoreGauge score={lead.score} />
+          </motion.div>
+
+          {/* Quick Personalize Action */}
+          <motion.div variants={fadeUp}>
+            <Card
+              className="bg-gradient-to-br from-rose-50 to-pink-50 rounded-2xl border-0 shadow-sm p-5 cursor-pointer hover:shadow-md transition-shadow group"
+              onClick={() => setView('personalization')}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center text-white shadow-sm shadow-rose-500/20 group-hover:shadow-rose-500/40 transition-shadow">
+                  <Heart className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-gray-900">Hyper-Personalize</div>
+                  <div className="text-[11px] text-gray-500">Run full 10-step pipeline</div>
+                </div>
+              </div>
+            </Card>
           </motion.div>
 
           {/* Activity Feed */}

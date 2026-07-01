@@ -20,6 +20,7 @@ export type AppView =
   | 'workflows'        // NEW
   | 'command-center'   // NEW
   | 'ai-agents'        // NEW
+  | 'personalization'  // NEW — Part 3 USP
 
 interface AppState {
   currentView: AppView

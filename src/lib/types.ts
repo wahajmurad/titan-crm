@@ -150,10 +150,11 @@ export type AgentType =
   | 'offer_generator'
   | 'personalization'
   | 'campaign_strategy'
+  | 'outreach'
   | 'learning'
 
 export interface AgentConfig {
-  id: AgentType
+  id: string
   name: string
   description: string
   systemPrompt: string
@@ -222,3 +223,97 @@ export interface CommandResult {
 
 // ── Asset Types ──
 export type AssetType = 'pdf_audit_report' | 'html_demo' | 'growth_blueprint' | 'roi_calculation' | 'sales_pitch'
+
+// ── Sales Angle Types ──
+export interface SalesAngle {
+  angleName: string
+  hook: string
+  subjectLine: string
+  openingLine: string
+  valueProposition: string
+  emotionalTrigger: string
+  bestFor: 'cold' | 'warm' | 'follow_up'
+  estimatedEffectiveness: 'High' | 'Medium' | 'Low'
+  effectivenessScore?: number // 0-100
+}
+
+// ── ROI Data Types ──
+export interface ROIData {
+  implementationCost: { oneTime: string; monthly: string }
+  timeSavings: { hoursPerWeek: number; annualValue: string }
+  revenueImpact: { increasePercent: number; annualValue: string }
+  costReduction: { percent: number; annualValue: string }
+  paybackPeriod: string
+  roi: { twelveMonth: number; twentyFourMonth: number }
+  netValue: { year1: string; year2: string }
+  assumptions: string[]
+  confidence: 'High' | 'Medium' | 'Low'
+  summary: string
+}
+
+// ── Outreach Package Types ──
+export type PackageTier = 'platinum' | 'gold' | 'silver'
+
+export interface OutreachPackage {
+  companyName: string
+  estimatedDealValue: string
+  tier: PackageTier
+  assets: {
+    personalizedEmail: boolean
+    linkedinOutreach: boolean
+    auditPDF: boolean
+    htmlDemoPage: boolean
+    growthBlueprint: boolean
+    roiReport: boolean
+    bookingLink: boolean
+    annotatedScreenshots: boolean
+  }
+  rationale: string
+  recommendedSequence: Array<{ step: number; action: string; asset: string; timing: string; reason: string }>
+  estimatedResponseRate?: string
+  estimatedMeetingRate?: string
+  personalizationRequirements?: string[]
+  totalAssetsToGenerate?: number
+  estimatedPrepTime?: string
+}
+
+// ── Quality Score Types (Extended) ──
+export interface QualityScoreDetail {
+  researchQuality?: number
+  businessUnderstanding?: number
+  personalizationDepth?: number
+  offerRelevance?: number
+  emailQuality?: number
+  professionalism?: number
+  confidence?: number
+  overall?: number
+  issues?: string[]
+  improvements?: string[]
+}
+
+// ── Pipeline Step Types ──
+export interface PipelineStepResult {
+  step: string
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'skipped'
+  duration?: number
+  output?: Record<string, unknown>
+  error?: string
+}
+
+// ── Personalization Context (Full Pipeline Output) ──
+export interface PersonalizationContext {
+  research?: Record<string, unknown>
+  audit?: Record<string, unknown>
+  industry?: Record<string, unknown>
+  competitors?: Record<string, unknown>
+  problems?: Record<string, unknown>
+  opportunities?: Record<string, unknown>
+  solutions?: Record<string, unknown>
+  salesAngles?: SalesAngle[]
+  outreach?: Record<string, unknown>
+  qualityScores?: QualityScoreDetail
+  qualityPassed?: boolean
+  revisionCount?: number
+  finalOutreach?: Record<string, unknown>
+  assets?: Record<string, unknown>
+}
