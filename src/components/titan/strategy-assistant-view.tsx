@@ -436,11 +436,22 @@ export function StrategyAssistantView() {
     setProgressStage(0)
     setResult(null)
 
-    // Build campaign data payload
+    // Build campaign data payload — limit to essential fields to avoid token overflow
     const selectedCampaign = selectedCampaignId === 'all'
       ? null
       : campaigns.find((c) => c.id === selectedCampaignId) || null
-    const campaignData = selectedCampaignId === 'all' ? campaigns : selectedCampaign
+    const campaignData = selectedCampaignId === 'all'
+      ? campaigns.map(c => ({
+          name: c.name,
+          industry: c.industry,
+          status: c.status,
+          leadCount: c.leadCount,
+          sentCount: c.sentCount,
+          replyCount: c.replyCount,
+          meetingCount: c.meetingCount,
+          wonCount: c.wonCount,
+        }))
+      : selectedCampaign
 
     const categoryLabels = selectedCategories
       .map((id) => ANALYSIS_CATEGORIES.find((c) => c.id === id)?.label)
@@ -451,23 +462,33 @@ export function StrategyAssistantView() {
       selectedCampaignId === 'all' ? 'All Campaigns' : selectedCampaign?.name || 'Selected Campaign'
 
     try {
-      const res = await fetch('/api/ai/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [
-            {
-              role: 'system',
-              content:
-                'You are a senior sales strategy consultant with deep expertise in B2B sales, demand generation, pipeline optimization, and revenue operations. You analyze campaign data and provide actionable, data-driven recommendations. Always respond with valid JSON matching the requested schema. Be specific, quantified, and practical.',
-            },
-            {
-              role: 'user',
-              content: `Analyze my campaign: ${JSON.stringify(campaignData)}. Focus on: ${categoryLabels}. Provide JSON with: { executiveSummary: string (2-3 sentence high-level assessment), findings: [{severity: "Critical"|"Warning"|"Opportunity", category: string, description: string}], recommendations: [{priority: "High"|"Medium"|"Low", title: string, description: string, expectedImpact: string}], strategyScore: number (0-100) }. Return ONLY valid JSON, no markdown.`,
-            },
-          ],
-        }),
-      })
+      // Add AbortController for 60s timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 60000)
+
+      let res: Response
+      try {
+        res = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+          body: JSON.stringify({
+            messages: [
+              {
+                role: 'system',
+                content:
+                  'You are a senior sales strategy consultant with deep expertise in B2B sales, demand generation, pipeline optimization, and revenue operations. You analyze campaign data and provide actionable, data-driven recommendations. Always respond with valid JSON matching the requested schema. Be specific, quantified, and practical.',
+              },
+              {
+                role: 'user',
+                content: `Analyze my campaign: ${JSON.stringify(campaignData)}. Focus on: ${categoryLabels}. Provide JSON with: { executiveSummary: string (2-3 sentence high-level assessment), findings: [{severity: "Critical"|"Warning"|"Opportunity", category: string, description: string}], recommendations: [{priority: "High"|"Medium"|"Low", title: string, description: string, expectedImpact: string}], strategyScore: number (0-100) }. Return ONLY valid JSON, no markdown.`,
+              },
+            ],
+          }),
+        })
+      } finally {
+        clearTimeout(timeoutId)
+      }
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({ error: `Request failed (${res.status})` }))
@@ -477,35 +498,50 @@ export function StrategyAssistantView() {
       const data = await res.json()
       const content = data.response || data.message || data.content || ''
 
+      if (!content.trim()) {
+        throw new Error('AI returned an empty response. Please try again.')
+      }
+
       // Try to parse JSON from the response
       let analysisResult: AnalysisResult
       try {
-        // Try direct parse first
-        const jsonMatch = content.match(/\{[\s\S]*\}/)
-        if (jsonMatch) {
-          analysisResult = JSON.parse(jsonMatch[0])
-        } else {
-          throw new Error('No JSON found')
+        // Strip markdown code fences first
+        const cleaned = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+        // Try direct parse
+        try {
+          analysisResult = JSON.parse(cleaned)
+        } catch {
+          // Try regex extraction
+          const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
+          if (jsonMatch) {
+            analysisResult = JSON.parse(jsonMatch[0])
+          } else {
+            throw new Error('No JSON found')
+          }
         }
         // Validate shape
         if (!analysisResult.executiveSummary || !Array.isArray(analysisResult.findings) || !Array.isArray(analysisResult.recommendations)) {
           throw new Error('Invalid shape')
         }
+        // Ensure strategyScore is a number
+        if (typeof analysisResult.strategyScore !== 'number') {
+          analysisResult.strategyScore = 65
+        }
       } catch {
         // Fallback: create a structured result from the raw text
         analysisResult = {
-          executiveSummary: content.slice(0, 300),
-          findings: [
-            { severity: 'Opportunity' as const, category: 'General', description: content.slice(0, 200) },
-          ],
-          recommendations: [
-            {
-              priority: 'Medium' as const,
-              title: 'Review Full Analysis',
-              description: content.slice(200, 500),
-              expectedImpact: 'Review AI output for detailed insights',
-            },
-          ],
+          executiveSummary: content.slice(0, 300) || 'Analysis completed but the response could not be structured.',
+          findings: content.trim()
+            ? [{ severity: 'Opportunity' as const, category: 'General', description: content.slice(0, 200) }]
+            : [],
+          recommendations: content.trim()
+            ? [{
+                priority: 'Medium' as const,
+                title: 'Review Full Analysis',
+                description: content.slice(200, 500),
+                expectedImpact: 'Review AI output for detailed insights',
+              }]
+            : [],
           strategyScore: 65,
         }
       }
@@ -524,7 +560,16 @@ export function StrategyAssistantView() {
 
       toast.success('Analysis complete')
     } catch (error) {
-      const msg = error instanceof Error ? error.message : 'Unknown error'
+      let msg = 'Unknown error'
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          msg = 'Request timed out. The AI took too long to respond. Please try again.'
+        } else if (error.message.includes('rate limit') || error.message.includes('busy') || error.message.includes('429')) {
+          msg = 'AI is currently busy. Please wait 30 seconds and try again.'
+        } else {
+          msg = error.message
+        }
+      }
       toast.error(`Analysis failed: ${msg}`)
     } finally {
       setIsAnalyzing(false)
@@ -679,7 +724,7 @@ export function StrategyAssistantView() {
                 onClick={() => toggleCategory(category.id)}
                 disabled={isAnalyzing}
                 className={cn(
-                  'border border-gray-200/60 rounded-xl p-4 hover:border-blue-300 hover:bg-blue-50/50 cursor-pointer transition-all text-left group disabled:opacity-50 disabled:pointer-events-none',
+                  'relative border border-gray-200/60 rounded-xl p-4 hover:border-blue-300 hover:bg-blue-50/50 cursor-pointer transition-all text-left group disabled:opacity-50 disabled:pointer-events-none',
                   isSelected && 'border-blue-400 bg-blue-50 ring-1 ring-blue-200'
                 )}
               >

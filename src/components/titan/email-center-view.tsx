@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
@@ -201,6 +201,21 @@ export function EmailCenterView() {
         </Tabs>
 
         <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            className="h-8 bg-blue-600 hover:bg-blue-700 text-white"
+            onClick={() => setAiGenerateOpen(true)}
+          >
+            <Sparkles className="w-3.5 h-3.5 mr-1.5" />Generate AI Email
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+            onClick={() => setComposeOpen(true)}
+          >
+            <Plus className="w-3.5 h-3.5 mr-1.5" />Compose
+          </Button>
           <AiEmailDialog
             open={aiGenerateOpen}
             onOpenChange={setAiGenerateOpen}
@@ -282,7 +297,7 @@ export function EmailCenterView() {
                         >
                           <td className="px-4 py-3 min-w-0 max-w-xs">
                             <p className="font-medium text-gray-900 truncate">{email.subject || '(No Subject)'}</p>
-                            <p className="text-xs text-gray-400 truncate mt-0.5">{email.body.slice(0, 100)}</p>
+                            <p className="text-xs text-gray-400 truncate mt-0.5">{(email.body || '').slice(0, 100)}</p>
                           </td>
                           <td className="px-4 py-3 hidden md:table-cell">
                             <p className="text-gray-600">{email.lead?.business?.name || '—'}</p>
@@ -357,7 +372,7 @@ function AiEmailDialog({ open, onOpenChange, leads, campaigns, onSaved }: {
     setGenerating(true)
     try {
       const params = new URLSearchParams({ leadId })
-      if (campaignId) params.set('campaignId', campaignId)
+      if (campaignId && campaignId !== 'none') params.set('campaignId', campaignId)
       const res = await fetch(`/api/ai/email?${params}`, {
         method: 'POST',
         credentials: 'same-origin',
@@ -453,11 +468,6 @@ function AiEmailDialog({ open, onOpenChange, leads, campaigns, onSaved }: {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v) }}>
-      <DialogTrigger asChild>
-        <Button size="sm" className="h-8 bg-blue-600 hover:bg-blue-700 text-gray-900">
-          <Sparkles className="w-3.5 h-3.5 mr-1.5" />Generate AI Email
-        </Button>
-      </DialogTrigger>
       <DialogContent className="bg-white border-gray-200 max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-gray-900 flex items-center gap-2">
@@ -489,7 +499,7 @@ function AiEmailDialog({ open, onOpenChange, leads, campaigns, onSaved }: {
                   <SelectValue placeholder="No campaign" />
                 </SelectTrigger>
                 <SelectContent className="bg-white border-gray-200">
-                  <SelectItem value="">No campaign</SelectItem>
+                  <SelectItem value="none">No campaign</SelectItem>
                   {campaigns.map(c => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                   ))}
@@ -637,11 +647,6 @@ function ComposeEmailDialog({ open, onOpenChange, leads, campaigns, onSent }: {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v) }}>
-      <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="h-8 border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900">
-          <Plus className="w-3.5 h-3.5 mr-1.5" />Compose
-        </Button>
-      </DialogTrigger>
       <DialogContent className="bg-white border-gray-200 max-w-lg max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-gray-900">Compose Email</DialogTitle>
@@ -669,7 +674,7 @@ function ComposeEmailDialog({ open, onOpenChange, leads, campaigns, onSent }: {
                   <SelectValue placeholder="No campaign" />
                 </SelectTrigger>
                 <SelectContent className="bg-white border-gray-200">
-                  <SelectItem value="">No campaign</SelectItem>
+                  <SelectItem value="none">No campaign</SelectItem>
                   {campaigns.map(c => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                   ))}

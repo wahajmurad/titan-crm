@@ -1,6 +1,20 @@
 ---
-Task ID: 2
-Agent: Main Agent + Multiple Subagents
+Task ID: 10
+Agent: Main Agent
+Task: Fix client-side crashes on "Generate AI Mails" and "Strategy Analysis"
+
+Work Log:
+- Diagnosed email-center-view.tsx: DialogTrigger inside controlled Dialog (Radix anti-pattern causing React crash), SelectItem value="" causing Radix Select internal errors, missing header buttons after DialogTrigger removal
+- Fixed email-center-view.tsx: Removed DialogTrigger from both AiEmailDialog and ComposeEmailDialog, added explicit Button triggers in header, changed SelectItem value="" to value="none", added campaignId sentinel check
+- Diagnosed strategy-assistant-view.tsx: Missing `relative` class on category buttons (absolute check icon escaped container), no request timeout, no markdown code fence stripping for AI response, sent full campaign objects to AI (token overflow risk)
+- Fixed strategy-assistant-view.tsx: Added `relative` to category buttons, added 60s AbortController timeout, improved JSON parsing (strip code fences first, then try direct parse, then regex), limited campaign payload to essential numeric fields, added error type detection (timeout vs rate-limit vs generic)
+- Fixed /api/ai/email/route.ts: Wrapped new URL(resolvedWebsite) in try/catch for malformed URLs, preventing 500 error on leads with invalid website strings
+- Verified build passes clean (zero TS errors, all 23 routes)
+
+Stage Summary:
+- Email Center crash: Root cause was DialogTrigger + controlled Dialog conflict + empty string SelectItem value. Both dialogs now use explicit Button triggers with proper state management.
+- Strategy Analysis: Root cause was oversized AI payload + no timeout + fragile JSON parsing. Now sends only essential campaign fields, has 60s timeout, strips markdown fences, and provides clear error messages for rate limits vs timeouts.
+- Email API: Malformed website URLs no longer cause 500 errors.
 Task: Complete UI/UX redesign, fix audit, add new features
 
 Work Log:

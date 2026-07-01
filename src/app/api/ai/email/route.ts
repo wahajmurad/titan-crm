@@ -44,24 +44,31 @@ export async function POST(req: NextRequest) {
 
     // Fetch audit findings if not provided and we have a website
     if (!resolvedAuditFindings && resolvedWebsite) {
-      const audit = await db.websiteAudit.findFirst({
-        where: { url: { contains: new URL(resolvedWebsite).hostname.replace(/^www\./, '') } },
-      })
-      if (audit) {
-        resolvedAuditFindings = [
-          audit.uiDetails,
-          audit.uxDetails,
-          audit.seoDetails,
-          audit.performanceDetails,
-          audit.accessibilityDetails,
-          audit.mobileDetails,
-          audit.securityDetails,
-          audit.aiReadinessDetails,
-          audit.automationDetails,
-          audit.conversionDetails,
-          audit.problemsFound,
-        ].filter(Boolean).join('\n\n')
-        resolvedOpportunities = resolvedOpportunities || audit.opportunities || undefined
+      try {
+        const hostname = new URL(resolvedWebsite).hostname.replace(/^www\./, '')
+        if (hostname) {
+          const audit = await db.websiteAudit.findFirst({
+            where: { url: { contains: hostname } },
+          })
+          if (audit) {
+            resolvedAuditFindings = [
+              audit.uiDetails,
+              audit.uxDetails,
+              audit.seoDetails,
+              audit.performanceDetails,
+              audit.accessibilityDetails,
+              audit.mobileDetails,
+              audit.securityDetails,
+              audit.aiReadinessDetails,
+              audit.automationDetails,
+              audit.conversionDetails,
+              audit.problemsFound,
+            ].filter(Boolean).join('\n\n')
+            resolvedOpportunities = resolvedOpportunities || audit.opportunities || undefined
+          }
+        }
+      } catch {
+        // Invalid URL format — skip audit lookup, continue with email generation
       }
     }
 
