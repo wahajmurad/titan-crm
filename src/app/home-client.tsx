@@ -8,7 +8,8 @@ import { SetupView } from '@/components/titan/setup-view'
 import { LoginView } from '@/components/titan/login-view'
 import { Toaster } from 'sonner'
 import { cn } from '@/lib/utils'
-import { Bell, Zap } from 'lucide-react'
+import { Bell, Zap, Search, Command } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import type { PermissionMap } from '@/lib/types'
 
 const DashboardView = dynamic(() => import('@/components/titan/dashboard-view').then(m => ({ default: m.DashboardView })), { loading: () => <PageSkeleton /> })
@@ -30,15 +31,15 @@ const LeadProvidersView = dynamic(() => import('@/components/titan/lead-provider
 
 function PageSkeleton() {
   return (
-    <div className="space-y-4 animate-pulse">
-      <div className="h-6 w-40 bg-gray-100 rounded" />
-      <div className="h-4 w-64 bg-gray-100 rounded" />
+    <div className="space-y-6 animate-pulse">
+      <div className="h-7 w-48 bg-gray-100 rounded-2xl" />
+      <div className="h-4 w-72 bg-gray-100/70 rounded-2xl" />
       <div className="grid grid-cols-4 gap-4 mt-6">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-24 bg-gray-100 rounded-xl" />
+          <div key={i} className="h-28 bg-gray-100 rounded-2xl" style={{ animationDelay: `${i * 100}ms` }} />
         ))}
       </div>
-      <div className="h-64 bg-gray-100 rounded-xl mt-4" />
+      <div className="h-72 bg-gray-100 rounded-2xl mt-4" />
     </div>
   )
 }
@@ -91,23 +92,40 @@ export default function HomeClient() {
   if (state === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="flex flex-col items-center gap-4">
-          <div className="relative w-12 h-12">
-            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 animate-pulse opacity-60 shadow-lg shadow-blue-500/20" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Zap className="w-5 h-5 text-white" />
-            </div>
-          </div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+          className="flex flex-col items-center gap-5"
+        >
+          <motion.div
+            animate={{
+              background: [
+                'linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)',
+                'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
+                'linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)',
+              ],
+            }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20"
+          >
+            <Zap className="w-7 h-7 text-white" fill="white" />
+          </motion.div>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-gray-900 tracking-tight">TITAN</span>
-            <span className="text-[10px] bg-blue-500 text-white px-1.5 py-0.5 rounded-full font-semibold">AI</span>
+            <span className="text-sm font-bold text-[#0F172A] tracking-tight">TITAN</span>
+            <span className="text-[10px] bg-gradient-to-r from-[#2563EB] to-[#3B82F6] text-white font-bold rounded-md px-1.5 py-0.5 leading-none">AI</span>
           </div>
           <div className="flex items-center gap-1.5 mt-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '0ms' }} />
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-300 animate-bounce" style={{ animationDelay: '300ms' }} />
+            {[0, 150, 300].map((delay, i) => (
+              <motion.div
+                key={i}
+                animate={{ scale: [1, 1.3, 1], opacity: [0.4, 1, 0.4] }}
+                transition={{ duration: 1.2, repeat: Infinity, delay: delay / 1000, ease: 'easeInOut' }}
+                className="w-1.5 h-1.5 rounded-full bg-[#2563EB]"
+              />
+            ))}
           </div>
-        </div>
+        </motion.div>
       </div>
     )
   }
@@ -120,7 +138,7 @@ export default function HomeClient() {
     if (!hasPermission(currentView, 'canView') && currentView !== 'dashboard' && currentView !== 'ai-assistant') {
       return (
         <div className="flex items-center justify-center py-24">
-          <p className="text-gray-400">You don&apos;t have access to this section</p>
+          <p className="text-[#94A3B8]">You don&apos;t have access to this section</p>
         </div>
       )
     }
@@ -145,33 +163,57 @@ export default function HomeClient() {
     }
   }
 
+  const viewLabel = currentView.replace(/-/g, ' ')
+
   return (
-    <div className="min-h-screen bg-[#FAFBFC] text-gray-900 font-sans antialiased">
+    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] font-sans antialiased">
       <Sidebar userName={user.name} userRole={user.role} onLogout={handleLogout} />
-      <main
-        className={cn(
-          'transition-all duration-200 ease-in-out min-h-screen',
-          sidebarOpen ? 'ml-60' : 'ml-[68px]'
-        )}
+      <motion.main
+        animate={{ marginLeft: sidebarOpen ? 260 : 72 }}
+        transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+        className="min-h-screen"
       >
+        {/* Premium Header */}
         <header className="h-14 bg-white/80 backdrop-blur-xl border-b border-gray-200/60 flex items-center justify-between px-6 sticky top-0 z-30">
           <div className="flex items-center gap-3">
-            <h1 className="text-sm font-medium text-gray-900 capitalize">{currentView.replace(/-/g, ' ')}</h1>
+            <h1 className="text-sm font-semibold text-[#0F172A] capitalize">{viewLabel}</h1>
             {currentView === 'dashboard' && (
-              <span className="text-sm text-gray-400 hidden sm:inline">Welcome back, {user.name.split(' ')[0]}</span>
+              <span className="text-sm text-[#94A3B8] hidden sm:inline">Welcome back, {user.name.split(' ')[0]}</span>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            <button className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
-              <Bell className="w-4 h-4 text-gray-500" />
+          <div className="flex items-center gap-1.5">
+            {/* Command-K hint pill */}
+            <button className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-gray-200/80 text-[#94A3B8] text-xs hover:border-gray-300 hover:text-[#475569] transition-colors duration-150">
+              <Command className="w-3 h-3" />
+              <span>K</span>
+            </button>
+            {/* Search button */}
+            <button className="p-2 rounded-xl hover:bg-gray-100 transition-colors duration-150">
+              <Search className="w-4 h-4 text-[#475569]" />
+            </button>
+            {/* Notification bell */}
+            <button className="relative p-2 rounded-xl hover:bg-gray-100 transition-colors duration-150">
+              <Bell className="w-4 h-4 text-[#475569]" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#2563EB] rounded-full ring-2 ring-white" />
             </button>
           </div>
         </header>
 
+        {/* Page content with transitions */}
         <div className="p-6">
-          {renderView()}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentView}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+            >
+              {renderView()}
+            </motion.div>
+          </AnimatePresence>
         </div>
-      </main>
+      </motion.main>
       <Toaster position="top-right" />
     </div>
   )
