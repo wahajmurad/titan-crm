@@ -1,0 +1,649 @@
+     1→'use client'
+     2→
+     3→import { useEffect, useState, useCallback } from 'react'
+     4→import { useAppStore } from '@/lib/store'
+     5→import { Card, CardContent } from '@/components/ui/card'
+     6→import { Button } from '@/components/ui/button'
+     7→import { Input } from '@/components/ui/input'
+     8→import { Badge } from '@/components/ui/badge'
+     9→import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+    10→import { Textarea } from '@/components/ui/textarea'
+    11→import { Label } from '@/components/ui/label'
+    12→import { LEAD_STAGES, STAGE_COLORS, STAGE_DOT_COLORS, type LeadStage } from '@/lib/types'
+    13→import { Plus, Search, ChevronRight, ExternalLink, Phone, Mail, Globe, Globe2, Target, Loader2, CheckCircle2, LayoutGrid, List } from 'lucide-react'
+    14→import { cn } from '@/lib/utils'
+    15→import { format } from 'date-fns'
+    16→import { toast } from 'sonner'
+    17→import { motion, AnimatePresence } from 'framer-motion'
+    18→
+    19→// ─── Keep local CalendarIcon SVG to avoid name collision ──────────────
+    20→
+    21→function CalendarIcon({ className }: { className?: string }) {
+    22→  return (
+    23→    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    24→      <path d="M8 2v4" /><path d="M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" />
+    25→    </svg>
+    26→  )
+    27→}
+    28→
+    29→// ─── Data Types ────────────────────────────────────────────────────────
+    30→
+    31→interface Lead {
+    32→  id: string
+    33→  stage: LeadStage
+    34→  score: number
+    35→  decisionMaker: string | null
+    36→  decisionMakerRole: string | null
+    37→  decisionMakerEmail: string | null
+    38→  recommendedSolution: string | null
+    39→  notes: string | null
+    40→  createdAt: string
+    41→  updatedAt: string
+    42→  business: {
+    43→    id: string; name: string; website: string | null; industry: string | null
+    44→    city: string | null; country: string | null; phone: string | null; email: string | null
+    45→  }
+    46→  assignedTo: { id: string; name: string; email: string } | null
+    47→  _count: { outreaches: number; meetings: number }
+    48→}
+    49→
+    50→// ─── Animation Variants ───────────────────────────────────────────────
+    51→
+    52→const container = {
+    53→  hidden: { opacity: 0 },
+    54→  show: {
+    55→    opacity: 1,
+    56→    transition: { staggerChildren: 0.03 },
+    57→  },
+    58→}
+    59→
+    60→const fadeUp = {
+    61→  hidden: { opacity: 0, y: 8 },
+    62→  show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' as const } },
+    63→}
+    64→
+    65→const staggerCard = {
+    66→  hidden: { opacity: 0, y: 10 },
+    67→  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' as const } },
+    68→}
+    69→
+    70→// ─── Score Badge Color ────────────────────────────────────────────────
+    71→
+    72→function getScoreColor(score: number) {
+    73→  if (score >= 70) return 'bg-emerald-50 text-emerald-700 border-emerald-200'
+    74→  if (score >= 40) return 'bg-amber-50 text-amber-700 border-amber-200'
+    75→  return 'bg-red-50 text-red-700 border-red-200'
+    76→}
+    77→
+    78→// ─── Component ────────────────────────────────────────────────────────
+    79→
+    80→export function LeadsView() {
+    81→  const { setView } = useAppStore()
+    82→  const [leads, setLeads] = useState<Lead[]>([])
+    83→  const [loading, setLoading] = useState(true)
+    84→  const [viewMode, setViewMode] = useState<'table' | 'board'>('table')
+    85→  const [search, setSearch] = useState('')
+    86→  const [stageFilter, setStageFilter] = useState<string>('ALL')
+    87→  const [addOpen, setAddOpen] = useState(false)
+    88→  const [refreshKey, setRefreshKey] = useState(0)
+    89→  const [processingLeads, setProcessingLeads] = useState<Set<string>>(new Set())
+    90→  const [completedLeads, setCompletedLeads] = useState<Set<string>>(new Set())
+    91→
+    92→  useEffect(() => {
+    93→    const params = new URLSearchParams()
+    94→    if (search) params.set('search', search)
+    95→    if (stageFilter !== 'ALL') params.set('stage', stageFilter)
+    96→    fetch(`/api/leads?${params}`)
+    97→      .then(r => r.json())
+    98→      .then(d => setLeads(d.leads || []))
+    99→      .catch(() => {})
+   100→      .finally(() => setLoading(false))
+   101→  }, [search, stageFilter, refreshKey])
+   102→
+   103→  const refresh = () => setRefreshKey(k => k + 1)
+   104→  const stages = LEAD_STAGES.filter(s => s !== 'LOST')
+   105→
+   106→  const handleAudit = useCallback(async (lead: Lead) => {
+   107→    if (!lead.business.website || processingLeads.has(lead.id)) return
+   108→    setProcessingLeads(prev => new Set(prev).add(lead.id))
+   109→    setCompletedLeads(prev => { const next = new Set(prev); next.delete(lead.id); return next })
+   110→    try {
+   111→      const res = await fetch('/api/audit', {
+   112→        method: 'POST',
+   113→        headers: { 'Content-Type': 'application/json' },
+   114→        body: JSON.stringify({ website: lead.business.website }),
+   115→      })
+   116→      if (res.ok) {
+   117→        toast.success('Audit completed!', { description: `${lead.business.name} has been audited` })
+   118→        setCompletedLeads(prev => new Set(prev).add(lead.id))
+   119→        setTimeout(() => setCompletedLeads(prev => { const next = new Set(prev); next.delete(lead.id); return next }), 2000)
+   120→        refresh()
+   121→      } else {
+   122→        toast.error('Audit failed', { description: 'Could not complete the audit' })
+   123→      }
+   124→    } catch {
+   125→      toast.error('Audit failed', { description: 'Network error' })
+   126→    } finally {
+   127→      setProcessingLeads(prev => { const next = new Set(prev); next.delete(lead.id); return next })
+   128→    }
+   129→  }, [processingLeads, refresh])
+   130→
+   131→  const handleQualify = useCallback(async (lead: Lead) => {
+   132→    if (processingLeads.has(lead.id)) return
+   133→    setProcessingLeads(prev => new Set(prev).add(lead.id))
+   134→    setCompletedLeads(prev => { const next = new Set(prev); next.delete(lead.id); return next })
+   135→    try {
+   136→      const res = await fetch('/api/ai/qualify', {
+   137→        method: 'POST',
+   138→        headers: { 'Content-Type': 'application/json' },
+   139→        body: JSON.stringify({
+   140→          companyName: lead.business.name,
+   141→          website: lead.business.website,
+   142→          industry: lead.business.industry,
+   143→          auditScore: lead.score || undefined,
+   144→        }),
+   145→      })
+   146→      const data = await res.json()
+   147→      if (res.ok) {
+   148→        const temperature = data.temperature?.toUpperCase() || 'WARM'
+   149→        const score = data.score ?? data.qualificationScore ?? '—'
+   150→        toast.success(`Qualified as ${temperature} (score: ${score}/100)`, { description: `${lead.business.name} — ${data.summary || data.reason || ''}` })
+   151→        setCompletedLeads(prev => new Set(prev).add(lead.id))
+   152→        setTimeout(() => setCompletedLeads(prev => { const next = new Set(prev); next.delete(lead.id); return next }), 2000)
+   153→        refresh()
+   154→      } else {
+   155→        toast.error('Qualification failed', { description: data.error || 'Could not qualify lead' })
+   156→      }
+   157→    } catch {
+   158→      toast.error('Qualification failed', { description: 'Network error' })
+   159→    } finally {
+   160→      setProcessingLeads(prev => { const next = new Set(prev); next.delete(lead.id); return next })
+   161→    }
+   162→  }, [processingLeads, refresh])
+   163→
+   164→  return (
+   165→    <motion.div
+   166→      variants={container}
+   167→      initial="hidden"
+   168→      animate="show"
+   169→      className="space-y-5"
+   170→    >
+   171→      {/* ─── Header ──────────────────────────────────────────────────── */}
+   172→      <motion.div variants={fadeUp} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   173→        <div>
+   174→          <h1 className="text-2xl font-bold text-[#0F172A] tracking-tight">Leads</h1>
+   175→          <p className="text-sm text-[#475569] mt-1">{leads.length} leads in pipeline</p>
+   176→        </div>
+   177→        <div className="flex items-center gap-2.5 flex-wrap">
+   178→          {/* Search */}
+   179→          <div className="relative">
+   180→            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
+   181→            <Input
+   182→              placeholder="Search leads..."
+   183→              value={search}
+   184→              onChange={e => setSearch(e.target.value)}
+   185→              className="pl-10 w-56 h-10 rounded-xl bg-slate-50 border-0 text-sm text-[#0F172A] placeholder:text-[#94A3B8] focus-visible:ring-1 focus-visible:ring-[#2563EB]/30 shadow-none"
+   186→            />
+   187→          </div>
+   188→
+   189→          {/* Stage filter pills */}
+   190→          <div className="hidden md:flex items-center gap-1 bg-slate-100 rounded-full p-1">
+   191→            <button
+   192→              onClick={() => setStageFilter('ALL')}
+   193→              className={cn(
+   194→                'px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-200',
+   195→                stageFilter === 'ALL'
+   196→                  ? 'bg-white text-[#2563EB] shadow-sm'
+   197→                  : 'text-[#94A3B8] hover:text-[#475569]'
+   198→              )}
+   199→            >
+   200→              All
+   201→            </button>
+   202→            {stages.slice(0, 5).map(s => (
+   203→              <button
+   204→                key={s}
+   205→                onClick={() => setStageFilter(s)}
+   206→                className={cn(
+   207→                  'px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-200 whitespace-nowrap',
+   208→                  stageFilter === s
+   209→                    ? 'bg-white text-[#2563EB] shadow-sm'
+   210→                    : 'text-[#94A3B8] hover:text-[#475569]'
+   211→                )}
+   212→              >
+   213→                {s.replace(/_/g, ' ')}
+   214→              </button>
+   215→            ))}
+   216→          </div>
+   217→
+   218→          {/* View toggle */}
+   219→          <div className="flex items-center bg-slate-100 rounded-full p-1">
+   220→            <button
+   221→              onClick={() => setViewMode('table')}
+   222→              className={cn(
+   223→                'p-2 rounded-full transition-all duration-200',
+   224→                viewMode === 'table'
+   225→                  ? 'bg-white shadow-sm text-[#2563EB]'
+   226→                  : 'text-[#94A3B8] hover:text-[#475569]'
+   227→              )}
+   228→            >
+   229→              <List className="w-4 h-4" />
+   230→            </button>
+   231→            <button
+   232→              onClick={() => setViewMode('board')}
+   233→              className={cn(
+   234→                'p-2 rounded-full transition-all duration-200',
+   235→                viewMode === 'board'
+   236→                  ? 'bg-white shadow-sm text-[#2563EB]'
+   237→                  : 'text-[#94A3B8] hover:text-[#475569]'
+   238→              )}
+   239→            >
+   240→              <LayoutGrid className="w-4 h-4" />
+   241→            </button>
+   242→          </div>
+   243→
+   244→          <AddLeadDialog open={addOpen} onOpenChange={setAddOpen} onCreated={refresh} />
+   245→        </div>
+   246→      </motion.div>
+   247→
+   248→      {/* ─── Content ──────────────────────────────────────────────────── */}
+   249→      {loading ? (
+   250→        <Card className="bg-white rounded-2xl border-0 shadow-sm p-8">
+   251→          <div className="h-56 bg-slate-100 rounded-2xl animate-pulse" />
+   252→        </Card>
+   253→      ) : viewMode === 'table' ? (
+   254→        <motion.div variants={fadeUp}>
+   255→          <Card className="bg-white rounded-2xl border-0 shadow-sm overflow-hidden">
+   256→            <div className="overflow-x-auto">
+   257→              <table className="w-full text-sm">
+   258→                <thead className="sticky top-0 bg-slate-50/95 backdrop-blur-sm">
+   259→                  <tr className="border-b border-slate-100">
+   260→                    <th className="text-left px-5 py-3.5 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider">Business</th>
+   261→                    <th className="text-left px-5 py-3.5 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider">Industry</th>
+   262→                    <th className="text-left px-5 py-3.5 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider">Stage</th>
+   263→                    <th className="text-left px-5 py-3.5 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider">Contact</th>
+   264→                    <th className="text-left px-5 py-3.5 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider">Score</th>
+   265→                    <th className="text-left px-5 py-3.5 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider">Actions</th>
+   266→                    <th className="text-left px-5 py-3.5 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider">Updated</th>
+   267→                    <th className="w-10" />
+   268→                  </tr>
+   269→                </thead>
+   270→                <motion.tbody variants={container} initial="hidden" animate="show">
+   271→                  {leads.length === 0 ? (
+   272→                    <tr>
+   273→                      <td colSpan={8} className="px-5 py-16 text-center">
+   274→                        <div className="flex flex-col items-center">
+   275→                          <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center mb-3">
+   276→                            <Search className="w-5 h-5 text-slate-300" />
+   277→                          </div>
+   278→                          <p className="text-sm text-[#475569] font-medium">No leads yet</p>
+   279→                          <p className="text-xs text-[#94A3B8] mt-1">Add your first lead to get started</p>
+   280→                        </div>
+   281→                      </td>
+   282→                    </tr>
+   283→                  ) : leads.map(lead => (
+   284→                    <motion.tr
+   285→                      key={lead.id}
+   286→                      variants={fadeUp}
+   287→                      className="border-b border-slate-50 last:border-0 hover:bg-blue-50/40 cursor-pointer transition-colors group"
+   288→                      onClick={() => setView('lead-detail', lead.id)}
+   289→                    >
+   290→                      <td className="px-5 py-3.5">
+   291→                        <div className="font-semibold text-[#0F172A] group-hover:text-[#2563EB] transition-colors">{lead.business.name}</div>
+   292→                        {lead.business.city && (
+   293→                          <div className="text-xs text-[#94A3B8] mt-0.5">
+   294→                            {lead.business.city}{lead.business.country ? `, ${lead.business.country}` : ''}
+   295→                          </div>
+   296→                        )}
+   297→                      </td>
+   298→                      <td className="px-5 py-3.5">
+   299→                        <span className="text-xs text-[#475569] font-medium">{lead.business.industry || '—'}</span>
+   300→                      </td>
+   301→                      <td className="px-5 py-3.5">
+   302→                        <Badge
+   303→                          variant="outline"
+   304→                          className={cn(
+   305→                            'text-[11px] font-semibold rounded-full border px-2.5 py-0.5',
+   306→                            STAGE_COLORS[lead.stage]
+   307→                          )}
+   308→                        >
+   309→                          <span className={cn('w-1.5 h-1.5 rounded-full mr-1.5', STAGE_DOT_COLORS[lead.stage])} />
+   310→                          {lead.stage.replace(/_/g, ' ')}
+   311→                        </Badge>
+   312→                      </td>
+   313→                      <td className="px-5 py-3.5">
+   314→                        {lead.decisionMaker ? (
+   315→                          <div>
+   316→                            <div className="text-sm font-medium text-[#0F172A]">{lead.decisionMaker}</div>
+   317→                            {lead.decisionMakerRole && <div className="text-xs text-[#94A3B8]">{lead.decisionMakerRole}</div>}
+   318→                          </div>
+   319→                        ) : <span className="text-[#94A3B8] text-xs">—</span>}
+   320→                      </td>
+   321→                      <td className="px-5 py-3.5">
+   322→                        {lead.score > 0 && (
+   323→                          <Badge
+   324→                            variant="outline"
+   325→                            className={cn('text-[11px] font-bold rounded-lg px-2 py-0.5 border', getScoreColor(lead.score))}
+   326→                          >
+   327→                            {lead.score}
+   328→                          </Badge>
+   329→                        )}
+   330→                      </td>
+   331→                      <td className="px-5 py-3.5">
+   332→                        {processingLeads.has(lead.id) ? (
+   333→                          <div className="flex items-center gap-1.5">
+   334→                            <Loader2 className="w-3.5 h-3.5 animate-spin text-[#2563EB]" />
+   335→                            <span className="text-xs text-[#94A3B8]">Analyzing...</span>
+   336→                          </div>
+   337→                        ) : completedLeads.has(lead.id) ? (
+   338→                          <div className="flex items-center gap-1.5">
+   339→                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+   340→                            <span className="text-xs text-emerald-600 font-medium">Done</span>
+   341→                          </div>
+   342→                        ) : (
+   343→                          <div className="flex items-center gap-1.5">
+   344→                            <button
+   345→                              onClick={e => { e.stopPropagation(); handleAudit(lead) }}
+   346→                              disabled={!lead.business.website || processingLeads.has(lead.id)}
+   347→                              className="inline-flex items-center gap-1.5 h-7 px-2.5 text-[11px] font-semibold rounded-lg bg-blue-50 text-[#2563EB] hover:bg-blue-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
+   348→                              title={!lead.business.website ? 'No website' : 'Audit website'}
+   349→                            >
+   350→                              <Globe2 className="w-3 h-3" />
+   351→                              Audit
+   352→                            </button>
+   353→                            <button
+   354→                              onClick={e => { e.stopPropagation(); handleQualify(lead) }}
+   355→                              disabled={processingLeads.has(lead.id)}
+   356→                              className="inline-flex items-center gap-1.5 h-7 px-2.5 text-[11px] font-semibold rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
+   357→                              title="Qualify lead with AI"
+   358→                            >
+   359→                              <Target className="w-3 h-3" />
+   360→                              Qualify
+   361→                            </button>
+   362→                          </div>
+   363→                        )}
+   364→                      </td>
+   365→                      <td className="px-5 py-3.5 text-[#94A3B8] text-xs font-medium">{format(new Date(lead.updatedAt), 'MMM d')}</td>
+   366→                      <td className="px-3 py-3.5">
+   367→                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-[#2563EB] transition-colors" />
+   368→                      </td>
+   369→                    </motion.tr>
+   370→                  ))}
+   371→                </motion.tbody>
+   372→              </table>
+   373→            </div>
+   374→          </Card>
+   375→        </motion.div>
+   376→      ) : (
+   377→        /* Kanban Board */
+   378→        <div className="flex gap-4 overflow-x-auto pb-4">
+   379→          {stages.map(stage => {
+   380→            const stageLeads = leads.filter(l => l.stage === stage)
+   381→            return (
+   382→              <div key={stage} className="min-w-[280px] flex-1">
+   383→                <div className="flex items-center gap-2.5 mb-3 px-1">
+   384→                  <span className={cn('w-2.5 h-2.5 rounded-full', STAGE_DOT_COLORS[stage])} />
+   385→                  <span className="text-xs font-semibold text-[#0F172A] uppercase tracking-wider">{stage.replace(/_/g, ' ')}</span>
+   386→                  <span className="text-xs text-[#94A3B8] bg-slate-100 rounded-full px-2 py-0.5 font-semibold tabular-nums">{stageLeads.length}</span>
+   387→                </div>
+   388→                <motion.div
+   389→                  variants={container}
+   390→                  initial="hidden"
+   391→                  animate="show"
+   392→                  className="space-y-2.5"
+   393→                >
+   394→                  {stageLeads.map(lead => (
+   395→                    <motion.div
+   396→                      key={lead.id}
+   397→                      variants={staggerCard}
+   398→                      whileHover={{ y: -2 }}
+   399→                      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+   400→                    >
+   401→                      <Card
+   402→                        className="bg-white rounded-2xl border-0 shadow-sm hover:shadow-md transition-shadow cursor-pointer p-4"
+   403→                        onClick={() => setView('lead-detail', lead.id)}
+   404→                      >
+   405→                        <div className="flex items-start justify-between mb-2">
+   406→                          <p className="text-sm font-semibold text-[#0F172A] truncate pr-2">{lead.business.name}</p>
+   407→                          {lead.score > 0 && (
+   408→                            <Badge
+   409→                              variant="outline"
+   410→                              className={cn('text-[10px] font-bold rounded-lg px-1.5 py-0 border shrink-0', getScoreColor(lead.score))}
+   411→                            >
+   412→                              {lead.score}
+   413→                            </Badge>
+   414→                          )}
+   415→                        </div>
+   416→                        {lead.business.industry && (
+   417→                          <p className="text-xs text-[#94A3B8] mb-2">{lead.business.industry}</p>
+   418→                        )}
+   419→                        {lead.decisionMaker && (
+   420→                          <p className="text-xs text-[#475569] mb-3">{lead.decisionMaker}</p>
+   421→                        )}
+   422→                        <div className="flex items-center gap-1.5 pt-3 border-t border-slate-100">
+   423→                          <button
+   424→                            onClick={e => { e.stopPropagation(); handleAudit(lead) }}
+   425→                            className="p-1.5 rounded-lg hover:bg-blue-50 transition-all duration-150"
+   426→                            title="Audit"
+   427→                            disabled={!lead.business.website || processingLeads.has(lead.id)}
+   428→                          >
+   429→                            {processingLeads.has(lead.id)
+   430→                              ? <Loader2 className="w-3.5 h-3.5 text-[#2563EB] animate-spin" />
+   431→                              : <Globe2 className="w-3.5 h-3.5 text-[#94A3B8] hover:text-[#2563EB] transition-colors" />}
+   432→                          </button>
+   433→                          <button
+   434→                            onClick={e => { e.stopPropagation(); handleQualify(lead) }}
+   435→                            className="p-1.5 rounded-lg hover:bg-emerald-50 transition-all duration-150"
+   436→                            title="Qualify"
+   437→                            disabled={processingLeads.has(lead.id)}
+   438→                          >
+   439→                            {processingLeads.has(lead.id)
+   440→                              ? <Loader2 className="w-3.5 h-3.5 text-emerald-500 animate-spin" />
+   441→                              : <Target className="w-3.5 h-3.5 text-[#94A3B8] hover:text-emerald-600 transition-colors" />}
+   442→                          </button>
+   443→                          {completedLeads.has(lead.id) && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 ml-0.5" />}
+   444→                          <div className="flex-1" />
+   445→                          <div className="flex items-center gap-1 text-[#94A3B8]">
+   446→                            <Mail className="w-3 h-3" />
+   447→                            <span className="text-[11px] font-medium tabular-nums">{lead._count.outreaches}</span>
+   448→                          </div>
+   449→                          <div className="flex items-center gap-1 text-[#94A3B8] ml-2">
+   450→                            <CalendarIcon className="w-3 h-3" />
+   451→                            <span className="text-[11px] font-medium tabular-nums">{lead._count.meetings}</span>
+   452→                          </div>
+   453→                        </div>
+   454→                      </Card>
+   455→                    </motion.div>
+   456→                  ))}
+   457→                  {stageLeads.length === 0 && (
+   458→                    <div className="bg-slate-50/80 rounded-2xl p-6 text-center border border-dashed border-slate-200">
+   459→                      <p className="text-xs text-[#94A3B8] font-medium">No leads</p>
+   460→                    </div>
+   461→                  )}
+   462→                </motion.div>
+   463→              </div>
+   464→            )
+   465→          })}
+   466→        </div>
+   467→      )}
+   468→    </motion.div>
+   469→  )
+   470→}
+   471→
+   472→// ─── Add Lead Dialog ──────────────────────────────────────────────────
+   473→
+   474→function AddLeadDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpenChange: (o: boolean) => void; onCreated: () => void }) {
+   475→  const [form, setForm] = useState({
+   476→    name: '', website: '', industry: '', city: '', country: '',
+   477→    phone: '', email: '', decisionMaker: '', decisionMakerRole: '', decisionMakerEmail: ''
+   478→  })
+   479→  const [loading, setLoading] = useState(false)
+   480→
+   481→  const handleSave = async () => {
+   482→    setLoading(true)
+   483→    try {
+   484→      const res = await fetch('/api/leads', {
+   485→        method: 'POST',
+   486→        headers: { 'Content-Type': 'application/json' },
+   487→        body: JSON.stringify({
+   488→          business: {
+   489→            name: form.name, website: form.website, industry: form.industry,
+   490→            city: form.city, country: form.country, phone: form.phone, email: form.email
+   491→          },
+   492→          decisionMaker: form.decisionMaker, decisionMakerRole: form.decisionMakerRole,
+   493→          decisionMakerEmail: form.decisionMakerEmail,
+   494→        }),
+   495→      })
+   496→      if (res.ok) {
+   497→        setForm({ name: '', website: '', industry: '', city: '', country: '', phone: '', email: '', decisionMaker: '', decisionMakerRole: '', decisionMakerEmail: '' })
+   498→        onOpenChange(false)
+   499→        onCreated()
+   500→      }
+   501→    } catch {}
+   502→    setLoading(false)
+   503→  }
+   504→
+   505→  return (
+   506→    <Dialog open={open} onOpenChange={onOpenChange}>
+   507→      <DialogTrigger asChild>
+   508→        <Button className="h-10 rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white font-semibold shadow-sm hover:shadow-md transition-all px-4">
+   509→          <Plus className="w-4 h-4 mr-1.5" />Add Lead
+   510→        </Button>
+   511→      </DialogTrigger>
+   512→      <DialogContent className="max-w-lg rounded-2xl border-0 shadow-xl p-0 overflow-hidden">
+   513→        <div className="bg-gradient-to-r from-[#2563EB] to-blue-600 px-6 py-5">
+   514→          <DialogTitle className="text-lg font-bold text-white">Add New Lead</DialogTitle>
+   515→          <p className="text-sm text-blue-100 mt-1">Fill in the details below to add a new lead to your pipeline</p>
+   516→        </div>
+   517→        <div className="px-6 py-5 space-y-5">
+   518→          {/* Business Information Section */}
+   519→          <div>
+   520→            <p className="text-xs font-semibold text-[#94A3B8] uppercase tracking-wider mb-3">Business Information</p>
+   521→            <div className="grid grid-cols-2 gap-3">
+   522→              <div className="col-span-2">
+   523→                <Label className="text-xs font-medium text-[#475569]">Company Name *</Label>
+   524→                <Input
+   525→                  className="mt-1.5 h-10 rounded-xl bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-[#2563EB]/30"
+   526→                  value={form.name}
+   527→                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+   528→                  placeholder="Acme Corp"
+   529→                />
+   530→              </div>
+   531→              <div>
+   532→                <Label className="text-xs font-medium text-[#475569]">Website</Label>
+   533→                <Input
+   534→                  className="mt-1.5 h-10 rounded-xl bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-[#2563EB]/30"
+   535→                  value={form.website}
+   536→                  onChange={e => setForm(f => ({ ...f, website: e.target.value }))}
+   537→                  placeholder="https://..."
+   538→                />
+   539→              </div>
+   540→              <div>
+   541→                <Label className="text-xs font-medium text-[#475569]">Industry</Label>
+   542→                <Input
+   543→                  className="mt-1.5 h-10 rounded-xl bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-[#2563EB]/30"
+   544→                  value={form.industry}
+   545→                  onChange={e => setForm(f => ({ ...f, industry: e.target.value }))}
+   546→                  placeholder="Law Firm"
+   547→                />
+   548→              </div>
+   549→              <div>
+   550→                <Label className="text-xs font-medium text-[#475569]">City</Label>
+   551→                <Input
+   552→                  className="mt-1.5 h-10 rounded-xl bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-[#2563EB]/30"
+   553→                  value={form.city}
+   554→                  onChange={e => setForm(f => ({ ...f, city: e.target.value }))}
+   555→                  placeholder="New York"
+   556→                />
+   557→              </div>
+   558→              <div>
+   559→                <Label className="text-xs font-medium text-[#475569]">Country</Label>
+   560→                <Input
+   561→                  className="mt-1.5 h-10 rounded-xl bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-[#2563EB]/30"
+   562→                  value={form.country}
+   563→                  onChange={e => setForm(f => ({ ...f, country: e.target.value }))}
+   564→                  placeholder="USA"
+   565→                />
+   566→              </div>
+   567→              <div>
+   568→                <Label className="text-xs font-medium text-[#475569]">Phone</Label>
+   569→                <Input
+   570→                  className="mt-1.5 h-10 rounded-xl bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-[#2563EB]/30"
+   571→                  value={form.phone}
+   572→                  onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+   573→                  placeholder="+1 555-0123"
+   574→                />
+   575→              </div>
+   576→              <div>
+   577→                <Label className="text-xs font-medium text-[#475569]">Email</Label>
+   578→                <Input
+   579→                  className="mt-1.5 h-10 rounded-xl bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-[#2563EB]/30"
+   580→                  type="email"
+   581→                  value={form.email}
+   582→                  onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+   583→                  placeholder="info@company.com"
+   584→                />
+   585→              </div>
+   586→            </div>
+   587→          </div>
+   588→
+   589→          {/* Decision Maker Section */}
+   590→          <div className="pt-4 border-t border-slate-100">
+   591→            <p className="text-xs font-semibold text-[#94A3B8] uppercase tracking-wider mb-3">Decision Maker</p>
+   592→            <div className="grid grid-cols-2 gap-3">
+   593→              <div>
+   594→                <Label className="text-xs font-medium text-[#475569]">Name</Label>
+   595→                <Input
+   596→                  className="mt-1.5 h-10 rounded-xl bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-[#2563EB]/30"
+   597→                  value={form.decisionMaker}
+   598→                  onChange={e => setForm(f => ({ ...f, decisionMaker: e.target.value }))}
+   599→                  placeholder="John Smith"
+   600→                />
+   601→              </div>
+   602→              <div>
+   603→                <Label className="text-xs font-medium text-[#475569]">Role</Label>
+   604→                <Input
+   605→                  className="mt-1.5 h-10 rounded-xl bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-[#2563EB]/30"
+   606→                  value={form.decisionMakerRole}
+   607→                  onChange={e => setForm(f => ({ ...f, decisionMakerRole: e.target.value }))}
+   608→                  placeholder="CEO"
+   609→                />
+   610→              </div>
+   611→              <div className="col-span-2">
+   612→                <Label className="text-xs font-medium text-[#475569]">Email</Label>
+   613→                <Input
+   614→                  className="mt-1.5 h-10 rounded-xl bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-[#2563EB]/30"
+   615→                  type="email"
+   616→                  value={form.decisionMakerEmail}
+   617→                  onChange={e => setForm(f => ({ ...f, decisionMakerEmail: e.target.value }))}
+   618→                  placeholder="john@company.com"
+   619→                />
+   620→              </div>
+   621→            </div>
+   622→          </div>
+   623→        </div>
+   624→
+   625→        {/* Footer */}
+   626→        <div className="px-6 py-4 bg-slate-50/80 border-t border-slate-100 flex justify-end gap-2.5">
+   627→          <Button
+   628→            variant="outline"
+   629→            onClick={() => onOpenChange(false)}
+   630→            className="rounded-xl border-slate-200 text-[#475569] hover:bg-slate-100 font-semibold h-10 px-5"
+   631→          >
+   632→            Cancel
+   633→          </Button>
+   634→          <Button
+   635→            onClick={handleSave}
+   636→            disabled={loading || !form.name}
+   637→            className="rounded-xl bg-gradient-to-r from-[#2563EB] to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold h-10 px-6 shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+   638→          >
+   639→            {loading ? (
+   640→              <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" />Saving...</>
+   641→            ) : (
+   642→              'Add Lead'
+   643→            )}
+   644→          </Button>
+   645→        </div>
+   646→      </DialogContent>
+   647→    </Dialog>
+   648→  )
+   649→}

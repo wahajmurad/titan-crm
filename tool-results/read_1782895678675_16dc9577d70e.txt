@@ -1,0 +1,947 @@
+     1→     1→'use client'
+     2→     2→
+     3→     3→import { useEffect, useState, useCallback } from 'react'
+     4→     4→import { useAppStore } from '@/lib/store'
+     5→     5→import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+     6→     6→import { Button } from '@/components/ui/button'
+     7→     7→import { Input } from '@/components/ui/input'
+     8→     8→import { Badge } from '@/components/ui/badge'
+     9→     9→import { Skeleton } from '@/components/ui/skeleton'
+    10→    10→import { Separator } from '@/components/ui/separator'
+    11→    11→import { Progress } from '@/components/ui/progress'
+    12→    12→import { Label } from '@/components/ui/label'
+    13→    13→import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+    14→    14→import { ScrollArea } from '@/components/ui/scroll-area'
+    15→    15→import {
+    16→    16→  Collapsible,
+    17→    17→  CollapsibleContent,
+    18→    18→  CollapsibleTrigger,
+    19→    19→} from '@/components/ui/collapsible'
+    20→    20→import {
+    21→    21→  Globe,
+    22→    22→  Loader2,
+    23→    23→  ChevronDown,
+    24→    24→  ChevronRight,
+    25→    25→  ExternalLink,
+    26→    26→  Target,
+    27→    27→  Lightbulb,
+    28→    28→  MessageSquare,
+    29→    29→  Palette,
+    30→    30→  Zap,
+    31→    31→  Shield,
+    32→    32→  Smartphone,
+    33→    33→  Bot,
+    34→    34→  TrendingUp,
+    35→    35→  Search,
+    36→    36→  ScanSearch,
+    37→    37→  Mail,
+    38→    38→  CheckCircle2,
+    39→    39→  ArrowRight,
+    40→    40→  Clock,
+    41→    41→  BarChart3,
+    42→    42→  AlertTriangle,
+    43→    43→  Sparkles,
+    44→    44→  Gauge,
+    45→    45→  Users,
+    46→    46→  RefreshCw,
+    47→    47→} from 'lucide-react'
+    48→    48→import type { LucideIcon } from 'lucide-react'
+    49→    49→import { cn } from '@/lib/utils'
+    50→    50→
+    51→    51→/* ──────────── types ──────────── */
+    52→    52→
+    53→    53→interface AuditResult {
+    54→    54→  id?: string
+    55→    55→  url: string
+    56→    56→  domain: string
+    57→    57→  scores: {
+    58→    58→    ui: number
+    59→    59→    ux: number
+    60→    60→    seo: number
+    61→    61→    performance: number
+    62→    62→    accessibility: number
+    63→    63→    mobile: number
+    64→    64→    security: number
+    65→    65→    aiReadiness: number
+    66→    66→    automation: number
+    67→    67→    conversion: number
+    68→    68→    overall: number
+    69→    69→  }
+    70→    70→  details: {
+    71→    71→    ui: string
+    72→    72→    ux: string
+    73→    73→    seo: string
+    74→    74→    performance: string
+    75→    75→    accessibility: string
+    76→    76→    mobile: string
+    77→    77→    security: string
+    78→    78→    aiReadiness: string
+    79→    79→    automation: string
+    80→    80→    conversion: string
+    81→    81→  }
+    82→    82→  executiveSummary: string
+    83→    83→  problemsFound: string[]
+    84→    84→  opportunities: string[]
+    85→    85→  recommendations: string[]
+    86→    86→  talkingPoints: string[]
+    87→    87→  pitchStrategy: string
+    88→    88→  createdAt?: string
+    89→    89→}
+    90→    90→
+    91→    91→interface RecentAudit {
+    92→    92→  id: string
+    93→    93→  url: string
+    94→    94→  domain: string
+    95→    95→  overallScore: number
+    96→    96→  createdAt: string
+    97→    97→}
+    98→    98→
+    99→    99→interface Campaign {
+   100→   100→  id: string
+   101→   101→  name: string
+   102→   102→}
+   103→   103→
+   104→   104→/* ──────────── constants ──────────── */
+   105→   105→
+   106→   106→type ScoreKey = keyof AuditResult['scores']
+   107→   107→
+   108→   108→const SCORE_CONFIG: { key: ScoreKey; label: string; icon: LucideIcon }[] = [
+   109→   109→  { key: 'ui', label: 'UI Design', icon: Palette },
+   110→   110→  { key: 'ux', label: 'UX', icon: Users },
+   111→   111→  { key: 'seo', label: 'SEO', icon: Search },
+   112→   112→  { key: 'performance', label: 'Performance', icon: Gauge },
+   113→   113→  { key: 'accessibility', label: 'Accessibility', icon: Users },
+   114→   114→  { key: 'mobile', label: 'Mobile', icon: Smartphone },
+   115→   115→  { key: 'security', label: 'Security', icon: Shield },
+   116→   116→  { key: 'aiReadiness', label: 'AI Readiness', icon: Bot },
+   117→   117→  { key: 'automation', label: 'Automation', icon: Zap },
+   118→   118→  { key: 'conversion', label: 'Conversion', icon: TrendingUp },
+   119→   119→]
+   120→   120→
+   121→   121→const ANALYSIS_STEPS = [
+   122→   122→  'Fetching page content…',
+   123→   123→  'Analyzing UI & visual design…',
+   124→   124→  'Evaluating user experience…',
+   125→   125→  'Scanning SEO indicators…',
+   126→   126→  'Measuring performance metrics…',
+   127→   127→  'Checking accessibility standards…',
+   128→   128→  'Testing mobile responsiveness…',
+   129→   129→  'Auditing security headers…',
+   130→   130→  'Assessing AI readiness…',
+   131→   131→  'Reviewing automation opportunities…',
+   132→   132→  'Analyzing conversion potential…',
+   133→   133→  'Generating executive summary…',
+   134→   134→]
+   135→   135→
+   136→   136→/* ──────────── helpers ──────────── */
+   137→   137→
+   138→   138→function getScoreColor(score: number): string {
+   139→   139→  if (score >= 80) return 'text-emerald-600'
+   140→   140→  if (score >= 60) return 'text-blue-600'
+   141→   141→  if (score >= 40) return 'text-amber-600'
+   142→   142→  return 'text-red-600'
+   143→   143→}
+   144→   144→
+   145→   145→function getScoreBarColor(score: number): string {
+   146→   146→  if (score >= 80) return 'bg-blue-500'
+   147→   147→  if (score >= 60) return 'bg-blue-500'
+   148→   148→  if (score >= 40) return 'bg-blue-300'
+   149→   149→  return 'bg-blue-200'
+   150→   150→}
+   151→   151→
+   152→   152→function getScoreBgColor(score: number): string {
+   153→   153→  if (score >= 80) return 'bg-emerald-100'
+   154→   154→  if (score >= 60) return 'bg-blue-100'
+   155→   155→  if (score >= 40) return 'bg-amber-100'
+   156→   156→  return 'bg-red-100'
+   157→   157→}
+   158→   158→
+   159→   159→function getScoreRingColor(score: number): string {
+   160→   160→  if (score >= 80) return 'stroke-blue-400'
+   161→   161→  if (score >= 60) return 'stroke-blue-500'
+   162→   162→  if (score >= 40) return 'stroke-blue-300'
+   163→   163→  return 'stroke-blue-200'
+   164→   164→}
+   165→   165→
+   166→   166→function getScoreLabel(score: number): string {
+   167→   167→  if (score >= 80) return 'Excellent'
+   168→   168→  if (score >= 60) return 'Good'
+   169→   169→  if (score >= 40) return 'Fair'
+   170→   170→  return 'Needs Work'
+   171→   171→}
+   172→   172→
+   173→   173→function clampScore(val: unknown): number {
+   174→   174→  const n = Number(val)
+   175→   175→  if (Number.isNaN(n)) return 0
+   176→   176→  return Math.max(0, Math.min(100, Math.round(n)))
+   177→   177→}
+   178→   178→
+   179→   179→function parseStringList(val: unknown): string[] {
+   180→   180→  if (!val) return []
+   181→   181→  // Already an array — handle strings AND objects
+   182→   182→  if (Array.isArray(val)) {
+   183→   183→    return val
+   184→   184→      .map((item) => {
+   185→   185→        if (typeof item === 'string') return item.replace(/^\d+[\.\)\-]\s*/, '').trim()
+   186→   186→        if (typeof item === 'object' && item !== null) {
+   187→   187→          const obj = item as Record<string, unknown>
+   188→   188→          return String(obj.title || obj.text || obj.description || obj.point || obj.content || '').trim()
+   189→   189→        }
+   190→   190→        return String(item).trim()
+   191→   191→      })
+   192→   192→      .filter((s) => s.length > 0 && !s.startsWith('[object'))
+   193→   193→  }
+   194→   194→  if (typeof val === 'string') {
+   195→   195→    try {
+   196→   196→      const parsed = JSON.parse(val)
+   197→   197→      if (Array.isArray(parsed)) return parseStringList(parsed)
+   198→   198→    } catch {
+   199→   199→      // split by newlines or commas
+   200→   200→      return val.split(/[\n]/).map(s => s.replace(/^\d+[\.\)\-]\s*/, '').trim()).filter(Boolean)
+   201→   201→    }
+   202→   202→  }
+   203→   203→  return []
+   204→   204→}
+   205→   205→
+   206→   206→function extractDomain(url: string): string {
+   207→   207→  try {
+   208→   208→    const u = new URL(url.startsWith('http') ? url : `https://${url}`)
+   209→   209→    return u.hostname.replace(/^www\./, '')
+   210→   210→  } catch {
+   211→   211→    return url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0]
+   212→   212→  }
+   213→   213→}
+   214→   214→
+   215→   215→function formatDate(iso: string | undefined): string {
+   216→   216→  if (!iso) return ''
+   217→   217→  try {
+   218→   218→    return new Date(iso).toLocaleDateString('en-US', {
+   219→   219→      month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit',
+   220→   220→    })
+   221→   221→  } catch {
+   222→   222→    return iso
+   223→   223→  }
+   224→   224→}
+   225→   225→
+   226→   226→/* ──────────── circular score component ──────────── */
+   227→   227→
+   228→   228→function CircularScore({ value, size = 140 }: { value: number; size?: number }) {
+   229→   229→  const strokeWidth = 8
+   230→   230→  const radius = (size - strokeWidth) / 2
+   231→   231→  const circumference = 2 * Math.PI * radius
+   232→   232→  const offset = circumference - (value / 100) * circumference
+   233→   233→
+   234→   234→  return (
+   235→   235→    <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
+   236→   236→      <svg width={size} height={size} className="-rotate-90">
+   237→   237→        {/* background ring */}
+   238→   238→        <circle
+   239→   239→          cx={size / 2}
+   240→   240→          cy={size / 2}
+   241→   241→          r={radius}
+   242→   242→          fill="none"
+   243→   243→          strokeWidth={strokeWidth}
+   244→   244→          className="stroke-gray-200"
+   245→   245→        />
+   246→   246→        {/* score ring */}
+   247→   247→        <circle
+   248→   248→          cx={size / 2}
+   249→   249→          cy={size / 2}
+   250→   250→          r={radius}
+   251→   251→          fill="none"
+   252→   252→          strokeWidth={strokeWidth}
+   253→   253→          strokeLinecap="round"
+   254→   254→          className={cn(
+   255→   255→            'transition-all duration-1000 ease-out',
+   256→   256→            getScoreRingColor(value)
+   257→   257→          )}
+   258→   258→          strokeDasharray={circumference}
+   259→   259→          strokeDashoffset={offset}
+   260→   260→        />
+   261→   261→      </svg>
+   262→   262→      <div className="absolute inset-0 flex flex-col items-center justify-center">
+   263→   263→        <span className={cn('font-bold leading-none', getScoreColor(value))} style={{ fontSize: size * 0.28 }}>
+   264→   264→          {value}
+   265→   265→        </span>
+   266→   266→        <span className="text-gray-400 text-xs mt-1">/ 100</span>
+   267→   267→      </div>
+   268→   268→    </div>
+   269→   269→  )
+   270→   270→}
+   271→   271→
+   272→   272→/* ──────────── mini circular score (for recent audits) ──────────── */
+   273→   273→
+   274→   274→function MiniCircularScore({ value, size = 44 }: { value: number; size?: number }) {
+   275→   275→  const strokeWidth = 3
+   276→   276→  const radius = (size - strokeWidth) / 2
+   277→   277→  const circumference = 2 * Math.PI * radius
+   278→   278→  const offset = circumference - (value / 100) * circumference
+   279→   279→
+   280→   280→  return (
+   281→   281→    <div className="relative inline-flex items-center justify-center flex-shrink-0" style={{ width: size, height: size }}>
+   282→   282→      <svg width={size} height={size} className="-rotate-90">
+   283→   283→        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" strokeWidth={strokeWidth} className="stroke-gray-200" />
+   284→   284→        <circle
+   285→   285→          cx={size / 2}
+   286→   286→          cy={size / 2}
+   287→   287→          r={radius}
+   288→   288→          fill="none"
+   289→   289→          strokeWidth={strokeWidth}
+   290→   290→          strokeLinecap="round"
+   291→   291→          className={cn('transition-all duration-700 ease-out', getScoreRingColor(value))}
+   292→   292→          strokeDasharray={circumference}
+   293→   293→          strokeDashoffset={offset}
+   294→   294→        />
+   295→   295→      </svg>
+   296→   296→      <span className={cn('absolute text-xs font-semibold', getScoreColor(value))} style={{ fontSize: size * 0.3 }}>
+   297→   297→        {value}
+   298→   298→      </span>
+   299→   299→    </div>
+   300→   300→  )
+   301→   301→}
+   302→   302→
+   303→   303→/* ──────────── main component ──────────── */
+   304→   304→
+   305→   305→export function AuditView() {
+   306→   306→  const { setView } = useAppStore()
+   307→   307→
+   308→   308→  // state
+   309→   309→  const [url, setUrl] = useState('')
+   310→   310→  const [isAnalyzing, setIsAnalyzing] = useState(false)
+   311→   311→  const [progressStep, setProgressStep] = useState(0)
+   312→   312→  const [progressPct, setProgressPct] = useState(0)
+   313→   313→  const [audit, setAudit] = useState<AuditResult | null>(null)
+   314→   314→  const [recentAudits, setRecentAudits] = useState<RecentAudit[]>([])
+   315→   315→  const [error, setError] = useState<string | null>(null)
+   316→   316→  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set())
+   317→   317→  const [campaigns, setCampaigns] = useState<Campaign[]>([])
+   318→   318→  const [selectedCampaign, setSelectedCampaign] = useState('')
+   319→   319→
+   320→   320→  // toggle card expansion
+   321→   321→  const toggleCard = (key: string) => {
+   322→   322→    setExpandedCards(prev => {
+   323→   323→      const next = new Set(prev)
+   324→   324→      if (next.has(key)) next.delete(key)
+   325→   325→      else next.add(key)
+   326→   326→      return next
+   327→   327→    })
+   328→   328→  }
+   329→   329→
+   330→   330→  /* ──── fetch recent audits ──── */
+   331→   331→  const fetchRecentAudits = useCallback(async () => {
+   332→   332→    try {
+   333→   333→      const res = await fetch('/api/audit')
+   334→   334→      if (res.ok) {
+   335→   335→        const data = await res.json()
+   336→   336→        if (Array.isArray(data.audits)) {
+   337→   337→          setRecentAudits(
+   338→   338→            data.audits.map((a: Record<string, unknown>) => ({
+   339→   339→              id: String(a.id ?? ''),
+   340→   340→              url: String(a.url ?? ''),
+   341→   341→              domain: String(a.domain ?? ''),
+   342→   342→              overallScore: clampScore((a.overallScore as number) ?? (a.scores as Record<string, unknown>)?.overall ?? 0),
+   343→   343→              createdAt: String(a.createdAt ?? ''),
+   344→   344→            }))
+   345→   345→          )
+   346→   346→        }
+   347→   347→      }
+   348→   348→    } catch {
+   349→   349→      // silent fail for recent audits
+   350→   350→    }
+   351→   351→  }, [])
+   352→   352→
+   353→   353→  /* ──── fetch campaigns ──── */
+   354→   354→  const fetchCampaigns = useCallback(async () => {
+   355→   355→    try {
+   356→   356→      const res = await fetch('/api/campaigns')
+   357→   357→      if (res.ok) {
+   358→   358→        const data = await res.json()
+   359→   359→        if (Array.isArray(data.campaigns)) {
+   360→   360→          setCampaigns(data.campaigns.map((c: { id: string; name: string }) => c))
+   361→   361→        }
+   362→   362→      }
+   363→   363→    } catch {
+   364→   364→      // silent fail
+   365→   365→    }
+   366→   366→  }, [])
+   367→   367→
+   368→   368→  /* ──── load a past audit by id ──── */
+   369→   369→  const loadAuditById = useCallback(async (id: string) => {
+   370→   370→    try {
+   371→   371→      setError(null)
+   372→   372→      const res = await fetch(`/api/audit?id=${encodeURIComponent(id)}`)
+   373→   373→      if (res.ok) {
+   374→   374→        const raw = await res.json()
+   375→   375→        setAudit(normalizeAudit(raw))
+   376→   376→      }
+   377→   377→    } catch {
+   378→   378→      setError('Failed to load audit. Please try again.')
+   379→   379→    }
+   380→   380→  }, [])
+   381→   381→
+   382→   382→  /* ──── normalize raw API data into AuditResult ──── */
+   383→   383→  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   384→   384→  function normalizeAudit(raw: any): AuditResult {
+   385→   385→    const rawUrl = String(raw.url ?? '')
+   386→   386→    const s = (raw.scores && typeof raw.scores === 'object') ? raw.scores : {}
+   387→   387→    const scores = {
+   388→   388→      ui: clampScore(raw.uiScore ?? raw.ui ?? s.uiScore ?? s.ui ?? 0),
+   389→   389→      ux: clampScore(raw.uxScore ?? raw.ux ?? s.uxScore ?? s.ux ?? 0),
+   390→   390→      seo: clampScore(raw.seoScore ?? raw.seo ?? s.seoScore ?? s.seo ?? 0),
+   391→   391→      performance: clampScore(raw.performanceScore ?? raw.performance ?? s.performanceScore ?? s.performance ?? 0),
+   392→   392→      accessibility: clampScore(raw.accessibilityScore ?? raw.accessibility ?? s.accessibilityScore ?? s.accessibility ?? 0),
+   393→   393→      mobile: clampScore(raw.mobileScore ?? raw.mobile ?? s.mobileScore ?? s.mobile ?? 0),
+   394→   394→      security: clampScore(raw.securityScore ?? raw.security ?? s.securityScore ?? s.security ?? 0),
+   395→   395→      aiReadiness: clampScore(raw.aiReadinessScore ?? raw.aiReadiness ?? s.aiReadinessScore ?? s.aiReadiness ?? 0),
+   396→   396→      automation: clampScore(raw.automationScore ?? raw.automation ?? s.automationScore ?? s.automation ?? 0),
+   397→   397→      conversion: clampScore(raw.conversionScore ?? raw.conversion ?? s.conversionScore ?? s.conversion ?? 0),
+   398→   398→      overall: clampScore(raw.overallScore ?? raw.overall ?? s.overallScore ?? s.overall ?? 0),
+   399→   399→    }
+   400→   400→
+   401→   401→    // calculate overall if not provided
+   402→   402→    if (!raw.overallScore && !s.overallScore && !raw.overall && !s.overall) {
+   403→   403→      const vals = [scores.ui, scores.ux, scores.seo, scores.performance, scores.accessibility, scores.mobile, scores.security, scores.aiReadiness, scores.automation, scores.conversion]
+   404→   404→      scores.overall = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length)
+   405→   405→    }
+   406→   406→
+   407→   407→    const rawDetails = (raw.details ?? raw.analysis ?? {}) as Record<string, unknown>
+   408→   408→    const details = {
+   409→   409→      ui: String(rawDetails.ui ?? raw.uiDetails ?? ''),
+   410→   410→      ux: String(rawDetails.ux ?? raw.uxDetails ?? ''),
+   411→   411→      seo: String(rawDetails.seo ?? raw.seoDetails ?? ''),
+   412→   412→      performance: String(rawDetails.performance ?? raw.performanceDetails ?? ''),
+   413→   413→      accessibility: String(rawDetails.accessibility ?? raw.accessibilityDetails ?? ''),
+   414→   414→      mobile: String(rawDetails.mobile ?? raw.mobileDetails ?? ''),
+   415→   415→      security: String(rawDetails.security ?? raw.securityDetails ?? ''),
+   416→   416→      aiReadiness: String(rawDetails.aiReadiness ?? raw.aiReadinessDetails ?? ''),
+   417→   417→      automation: String(rawDetails.automation ?? raw.automationDetails ?? ''),
+   418→   418→      conversion: String(rawDetails.conversion ?? raw.conversionDetails ?? ''),
+   419→   419→    }
+   420→   420→
+   421→   421→    return {
+   422→   422→      id: String(raw.id ?? ''),
+   423→   423→      url: rawUrl,
+   424→   424→      domain: String(raw.domain ?? extractDomain(rawUrl)),
+   425→   425→      scores,
+   426→   426→      details,
+   427→   427→      executiveSummary: String(raw.executiveSummary ?? raw.summary ?? ''),
+   428→   428→      problemsFound: parseStringList(raw.problemsFound ?? raw.problems ?? raw.issues ?? []),
+   429→   429→      opportunities: parseStringList(raw.opportunities ?? []),
+   430→   430→      recommendations: parseStringList(raw.recommendations ?? []),
+   431→   431→      talkingPoints: parseStringList(raw.talkingPoints ?? raw.talking_points ?? []),
+   432→   432→      pitchStrategy: String(raw.pitchStrategy ?? raw.pitch_strategy ?? ''),
+   433→   433→      createdAt: String(raw.createdAt ?? raw.created_at ?? ''),
+   434→   434→    }
+   435→   435→  }
+   436→   436→
+   437→   437→  /* ──── run analysis ──── */
+   438→   438→  const handleAnalyze = useCallback(async () => {
+   439→   439→    const trimmed = url.trim()
+   440→   440→    if (!trimmed) return
+   441→   441→
+   442→   442→    // ensure URL has protocol
+   443→   443→    const normalizedUrl = trimmed.startsWith('http') ? trimmed : `https://${trimmed}`
+   444→   444→
+   445→   445→    setIsAnalyzing(true)
+   446→   446→    setError(null)
+   447→   447→    setAudit(null)
+   448→   448→    setProgressStep(0)
+   449→   449→    setProgressPct(0)
+   450→   450→
+   451→   451→    // simulate progress animation
+   452→   452→    let step = 0
+   453→   453→    const totalSteps = ANALYSIS_STEPS.length
+   454→   454→    const progressInterval = setInterval(() => {
+   455→   455→      step = Math.min(step + 1, totalSteps)
+   456→   456→      setProgressStep(step)
+   457→   457→      setProgressPct(Math.round((step / totalSteps) * 100))
+   458→   458→      if (step >= totalSteps) clearInterval(progressInterval)
+   459→   459→    }, 2500)
+   460→   460→
+   461→   461→    try {
+   462→   462→      const res = await fetch('/api/audit', {
+   463→   463→        method: 'POST',
+   464→   464→        headers: { 'Content-Type': 'application/json' },
+   465→   465→        body: JSON.stringify({ url: normalizedUrl }),
+   466→   466→      })
+   467→   467→
+   468→   468→      clearInterval(progressInterval)
+   469→   469→
+   470→   470→      if (!res.ok) {
+   471→   471→        const errText = await res.text().catch(() => 'Unknown error')
+   472→   472→        throw new Error(errText || `Analysis failed (${res.status})`)
+   473→   473→      }
+   474→   474→
+   475→   475→      const raw = await res.json()
+   476→   476→      const normalized = normalizeAudit(raw)
+   477→   477→
+   478→   478→      // finish progress to 100%
+   479→   479→      setProgressStep(totalSteps)
+   480→   480→      setProgressPct(100)
+   481→   481→
+   482→   482→      // brief delay for UX feel
+   483→   483→      await new Promise(r => setTimeout(r, 400))
+   484→   484→
+   485→   485→      setAudit(normalized)
+   486→   486→      setUrl('')
+   487→   487→      fetchRecentAudits()
+   488→   488→    } catch (err) {
+   489→   489→      clearInterval(progressInterval)
+   490→   490→      setError(err instanceof Error ? err.message : 'Analysis failed. Please try again.')
+   491→   491→      setIsAnalyzing(false)
+   492→   492→    } finally {
+   493→   493→      setIsAnalyzing(false)
+   494→   494→    }
+   495→   495→  }, [url, fetchRecentAudits])
+   496→   496→
+   497→   497→  /* ──── init ──── */
+   498→   498→  useEffect(() => {
+   499→   499→    fetchRecentAudits()
+   500→   500→    fetchCampaigns()
+   501→   501→  }, [fetchRecentAudits, fetchCampaigns])
+   502→   502→
+   503→   503→  /* ──── key down handler ──── */
+   504→   504→  const handleKeyDown = (e: React.KeyboardEvent) => {
+   505→   505→    if (e.key === 'Enter') handleAnalyze()
+   506→   506→  }
+   507→   507→
+   508→   508→  /* ═══════════════════════ RENDER ═══════════════════════ */
+   509→   509→
+   510→   510→  return (
+   511→   511→    <ScrollArea className="h-full">
+   512→   512→      <div className="min-h-full bg-white">
+   513→   513→        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+   514→   514→          {/* ──── Header ──── */}
+   515→   515→          <div className="flex items-center gap-3 rounded-xl bg-blue-50 px-5 py-4">
+   516→   516→            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500 text-white">
+   517→   517→              <ScanSearch className="h-5 w-5" />
+   518→   518→            </div>
+   519→   519→            <div>
+   520→   520→              <h1 className="text-lg font-semibold text-gray-900">AI Website Intelligence</h1>
+   521→   521→              <p className="text-sm text-gray-500">Analyze any website and get actionable insights in seconds</p>
+   522→   522→            </div>
+   523→   523→          </div>
+   524→   524→
+   525→   525→          {/* ──── Search Card ──── */}
+   526→   526→          <Card className="overflow-hidden">
+   527→   527→            <div className="h-1 bg-gradient-to-r from-blue-500 to-blue-600" />
+   528→   528→            <CardContent className="pt-6">
+   529→   529→              <div className="flex flex-col sm:flex-row gap-3">
+   530→   530→                <div className="relative flex-1">
+   531→   531→                  <Globe className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+   532→   532→                  <Input
+   533→   533→                    placeholder="Enter website URL (e.g., example.com)"
+   534→   534→                    value={url}
+   535→   535→                    onChange={e => setUrl(e.target.value)}
+   536→   536→                    onKeyDown={handleKeyDown}
+   537→   537→                    disabled={isAnalyzing}
+   538→   538→                    className="pl-10 h-11"
+   539→   539→                  />
+   540→   540→                </div>
+   541→   541→                <Button
+   542→   542→                  onClick={handleAnalyze}
+   543→   543→                  disabled={isAnalyzing || !url.trim()}
+   544→   544→                  className="h-11 px-6 bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
+   545→   545→                >
+   546→   546→                  {isAnalyzing ? (
+   547→   547→                    <>
+   548→   548→                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+   549→   549→                      Analyzing…
+   550→   550→                    </>
+   551→   551→                  ) : (
+   552→   552→                    <>
+   553→   553→                      <ScanSearch className="mr-2 h-4 w-4" />
+   554→   554→                      Analyze Website
+   555→   555→                    </>
+   556→   556→                  )}
+   557→   557→                </Button>
+   558→   558→              </div>
+   559→   559→            </CardContent>
+   560→   560→          </Card>
+   561→   561→
+   562→   562→          {/* ──── Progress ──── */}
+   563→   563→          {isAnalyzing && (
+   564→   564→            <Card className="bg-white border border-gray-200/80 rounded-xl shadow-sm overflow-hidden">
+   565→   565→              <CardContent className="pt-6 space-y-4">
+   566→   566→                <div className="flex items-center justify-between text-sm">
+   567→   567→                  <span className="font-medium text-gray-900">Running analysis…</span>
+   568→   568→                  <span className="text-gray-500">{progressPct}%</span>
+   569→   569→                </div>
+   570→   570→                <div className="h-2 w-full rounded-full bg-gray-100 overflow-hidden">
+   571→   571→                  <div
+   572→   572→                    className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-700 ease-out"
+   573→   573→                    style={{ width: `${progressPct}%` }}
+   574→   574→                  />
+   575→   575→                </div>
+   576→   576→                <div className="flex items-center gap-2 text-sm text-gray-500">
+   577→   577→                  <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-500" />
+   578→   578→                  <span className="transition-all">
+   579→   579→                    {ANALYSIS_STEPS[Math.min(progressStep, ANALYSIS_STEPS.length - 1)]}
+   580→   580→                  </span>
+   581→   581→                </div>
+   582→   582→              </CardContent>
+   583→   583→            </Card>
+   584→   584→          )}
+   585→   585→
+   586→   586→          {/* ──── Error ──── */}
+   587→   587→          {error && (
+   588→   588→            <Card className="border-red-200 bg-red-50">
+   589→   589→              <CardContent className="flex items-start gap-3 pt-4">
+   590→   590→                <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+   591→   591→                <div>
+   592→   592→                  <p className="text-sm font-medium text-red-800">Analysis Error</p>
+   593→   593→                  <p className="text-sm text-red-600 mt-0.5">{error}</p>
+   594→   594→                  <Button variant="ghost" size="sm" className="mt-2 text-red-700 hover:text-red-900" onClick={() => setError(null)}>
+   595→   595→                    Dismiss
+   596→   596→                  </Button>
+   597→   597→                </div>
+   598→   598→              </CardContent>
+   599→   599→            </Card>
+   600→   600→          )}
+   601→   601→
+   602→   602→          {/* ══════════ RESULTS ══════════ */}
+   603→   603→          {audit && !isAnalyzing && (
+   604→   604→            <div className="space-y-6 animate-in fade-in duration-500">
+   605→   605→              {/* ──── Domain Header ──── */}
+   606→   606→              <div className="flex items-center gap-3">
+   607→   607→                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
+   608→   608→                  <Globe className="h-5 w-5 text-blue-500" />
+   609→   609→                </div>
+   610→   610→                <div className="min-w-0 flex-1">
+   611→   611→                  <h2 className="text-lg font-semibold text-gray-900 truncate">{audit.domain}</h2>
+   612→   612→                  <p className="text-sm text-gray-500 truncate">{audit.url}</p>
+   613→   613→                </div>
+   614→   614→                <a href={audit.url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-500 transition-colors">
+   615→   615→                  <ExternalLink className="h-4 w-4" />
+   616→   616→                </a>
+   617→   617→                {audit.createdAt && (
+   618→   618→                  <span className="text-xs text-gray-400 hidden sm:flex items-center gap-1">
+   619→   619→                    <Clock className="h-3 w-3" />
+   620→   620→                    {formatDate(audit.createdAt)}
+   621→   621→                  </span>
+   622→   622→                )}
+   623→   623→              </div>
+   624→   624→
+   625→   625→              {/* ──── Overall Score + Mini Scores ──── */}
+   626→   626→              <div className="bg-white border border-gray-200/80 rounded-xl shadow-sm p-6">
+   627→   627→                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+   628→   628→                  {/* Large circular score */}
+   629→   629→                  <div className="flex flex-col items-center gap-2 flex-shrink-0">
+   630→   630→                    <CircularScore value={audit.scores.overall} />
+   631→   631→                    <Badge variant="secondary" className={cn('text-xs font-medium', getScoreBgColor(audit.scores.overall), getScoreColor(audit.scores.overall))}>
+   632→   632→                      {getScoreLabel(audit.scores.overall)}
+   633→   633→                    </Badge>
+   634→   634→                    <span className="text-sm text-gray-500">Overall Score</span>
+   635→   635→                  </div>
+   636→   636→
+   637→   637→                  {/* 10 mini score bars */}
+   638→   638→                  <div className="flex-1 w-full">
+   639→   639→                    <h3 className="text-sm font-semibold text-gray-900 mb-3">Category Scores</h3>
+   640→   640→                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5">
+   641→   641→                      {SCORE_CONFIG.map(({ key, label, icon: Icon }) => {
+   642→   642→                        const val = audit.scores[key]
+   643→   643→                        return (
+   644→   644→                          <div key={key} className="flex items-center gap-3">
+   645→   645→                            <Icon className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+   646→   646→                            <span className="text-xs text-gray-500 w-24 truncate flex-shrink-0">{label}</span>
+   647→   647→                            <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+   648→   648→                              <div
+   649→   649→                                className={cn('h-full rounded-full transition-all duration-700 ease-out', getScoreBarColor(val))}
+   650→   650→                                style={{ width: `${val}%` }}
+   651→   651→                              />
+   652→   652→                            </div>
+   653→   653→                            <span className={cn('text-xs font-semibold w-7 text-right', getScoreColor(val))}>
+   654→   654→                              {val}
+   655→   655→                            </span>
+   656→   656→                          </div>
+   657→   657→                        )
+   658→   658→                      })}
+   659→   659→                    </div>
+   660→   660→                  </div>
+   661→   661→                </div>
+   662→   662→              </div>
+   663→   663→
+   664→   664→              {/* ──── Executive Summary ──── */}
+   665→   665→              {audit.executiveSummary && (
+   666→   666→                <Card className="bg-white border border-gray-200/80 rounded-xl shadow-sm">
+   667→   667→                  <CardHeader className="pb-3">
+   668→   668→                    <CardTitle className="flex items-center gap-2 text-base text-gray-900">
+   669→   669→                      <Sparkles className="h-4 w-4 text-blue-500" />
+   670→   670→                      Executive Summary
+   671→   671→                    </CardTitle>
+   672→   672→                  </CardHeader>
+   673→   673→                  <CardContent>
+   674→   674→                    <p className="text-sm leading-relaxed text-gray-600 whitespace-pre-line">{audit.executiveSummary}</p>
+   675→   675→                  </CardContent>
+   676→   676→                </Card>
+   677→   677→              )}
+   678→   678→
+   679→   679→              {/* ──── Problems Found ──── */}
+   680→   680→              {audit.problemsFound.length > 0 && (
+   681→   681→                <Card className="bg-white border border-red-200/60 rounded-xl shadow-sm">
+   682→   682→                  <CardHeader className="pb-3">
+   683→   683→                    <CardTitle className="flex items-center gap-2 text-base text-red-700">
+   684→   684→                      <AlertTriangle className="h-4 w-4 text-red-500" />
+   685→   685→                      Problems Found
+   686→   686→                      <Badge variant="secondary" className="bg-red-100 text-red-700 ml-1">{audit.problemsFound.length}</Badge>
+   687→   687→                    </CardTitle>
+   688→   688→                  </CardHeader>
+   689→   689→                  <CardContent>
+   690→   690→                    <ul className="space-y-2">
+   691→   691→                      {audit.problemsFound.map((problem, i) => (
+   692→   692→                        <li key={i} className="flex items-start gap-2.5 text-sm text-gray-600">
+   693→   693→                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-100 text-red-600 text-xs font-medium flex-shrink-0 mt-0.5">
+   694→   694→                            {i + 1}
+   695→   695→                          </span>
+   696→   696→                          <span>{problem}</span>
+   697→   697→                        </li>
+   698→   698→                      ))}
+   699→   699→                    </ul>
+   700→   700→                  </CardContent>
+   701→   701→                </Card>
+   702→   702→              )}
+   703→   703→
+   704→   704→              {/* ──── 10 Category Score Cards ──── */}
+   705→   705→              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+   706→   706→                {SCORE_CONFIG.map(({ key, label, icon: Icon }) => {
+   707→   707→                  const val = audit.scores[key]
+   708→   708→                  const detail = audit.details[key as keyof AuditResult['details']] ?? ''
+   709→   709→                  const isExpanded = expandedCards.has(key)
+   710→   710→
+   711→   711→                  return (
+   712→   712→                    <Collapsible key={key} open={isExpanded} onOpenChange={() => toggleCard(key)}>
+   713→   713→                      <Card className="bg-white border border-gray-200/80 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
+   714→   714→                        <CollapsibleTrigger asChild>
+   715→   715→                          <CardHeader className="pb-3">
+   716→   716→                            <div className="flex items-center justify-between">
+   717→   717→                              <div className="flex items-center gap-3">
+   718→   718→                                <div className={cn('flex h-9 w-9 items-center justify-center rounded-lg', getScoreBgColor(val))}>
+   719→   719→                                  <Icon className={cn('h-4.5 w-4.5', getScoreColor(val))} />
+   720→   720→                                </div>
+   721→   721→                                <div>
+   722→   722→                                  <CardTitle className="text-sm font-semibold text-gray-900">{label}</CardTitle>
+   723→   723→                                  <Badge variant="secondary" className={cn('mt-0.5 text-[10px]', getScoreBgColor(val), getScoreColor(val))}>
+   724→   724→                                    {getScoreLabel(val)}
+   725→   725→                                  </Badge>
+   726→   726→                                </div>
+   727→   727→                              </div>
+   728→   728→                              <div className="flex items-center gap-3">
+   729→   729→                                <span className={cn('text-2xl font-bold tabular-nums', getScoreColor(val))}>{val}</span>
+   730→   730→                                <ChevronDown className={cn('h-4 w-4 text-gray-400 transition-transform duration-200', isExpanded && 'rotate-180')} />
+   731→   731→                              </div>
+   732→   732→                            </div>
+   733→   733→                            <div className="mt-3 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+   734→   734→                              <div
+   735→   735→                                className={cn('h-full rounded-full transition-all duration-700 ease-out', getScoreBarColor(val))}
+   736→   736→                                style={{ width: `${val}%` }}
+   737→   737→                              />
+   738→   738→                            </div>
+   739→   739→                          </CardHeader>
+   740→   740→                        </CollapsibleTrigger>
+   741→   741→                        {detail && (
+   742→   742→                          <CollapsibleContent>
+   743→   743→                            <CardContent className="pt-0 pb-4">
+   744→   744→                              <Separator className="mb-3" />
+   745→   745→                              <p className="text-sm leading-relaxed text-gray-600 whitespace-pre-line">{detail}</p>
+   746→   746→                            </CardContent>
+   747→   747→                          </CollapsibleContent>
+   748→   748→                        )}
+   749→   749→                      </Card>
+   750→   750→                    </Collapsible>
+   751→   751→                  )
+   752→   752→                })}
+   753→   753→              </div>
+   754→   754→
+   755→   755→              {/* ──── 3-Column Row: Opportunities, Recommendations, Talking Points ──── */}
+   756→   756→              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+   757→   757→                {/* Opportunities */}
+   758→   758→                <Card className="bg-white border border-emerald-200/60 rounded-xl shadow-sm">
+   759→   759→                  <CardHeader className="pb-3">
+   760→   760→                    <CardTitle className="flex items-center gap-2 text-sm font-semibold text-emerald-700">
+   761→   761→                      <Lightbulb className="h-4 w-4 text-emerald-500" />
+   762→   762→                      Opportunities
+   763→   763→                      {audit.opportunities.length > 0 && (
+   764→   764→                        <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 text-[10px]">{audit.opportunities.length}</Badge>
+   765→   765→                      )}
+   766→   766→                    </CardTitle>
+   767→   767→                  </CardHeader>
+   768→   768→                  <CardContent>
+   769→   769→                    {audit.opportunities.length > 0 ? (
+   770→   770→                      <ul className="space-y-2">
+   771→   771→                        {audit.opportunities.map((item, i) => (
+   772→   772→                          <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+   773→   773→                            <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+   774→   774→                            <span>{item}</span>
+   775→   775→                          </li>
+   776→   776→                        ))}
+   777→   777→                      </ul>
+   778→   778→                    ) : (
+   779→   779→                      <p className="text-sm text-gray-400 italic">No opportunities identified</p>
+   780→   780→                    )}
+   781→   781→                  </CardContent>
+   782→   782→                </Card>
+   783→   783→
+   784→   784→                {/* Recommendations */}
+   785→   785→                <Card className="bg-white border border-blue-200/60 rounded-xl shadow-sm">
+   786→   786→                  <CardHeader className="pb-3">
+   787→   787→                    <CardTitle className="flex items-center gap-2 text-sm font-semibold text-blue-700">
+   788→   788→                      <Target className="h-4 w-4 text-blue-500" />
+   789→   789→                      Recommendations
+   790→   790→                      {audit.recommendations.length > 0 && (
+   791→   791→                        <Badge variant="secondary" className="bg-blue-100 text-blue-700 text-[10px]">{audit.recommendations.length}</Badge>
+   792→   792→                      )}
+   793→   793→                    </CardTitle>
+   794→   794→                  </CardHeader>
+   795→   795→                  <CardContent>
+   796→   796→                    {audit.recommendations.length > 0 ? (
+   797→   797→                      <ul className="space-y-2">
+   798→   798→                        {audit.recommendations.map((item, i) => (
+   799→   799→                          <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+   800→   800→                            <ArrowRight className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
+   801→   801→                            <span>{item}</span>
+   802→   802→                          </li>
+   803→   803→                        ))}
+   804→   804→                      </ul>
+   805→   805→                    ) : (
+   806→   806→                      <p className="text-sm text-gray-400 italic">No recommendations available</p>
+   807→   807→                    )}
+   808→   808→                  </CardContent>
+   809→   809→                </Card>
+   810→   810→
+   811→   811→                {/* Talking Points */}
+   812→   812→                <Card className="bg-white border border-blue-200/60 rounded-xl shadow-sm">
+   813→   813→                  <CardHeader className="pb-3">
+   814→   814→                    <CardTitle className="flex items-center gap-2 text-sm font-semibold text-blue-700">
+   815→   815→                      <MessageSquare className="h-4 w-4 text-blue-500" />
+   816→   816→                      Talking Points
+   817→   817→                      {audit.talkingPoints.length > 0 && (
+   818→   818→                        <Badge variant="secondary" className="bg-blue-100 text-blue-700 text-[10px]">{audit.talkingPoints.length}</Badge>
+   819→   819→                      )}
+   820→   820→                    </CardTitle>
+   821→   821→                  </CardHeader>
+   822→   822→                  <CardContent>
+   823→   823→                    {audit.talkingPoints.length > 0 ? (
+   824→   824→                      <ul className="space-y-2">
+   825→   825→                        {audit.talkingPoints.map((item, i) => (
+   826→   826→                          <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+   827→   827→                            <MessageSquare className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
+   828→   828→                            <span>{item}</span>
+   829→   829→                          </li>
+   830→   830→                        ))}
+   831→   831→                      </ul>
+   832→   832→                    ) : (
+   833→   833→                      <p className="text-sm text-gray-400 italic">No talking points generated</p>
+   834→   834→                    )}
+   835→   835→                  </CardContent>
+   836→   836→                </Card>
+   837→   837→              </div>
+   838→   838→
+   839→   839→              {/* ──── Pitch Strategy ──── */}
+   840→   840→              {audit.pitchStrategy && (
+   841→   841→                <Card className="bg-white border border-gray-200/80 rounded-xl shadow-sm">
+   842→   842→                  <CardHeader className="pb-3">
+   843→   843→                    <CardTitle className="flex items-center gap-2 text-base text-gray-900">
+   844→   844→                      <BarChart3 className="h-4 w-4 text-blue-500" />
+   845→   845→                      Pitch Strategy
+   846→   846→                    </CardTitle>
+   847→   847→                  </CardHeader>
+   848→   848→                  <CardContent>
+   849→   849→                    <p className="text-sm leading-relaxed text-gray-600 whitespace-pre-line">{audit.pitchStrategy}</p>
+   850→   850→                  </CardContent>
+   851→   851→                </Card>
+   852→   852→              )}
+   853→   853→
+   854→   854→              {/* ──── Action Buttons ──── */}
+   855→   855→              <Card className="bg-white border border-gray-200/80 rounded-xl shadow-sm">
+   856→   856→                <CardContent className="pt-6">
+   857→   857→                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+   858→   858→                    <Button
+   859→   859→                      className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
+   860→   860→                      onClick={() => setView('email-center')}
+   861→   861→                    >
+   862→   862→                      <Mail className="mr-2 h-4 w-4" />
+   863→   863→                      Generate Email
+   864→   864→                    </Button>
+   865→   865→                    <Button
+   866→   866→                      variant="outline"
+   867→   867→                      className="flex-1 sm:flex-none border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+   868→   868→                      onClick={() => setView('leads')}
+   869→   869→                    >
+   870→   870→                      <Target className="mr-2 h-4 w-4" />
+   871→   871→                      Qualify Lead
+   872→   872→                    </Button>
+   873→   873→                    {campaigns.length > 0 && (
+   874→   874→                      <div className="flex-1 sm:flex-none sm:w-56">
+   875→   875→                        <Label className="text-xs text-gray-500 mb-1.5 block">Add to Campaign</Label>
+   876→   876→                        <Select value={selectedCampaign} onValueChange={setSelectedCampaign}>
+   877→   877→                          <SelectTrigger className="h-10">
+   878→   878→                            <SelectValue placeholder="Select campaign…" />
+   879→   879→                          </SelectTrigger>
+   880→   880→                          <SelectContent>
+   881→   881→                            {campaigns.map(c => (
+   882→   882→                              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+   883→   883→                            ))}
+   884→   884→                          </SelectContent>
+   885→   885→                        </Select>
+   886→   886→                      </div>
+   887→   887→                    )}
+   888→   888→                  </div>
+   889→   889→                </CardContent>
+   890→   890→              </Card>
+   891→   891→            </div>
+   892→   892→          )}
+   893→   893→
+   894→   894→          {/* ══════════ RECENT AUDITS (when no current audit) ══════════ */}
+   895→   895→          {!audit && !isAnalyzing && (
+   896→   896→            <div className="space-y-4">
+   897→   897→              <div className="flex items-center justify-between">
+   898→   898→                <h3 className="text-sm font-semibold text-gray-900">Recent Audits</h3>
+   899→   899→                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700" onClick={fetchRecentAudits}>
+   900→   900→                  <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+   901→   901→                  Refresh
+   902→   902→                </Button>
+   903→   903→              </div>
+   904→   904→
+   905→   905→              {recentAudits.length > 0 ? (
+   906→   906→                <div className="space-y-2">
+   907→   907→                  {recentAudits.map(ra => (
+   908→   908→                    <button
+   909→   909→                      key={ra.id}
+   910→   910→                      onClick={() => loadAuditById(ra.id)}
+   911→   911→                      className="w-full text-left bg-white border border-gray-200/80 rounded-xl shadow-sm hover:shadow-md transition-shadow px-4 py-3 flex items-center gap-4 group"
+   912→   912→                    >
+   913→   913→                      <MiniCircularScore value={ra.overallScore} />
+   914→   914→                      <div className="flex-1 min-w-0">
+   915→   915→                        <p className="text-sm font-medium text-gray-900 truncate">{ra.domain}</p>
+   916→   916→                        <p className="text-xs text-gray-500 truncate">{ra.url}</p>
+   917→   917→                      </div>
+   918→   918→                      <div className="flex items-center gap-2 flex-shrink-0">
+   919→   919→                        {ra.createdAt && (
+   920→   920→                          <span className="text-xs text-gray-400 hidden sm:block">{formatDate(ra.createdAt)}</span>
+   921→   921→                        )}
+   922→   922→                        <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
+   923→   923→                      </div>
+   924→   924→                    </button>
+   925→   925→                  ))}
+   926→   926→                </div>
+   927→   927→              ) : (
+   928→   928→                <Card className="bg-white border border-gray-200/80 rounded-xl shadow-sm">
+   929→   929→                  <CardContent className="py-12 flex flex-col items-center justify-center text-center">
+   930→   930→                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 mb-4">
+   931→   931→                      <ScanSearch className="h-6 w-6 text-gray-400" />
+   932→   932→                    </div>
+   933→   933→                    <h3 className="text-sm font-semibold text-gray-900">No audits yet</h3>
+   934→   934→                    <p className="text-sm text-gray-500 mt-1 max-w-sm">
+   935→   935→                      Enter a website URL above and click &quot;Analyze Website&quot; to get your first AI-powered website audit with actionable insights.
+   936→   936→                    </p>
+   937→   937→                  </CardContent>
+   938→   938→                </Card>
+   939→   939→              )}
+   940→   940→            </div>
+   941→   941→          )}
+   942→   942→        </div>
+   943→   943→      </div>
+   944→   944→    </ScrollArea>
+   945→   945→  )
+   946→   946→}
+   947→   947→

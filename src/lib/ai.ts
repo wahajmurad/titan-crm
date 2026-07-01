@@ -8,32 +8,92 @@ const AI_BASE_URL = process.env.AI_BASE_URL || 'https://open.bigmodel.cn/api/paa
 const AI_API_KEY = process.env.AI_API_KEY || ''
 const AI_MODEL = process.env.AI_MODEL || 'glm-4-flash'
 
-async function aiChatCompletions(messages: { role: string; content: string }[]): Promise<string> {
+// Retry config — handles 429 (rate limit) and 5xx (server error)
+const MAX_RETRIES = 3
+const BASE_DELAY_MS = 2000 // 2s base, doubles each retry
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+async function aiChatCompletions(messages: { role: string; content: string }[], options?: { maxTokens?: number; temperature?: number }): Promise<string> {
   if (!AI_API_KEY) {
     throw new Error('AI not configured. Set AI_API_KEY in Vercel environment variables.')
   }
 
-  const res = await fetch(`${AI_BASE_URL}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${AI_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: AI_MODEL,
-      messages,
-      max_tokens: 4000,
-      temperature: 0.7,
-    }),
-  })
+  const maxTokens = options?.maxTokens ?? 4000
+  const temperature = options?.temperature ?? 0.7
 
-  if (!res.ok) {
-    const err = await res.text().catch(() => 'Unknown error')
-    throw new Error(`AI API error ${res.status}: ${err}`)
+  let lastError: string | null = null
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const res = await fetch(`${AI_BASE_URL}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${AI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: AI_MODEL,
+          messages,
+          max_tokens: maxTokens,
+          temperature,
+        }),
+      })
+
+      // Retry on 429 (rate limit) or 5xx (server error)
+      if (res.status === 429 || res.status >= 500) {
+        lastError = `AI API error ${res.status}`
+        const errBody = await res.text().catch(() => 'Unknown error')
+
+        // Don't retry if we've exhausted attempts
+        if (attempt < MAX_RETRIES) {
+          const delay = BASE_DELAY_MS * Math.pow(2, attempt) + Math.random() * 1000 // jitter
+          console.warn(`[AI] Attempt ${attempt + 1} failed (${res.status}). Retrying in ${Math.round(delay / 1000)}s...`, errBody.substring(0, 200))
+          await sleep(delay)
+          continue
+        }
+
+        // Final attempt failed — give a friendly error message
+        if (res.status === 429) {
+          throw new Error('AI model is currently busy (rate limited). Please wait 30 seconds and try again.')
+        }
+        throw new Error(`AI API error ${res.status}: ${errBody}`)
+      }
+
+      if (!res.ok) {
+        const err = await res.text().catch(() => 'Unknown error')
+        throw new Error(`AI API error ${res.status}: ${err}`)
+      }
+
+      const data = await res.json()
+      const content = data.choices?.[0]?.message?.content
+      if (!content) {
+        throw new Error('AI returned an empty response. Please try again.')
+      }
+      return content
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e)
+
+      // Don't retry on auth errors or configuration errors
+      if (msg.includes('not configured') || msg.includes('401') || msg.includes('403')) {
+        throw e
+      }
+
+      // Retry on network errors, 429, 5xx
+      if (attempt < MAX_RETRIES && (msg.includes('rate limit') || msg.includes('busy') || msg.includes('fetch') || msg.includes('network') || msg.includes('429') || msg.includes('500'))) {
+        const delay = BASE_DELAY_MS * Math.pow(2, attempt) + Math.random() * 1000
+        console.warn(`[AI] Attempt ${attempt + 1} error: ${msg}. Retrying in ${Math.round(delay / 1000)}s...`)
+        await sleep(delay)
+        continue
+      }
+
+      throw e
+    }
   }
 
-  const data = await res.json()
-  return data.choices?.[0]?.message?.content || 'No response generated'
+  throw new Error(lastError || 'AI request failed after multiple retries. Please try again later.')
 }
 
 export async function aiChat(messages: { role: string; content: string }[]): Promise<string> {
@@ -44,7 +104,7 @@ export async function aiAnalyzeWebsite(url: string, prompt: string): Promise<str
   return aiChatCompletions([
     { role: 'system', content: 'You are an expert business and website analyst. Analyze websites thoroughly and provide detailed, actionable insights. Always respond in valid JSON format when asked for structured data.' },
     { role: 'user', content: `${prompt}\n\nWebsite URL: ${url}` },
-  ])
+  ], { maxTokens: 4000, temperature: 0.7 })
 }
 
 export async function aiGenerateEmail(context: {

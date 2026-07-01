@@ -1,0 +1,826 @@
+     1→     1→'use client'
+     2→     2→
+     3→     3→import { useEffect, useState } from 'react'
+     4→     4→import { Card, CardContent } from '@/components/ui/card'
+     5→     5→import { Button } from '@/components/ui/button'
+     6→     6→import { Skeleton } from '@/components/ui/skeleton'
+     7→     7→import { ScrollArea } from '@/components/ui/scroll-area'
+     8→     8→import { Progress } from '@/components/ui/progress'
+     9→     9→import { LEAD_STAGES, STAGE_DOT_COLORS, STAGE_COLORS } from '@/lib/types'
+    10→    10→import { useAppStore } from '@/lib/store'
+    11→    11→import {
+    12→    12→  Users,
+    13→    13→  Mail,
+    14→    14→  Calendar,
+    15→    15→  TrendingUp,
+    16→    16→  Target,
+    17→    17→  Flame,
+    18→    18→  Thermometer,
+    19→    19→  ArrowUpRight,
+    20→    20→  ArrowRight,
+    21→    21→  Search,
+    22→    22→  Globe2,
+    23→    23→  Brain,
+    24→    24→  Inbox,
+    25→    25→  Zap,
+    26→    26→  Clock,
+    27→    27→  CheckCircle2,
+    28→    28→  XCircle,
+    29→    29→  Send,
+    30→    30→  BarChart3,
+    31→    31→  ChevronRight,
+    32→    32→  Activity,
+    33→    33→} from 'lucide-react'
+    34→    34→import { formatDistanceToNow } from 'date-fns'
+    35→    35→import { motion, useSpring, useTransform, useMotionValue } from 'framer-motion'
+    36→    36→
+    37→    37→// ─── Data Types ────────────────────────────────────────────────────────
+    38→    38→
+    39→    39→interface DashboardData {
+    40→    40→  totalLeads: number
+    41→    41→  stages: Record<string, number>
+    42→    42→  outreach: Record<string, number>
+    43→    43→  meetings: Record<string, number>
+    44→    44→  replyRate: number
+    45→    45→  recentActivities: Array<{
+    46→    46→    id: string
+    47→    47→    action: string
+    48→    48→    details: string
+    49→    49→    createdAt: string
+    50→    50→    user: { name: string } | null
+    51→    51→    lead: { business: { name: string } } | null
+    52→    52→  }>
+    53→    53→  leadsByIndustry: Array<{
+    54→    54→    industry: string | null
+    55→    55→    _count: { industry: number }
+    56→    56→  }>
+    57→    57→  temperature: Record<string, number>
+    58→    58→  wonCount: number
+    59→    59→  meetingBooked: number
+    60→    60→  outreachSent: number
+    61→    61→  qualifiedCount: number
+    62→    62→  activeCampaigns: number
+    63→    63→}
+    64→    64→
+    65→    65→interface CampaignData {
+    66→    66→  id: string
+    67→    67→  name: string
+    68→    68→  industry: string | null
+    69→    69→  status: string
+    70→    70→  leadCount: number
+    71→    71→  sentCount: number
+    72→    72→  replyCount: number
+    73→    73→  meetingCount: number
+    74→    74→  wonCount: number
+    75→    75→  createdAt: string
+    76→    76→}
+    77→    77→
+    78→    78→const defaultData: DashboardData = {
+    79→    79→  totalLeads: 0,
+    80→    80→  stages: {},
+    81→    81→  outreach: {},
+    82→    82→  meetings: {},
+    83→    83→  replyRate: 0,
+    84→    84→  recentActivities: [],
+    85→    85→  leadsByIndustry: [],
+    86→    86→  temperature: {},
+    87→    87→  wonCount: 0,
+    88→    88→  meetingBooked: 0,
+    89→    89→  outreachSent: 0,
+    90→    90→  qualifiedCount: 0,
+    91→    91→  activeCampaigns: 0,
+    92→    92→}
+    93→    93→
+    94→    94→// ─── Pipeline stage order (exclude LOST) ─────────────────────────────
+    95→    95→
+    96→    96→const PIPELINE_STAGES = LEAD_STAGES.filter((s) => s !== 'LOST')
+    97→    97→
+    98→    98→// ─── Stage bar colors ────────────────────────────────────────────────
+    99→    99→
+   100→   100→const STAGE_BAR_COLORS: Record<string, string> = {
+   101→   101→  DISCOVERED: 'bg-slate-400',
+   102→   102→  AUDITED: 'bg-sky-500',
+   103→   103→  QUALIFIED: 'bg-emerald-500',
+   104→   104→  OUTREACH_SENT: 'bg-amber-500',
+   105→   105→  REPLIED: 'bg-blue-500',
+   106→   106→  MEETING_BOOKED: 'bg-cyan-500',
+   107→   107→  PROPOSAL_SENT: 'bg-orange-500',
+   108→   108→  WON: 'bg-green-500',
+   109→   109→  LOST: 'bg-red-400',
+   110→   110→}
+   111→   111→
+   112→   112→// ─── Activity action → icon mapping ────────────────────────────────────
+   113→   113→
+   114→   114→const ACTION_ICONS: Record<string, React.ElementType> = {
+   115→   115→  LEAD_CREATED: Users,
+   116→   116→  LEAD_AUDITED: Search,
+   117→   117→  LEAD_QUALIFIED: CheckCircle2,
+   118→   118→  OUTREACH_SENT: Send,
+   119→   119→  REPLY_RECEIVED: Mail,
+   120→   120→  MEETING_BOOKED: Calendar,
+   121→   121→  MEETING_COMPLETED: CheckCircle2,
+   122→   122→  MEETING_CANCELLED: XCircle,
+   123→   123→  CAMPAIGN_CREATED: Target,
+   124→   124→  CAMPAIGN_UPDATED: BarChart3,
+   125→   125→  PROPOSAL_SENT: Send,
+   126→   126→  LEAD_WON: TrendingUp,
+   127→   127→  LEAD_LOST: XCircle,
+   128→   128→}
+   129→   129→
+   130→   130→const ACTION_DOT_COLORS: Record<string, string> = {
+   131→   131→  LEAD_CREATED: 'bg-blue-500',
+   132→   132→  LEAD_AUDITED: 'bg-sky-500',
+   133→   133→  LEAD_QUALIFIED: 'bg-emerald-500',
+   134→   134→  OUTREACH_SENT: 'bg-amber-500',
+   135→   135→  REPLY_RECEIVED: 'bg-blue-500',
+   136→   136→  MEETING_BOOKED: 'bg-cyan-500',
+   137→   137→  MEETING_COMPLETED: 'bg-green-500',
+   138→   138→  MEETING_CANCELLED: 'bg-red-500',
+   139→   139→  CAMPAIGN_CREATED: 'bg-purple-500',
+   140→   140→  CAMPAIGN_UPDATED: 'bg-indigo-500',
+   141→   141→  PROPOSAL_SENT: 'bg-orange-500',
+   142→   142→  LEAD_WON: 'bg-green-500',
+   143→   143→  LEAD_LOST: 'bg-red-500',
+   144→   144→}
+   145→   145→
+   146→   146→// ─── Industry bar colors ──────────────────────────────────────────────
+   147→   147→
+   148→   148→const INDUSTRY_COLORS = [
+   149→   149→  'bg-blue-500',
+   150→   150→  'bg-emerald-500',
+   151→   151→  'bg-amber-500',
+   152→   152→  'bg-purple-500',
+   153→   153→  'bg-cyan-500',
+   154→   154→  'bg-rose-500',
+   155→   155→  'bg-orange-500',
+   156→   156→  'bg-teal-500',
+   157→   157→]
+   158→   158→
+   159→   159→// ─── Animated Number Component ────────────────────────────────────────
+   160→   160→
+   161→   161→function AnimatedNumber({ value }: { value: number }) {
+   162→   162→  const spring = useSpring(0, { stiffness: 100, damping: 30 })
+   163→   163→  const display = useTransform(spring, (latest) => Math.round(latest))
+   164→   164→
+   165→   165→  useEffect(() => {
+   166→   166→    spring.set(value)
+   167→   167→  }, [spring, value])
+   168→   168→
+   169→   169→  return (
+   170→   170→    <motion.span className="tabular-nums">
+   171→   171→      {useTransform(display, (v) => v.toLocaleString())}
+   172→   172→    </motion.span>
+   173→   173→  )
+   174→   174→}
+   175→   175→
+   176→   176→// ─── SVG Circle Gauge ─────────────────────────────────────────────────
+   177→   177→
+   178→   178→function CircleGauge({ value, size = 120, strokeWidth = 8, label }: { value: number; size?: number; strokeWidth?: number; label: string }) {
+   179→   179→  const radius = (size - strokeWidth) / 2
+   180→   180→  const circumference = 2 * Math.PI * radius
+   181→   181→  const clampedValue = Math.min(Math.max(value, 0), 100)
+   182→   182→  const offset = circumference - (clampedValue / 100) * circumference
+   183→   183→
+   184→   184→  const color = clampedValue >= 60 ? '#10B981' : clampedValue >= 30 ? '#F59E0B' : '#EF4444'
+   185→   185→
+   186→   186→  return (
+   187→   187→    <div className="flex flex-col items-center gap-1.5">
+   188→   188→      <svg width={size} height={size} className="-rotate-90">
+   189→   189→        <circle
+   190→   190→          cx={size / 2}
+   191→   191→          cy={size / 2}
+   192→   192→          r={radius}
+   193→   193→          fill="none"
+   194→   194→          stroke="#F1F5F9"
+   195→   195→          strokeWidth={strokeWidth}
+   196→   196→        />
+   197→   197→        <motion.circle
+   198→   198→          cx={size / 2}
+   199→   199→          cy={size / 2}
+   200→   200→          r={radius}
+   201→   201→          fill="none"
+   202→   202→          stroke={color}
+   203→   203→          strokeWidth={strokeWidth}
+   204→   204→          strokeLinecap="round"
+   205→   205→          strokeDasharray={circumference}
+   206→   206→          initial={{ strokeDashoffset: circumference }}
+   207→   207→          animate={{ strokeDashoffset: offset }}
+   208→   208→          transition={{ duration: 1.2, ease: 'easeOut', delay: 0.5 }}
+   209→   209→        />
+   210→   210→      </svg>
+   211→   211→      <div className="absolute flex flex-col items-center justify-center" style={{ width: size, height: size }}>
+   212→   212→        <span className="text-2xl font-bold text-slate-900 tabular-nums">{clampedValue}%</span>
+   213→   213→        <span className="text-[11px] text-slate-400 font-medium">{label}</span>
+   214→   214→      </div>
+   215→   215→    </div>
+   216→   216→  )
+   217→   217→}
+   218→   218→
+   219→   219→// ─── Component ────────────────────────────────────────────────────────
+   220→   220→
+   221→   221→function getGreeting(): string {
+   222→   222→  const hour = new Date().getHours()
+   223→   223→  if (hour < 12) return 'Good Morning'
+   224→   224→  if (hour < 17) return 'Good Afternoon'
+   225→   225→  return 'Good Evening'
+   226→   226→}
+   227→   227→
+   228→   228→const container = {
+   229→   229→  hidden: { opacity: 0 },
+   230→   230→  show: {
+   231→   231→    opacity: 1,
+   232→   232→    transition: { staggerChildren: 0.06 },
+   233→   233→  },
+   234→   234→}
+   235→   235→
+   236→   236→const fadeUp = {
+   237→   237→  hidden: { opacity: 0, y: 12 },
+   238→   238→  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' as const } },
+   239→   239→}
+   240→   240→
+   241→   241→export function DashboardView({ userName }: { userName?: string }) {
+   242→   242→  const [data, setData] = useState<DashboardData>(defaultData)
+   243→   243→  const [campaigns, setCampaigns] = useState<CampaignData[]>([])
+   244→   244→  const [loading, setLoading] = useState(true)
+   245→   245→  const [error, setError] = useState<string | null>(null)
+   246→   246→  const { setView } = useAppStore()
+   247→   247→
+   248→   248→  useEffect(() => {
+   249→   249→    let cancelled = false
+   250→   250→    const load = async () => {
+   251→   251→      try {
+   252→   252→        const [dashRes, campRes] = await Promise.all([
+   253→   253→          fetch('/api/dashboard', { credentials: 'same-origin' }),
+   254→   254→          fetch('/api/campaigns?status=ACTIVE&limit=10', { credentials: 'same-origin' }),
+   255→   255→        ])
+   256→   256→        if (cancelled) return
+   257→   257→        if (!dashRes.ok) throw new Error('Failed to load dashboard')
+   258→   258→        if (!campRes.ok) throw new Error('Failed to load campaigns')
+   259→   259→
+   260→   260→        const [dashData, campData] = await Promise.all([dashRes.json(), campRes.json()])
+   261→   261→        if (cancelled) return
+   262→   262→        setData(dashData)
+   263→   263→        setCampaigns(campData.campaigns || [])
+   264→   264→      } catch (err) {
+   265→   265→        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load data')
+   266→   266→      } finally {
+   267→   267→        if (!cancelled) setLoading(false)
+   268→   268→      }
+   269→   269→    }
+   270→   270→    load()
+   271→   271→    return () => {
+   272→   272→      cancelled = true
+   273→   273→    }
+   274→   274→  }, [])
+   275→   275→
+   276→   276→  // ─── KPI Cards Data ─────────────────────────────────────────────────
+   277→   277→
+   278→   278→  const kpiCards = [
+   279→   279→    {
+   280→   280→      label: 'Total Leads',
+   281→   281→      value: data.totalLeads,
+   282→   282→      icon: Users,
+   283→   283→      iconBg: 'bg-blue-50',
+   284→   284→      iconColor: 'text-[#2563EB]',
+   285→   285→      trend: null,
+   286→   286→    },
+   287→   287→    {
+   288→   288→      label: 'Qualified Leads',
+   289→   289→      value: data.qualifiedCount,
+   290→   290→      icon: Thermometer,
+   291→   291→      iconBg: 'bg-emerald-50',
+   292→   292→      iconColor: 'text-emerald-600',
+   293→   293→      trend: 'hotwarmcold',
+   294→   294→    },
+   295→   295→    {
+   296→   296→      label: 'Outreach Sent',
+   297→   297→      value: data.outreachSent,
+   298→   298→      icon: Mail,
+   299→   299→      iconBg: 'bg-amber-50',
+   300→   300→      iconColor: 'text-amber-600',
+   301→   301→      trend: data.replyRate > 0 ? `${data.replyRate}% replies` : null,
+   302→   302→    },
+   303→   303→    {
+   304→   304→      label: 'Meetings Booked',
+   305→   305→      value: data.meetingBooked,
+   306→   306→      icon: Calendar,
+   307→   307→      iconBg: 'bg-cyan-50',
+   308→   308→      iconColor: 'text-cyan-600',
+   309→   309→      trend: null,
+   310→   310→    },
+   311→   311→  ]
+   312→   312→
+   313→   313→  // ─── Top campaigns by reply rate ─────────────────────────────────────
+   314→   314→
+   315→   315→  const topCampaigns = [...campaigns]
+   316→   316→    .map((c) => ({
+   317→   317→      ...c,
+   318→   318→      replyRate: c.sentCount > 0 ? Math.round((c.replyCount / c.sentCount) * 100) : 0,
+   319→   319→    }))
+   320→   320→    .sort((a, b) => b.replyRate - a.replyRate)
+   321→   321→    .slice(0, 5)
+   322→   322→
+   323→   323→  // ─── Quick Actions ──────────────────────────────────────────────────
+   324→   324→
+   325→   325→  const quickActions = [
+   326→   326→    {
+   327→   327→      label: 'Discover Leads',
+   328→   328→      icon: Search,
+   329→   329→      view: 'discovery' as const,
+   330→   330→      color: 'bg-[#2563EB] hover:bg-blue-700',
+   331→   331→    },
+   332→   332→    {
+   333→   333→      label: 'Run Website Audit',
+   334→   334→      icon: Globe2,
+   335→   335→      view: 'audit' as const,
+   336→   336→      color: 'bg-sky-600 hover:bg-sky-700',
+   337→   337→    },
+   338→   338→    {
+   339→   339→      label: 'Ask AI',
+   340→   340→      icon: Brain,
+   341→   341→      view: 'ai-assistant' as const,
+   342→   342→      color: 'bg-emerald-600 hover:bg-emerald-700',
+   343→   343→    },
+   344→   344→    {
+   345→   345→      label: 'View Inbox',
+   346→   346→      icon: Inbox,
+   347→   347→      view: 'inbox' as const,
+   348→   348→      color: 'bg-amber-600 hover:bg-amber-700',
+   349→   349→    },
+   350→   350→  ]
+   351→   351→
+   352→   352→  // ─── Loading State ───────────────────────────────────────────────────
+   353→   353→
+   354→   354→  if (loading) {
+   355→   355→    return (
+   356→   356→      <div className="space-y-6">
+   357→   357→        <div className="flex items-center justify-between">
+   358→   358→          <div className="space-y-2">
+   359→   359→            <Skeleton className="h-8 w-48 bg-slate-100 rounded-xl" />
+   360→   360→            <Skeleton className="h-4 w-80 bg-slate-100 rounded-xl" />
+   361→   361→          </div>
+   362→   362→          <Skeleton className="h-10 w-24 bg-slate-100 rounded-xl" />
+   363→   363→        </div>
+   364→   364→        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+   365→   365→          {Array.from({ length: 4 }).map((_, i) => (
+   366→   366→            <Skeleton key={i} className="h-36 bg-slate-100 rounded-2xl" />
+   367→   367→          ))}
+   368→   368→        </div>
+   369→   369→        <Skeleton className="h-44 bg-slate-100 rounded-2xl" />
+   370→   370→        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+   371→   371→          <Skeleton className="h-80 bg-slate-100 rounded-2xl" />
+   372→   372→          <Skeleton className="h-80 bg-slate-100 rounded-2xl" />
+   373→   373→          <Skeleton className="h-80 bg-slate-100 rounded-2xl" />
+   374→   374→        </div>
+   375→   375→      </div>
+   376→   376→    )
+   377→   377→  }
+   378→   378→
+   379→   379→  // ─── Error State ────────────────────────────────────────────────────
+   380→   380→
+   381→   381→  if (error) {
+   382→   382→    return (
+   383→   383→      <div className="flex flex-col items-center justify-center py-24">
+   384→   384→        <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mb-4">
+   385→   385→          <XCircle className="w-7 h-7 text-red-400" />
+   386→   386→        </div>
+   387→   387→        <p className="text-slate-900 font-semibold text-lg">Failed to load dashboard</p>
+   388→   388→        <p className="text-sm text-slate-400 mt-1">{error}</p>
+   389→   389→        <Button
+   390→   390→          variant="outline"
+   391→   391→          className="mt-5 border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl"
+   392→   392→          onClick={() => window.location.reload()}
+   393→   393→        >
+   394→   394→          Retry
+   395→   395→        </Button>
+   396→   396→      </div>
+   397→   397→    )
+   398→   398→  }
+   399→   399→
+   400→   400→  // ─── Render ──────────────────────────────────────────────────────────
+   401→   401→
+   402→   402→  return (
+   403→   403→    <motion.div
+   404→   404→      variants={container}
+   405→   405→      initial="hidden"
+   406→   406→      animate="show"
+   407→   407→      className="space-y-6"
+   408→   408→    >
+   409→   409→      {/* ─── 1. Heading ────────────────────────────────────────────── */}
+   410→   410→      <motion.div variants={fadeUp} className="flex items-center justify-between">
+   411→   411→        <div>
+   412→   412→          <h1 className="text-2xl font-bold text-[#0F172A] tracking-tight">Dashboard</h1>
+   413→   413→          <p className="text-sm text-[#475569] mt-1">
+   414→   414→            {getGreeting()}, {userName || 'there'} — here&apos;s your acquisition pipeline overview
+   415→   415→          </p>
+   416→   416→        </div>
+   417→   417→        <div className="hidden sm:flex items-center gap-2 bg-emerald-50 rounded-full px-3.5 py-1.5">
+   418→   418→          <span className="relative flex h-2 w-2">
+   419→   419→            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+   420→   420→            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+   421→   421→          </span>
+   422→   422→          <span className="text-xs text-emerald-700 font-medium">Live</span>
+   423→   423→        </div>
+   424→   424→      </motion.div>
+   425→   425→
+   426→   426→      {/* ─── 2. KPI Cards ─────────────────────────────────────────── */}
+   427→   427→      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+   428→   428→        {kpiCards.map((card) => {
+   429→   429→          const Icon = card.icon
+   430→   430→          return (
+   431→   431→            <motion.div
+   432→   432→              key={card.label}
+   433→   433→              variants={fadeUp}
+   434→   434→              whileHover={{ y: -2 }}
+   435→   435→              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+   436→   436→            >
+   437→   437→              <Card className="bg-white rounded-2xl border-0 shadow-sm hover:shadow-md transition-shadow p-6">
+   438→   438→                <div className="flex items-start justify-between mb-4">
+   439→   439→                  <div
+   440→   440→                    className={`w-11 h-11 rounded-xl ${card.iconBg} flex items-center justify-center`}
+   441→   441→                  >
+   442→   442→                    <Icon className={`w-5 h-5 ${card.iconColor}`} />
+   443→   443→                  </div>
+   444→   444→                  {card.trend && card.trend !== 'hotwarmcold' && (
+   445→   445→                    <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 rounded-full px-2.5 py-0.5">
+   446→   446→                      <TrendingUp className="w-3 h-3" />
+   447→   447→                      {card.trend}
+   448→   448→                    </span>
+   449→   449→                  )}
+   450→   450→                </div>
+   451→   451→                <p className="text-3xl font-bold text-[#0F172A] tabular-nums tracking-tight">
+   452→   452→                  {card.value.toLocaleString()}
+   453→   453→                </p>
+   454→   454→                <p className="text-sm text-[#94A3B8] mt-1 font-medium">{card.label}</p>
+   455→   455→
+   456→   456→                {/* Hot/Warm/Cold breakdown for Qualified card */}
+   457→   457→                {card.trend === 'hotwarmcold' && (
+   458→   458→                  <div className="mt-4 pt-4 border-t border-slate-100">
+   459→   459→                    <div className="flex items-center gap-4">
+   460→   460→                      <span className="flex items-center gap-1.5 text-xs">
+   461→   461→                        <span className="w-2 h-2 rounded-full bg-red-500" />
+   462→   462→                        <span className="text-[#94A3B8]">Hot</span>
+   463→   463→                        <span className="text-slate-900 font-semibold tabular-nums">
+   464→   464→                          {data.temperature['HOT'] || 0}
+   465→   465→                        </span>
+   466→   466→                      </span>
+   467→   467→                      <span className="flex items-center gap-1.5 text-xs">
+   468→   468→                        <span className="w-2 h-2 rounded-full bg-amber-500" />
+   469→   469→                        <span className="text-[#94A3B8]">Warm</span>
+   470→   470→                        <span className="text-slate-900 font-semibold tabular-nums">
+   471→   471→                          {data.temperature['WARM'] || 0}
+   472→   472→                        </span>
+   473→   473→                      </span>
+   474→   474→                      <span className="flex items-center gap-1.5 text-xs">
+   475→   475→                        <span className="w-2 h-2 rounded-full bg-sky-400" />
+   476→   476→                        <span className="text-[#94A3B8]">Cold</span>
+   477→   477→                        <span className="text-slate-900 font-semibold tabular-nums">
+   478→   478→                          {data.temperature['COLD'] || 0}
+   479→   479→                        </span>
+   480→   480→                      </span>
+   481→   481→                    </div>
+   482→   482→                  </div>
+   483→   483→                )}
+   484→   484→              </Card>
+   485→   485→            </motion.div>
+   486→   486→          )
+   487→   487→        })}
+   488→   488→      </div>
+   489→   489→
+   490→   490→      {/* ─── 3. Lead Pipeline ──────────────────────────────────────── */}
+   491→   491→      <motion.div variants={fadeUp}>
+   492→   492→        <Card className="bg-white rounded-2xl border-0 shadow-sm p-6">
+   493→   493→          <div className="flex items-center justify-between mb-5">
+   494→   494→            <div className="flex items-center gap-2.5">
+   495→   495→              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+   496→   496→                <BarChart3 className="w-4 h-4 text-[#2563EB]" />
+   497→   497→              </div>
+   498→   498→              <h3 className="text-sm font-semibold text-[#0F172A]">Lead Pipeline</h3>
+   499→   499→            </div>
+   500→   500→            <span className="text-xs text-[#94A3B8] font-medium tabular-nums">
+   501→   501→              {data.totalLeads} total leads
+   502→   502→            </span>
+   503→   503→          </div>
+   504→   504→          <ScrollArea className="w-full">
+   505→   505→            <div className="flex gap-3 pb-2 min-w-max">
+   506→   506→              {PIPELINE_STAGES.map((stage, idx) => {
+   507→   507→                const count = data.stages[stage] || 0
+   508→   508→                const pct =
+   509→   509→                  data.totalLeads > 0
+   510→   510→                    ? (count / data.totalLeads) * 100
+   511→   511→                    : 0
+   512→   512→                return (
+   513→   513→                  <div key={stage} className="flex items-center gap-3">
+   514→   514→                    <div className="flex-shrink-0 w-40 rounded-2xl bg-slate-50/80 px-5 py-4 transition-all duration-200 hover:bg-slate-100/80 cursor-default">
+   515→   515→                      <div className="flex items-center gap-2 mb-3">
+   516→   516→                        <span
+   517→   517→                          className={`w-2.5 h-2.5 rounded-full ${STAGE_DOT_COLORS[stage]}`}
+   518→   518→                        />
+   519→   519→                        <span className="text-xs font-medium text-[#475569] truncate">
+   520→   520→                          {stage.replace(/_/g, ' ')}
+   521→   521→                        </span>
+   522→   522→                      </div>
+   523→   523→                      <div className="flex items-end justify-between mb-3">
+   524→   524→                        <span className="text-2xl font-bold text-[#0F172A] tabular-nums tracking-tight">
+   525→   525→                          {count}
+   526→   526→                        </span>
+   527→   527→                        <span className="text-xs text-[#94A3B8] font-medium tabular-nums">
+   528→   528→                          {pct.toFixed(0)}%
+   529→   529→                        </span>
+   530→   530→                      </div>
+   531→   531→                      <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+   532→   532→                        <motion.div
+   533→   533→                          className={`h-full rounded-full ${STAGE_BAR_COLORS[stage]}`}
+   534→   534→                          initial={{ width: 0 }}
+   535→   535→                          animate={{ width: `${Math.max(pct, 0)}%` }}
+   536→   536→                          transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 + idx * 0.08 }}
+   537→   537→                        />
+   538→   538→                      </div>
+   539→   539→                    </div>
+   540→   540→                    {idx < PIPELINE_STAGES.length - 1 && (
+   541→   541→                      <ArrowRight className="w-4 h-4 text-slate-300 shrink-0" />
+   542→   542→                    )}
+   543→   543→                  </div>
+   544→   544→                )
+   545→   545→              })}
+   546→   546→            </div>
+   547→   547→          </ScrollArea>
+   548→   548→        </Card>
+   549→   549→      </motion.div>
+   550→   550→
+   551→   551→      {/* ─── 4. Three-Column Section ────────────────────────────────── */}
+   552→   552→      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+   553→   553→
+   554→   554→        {/* Left: Quick Stats with Reply Rate Gauge */}
+   555→   555→        <motion.div variants={fadeUp}>
+   556→   556→          <Card className="bg-white rounded-2xl border-0 shadow-sm p-6 h-full">
+   557→   557→            <div className="flex items-center gap-2.5 mb-6">
+   558→   558→              <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+   559→   559→                <Zap className="w-4 h-4 text-emerald-600" />
+   560→   560→              </div>
+   561→   561→              <h3 className="text-sm font-semibold text-[#0F172A]">Quick Stats</h3>
+   562→   562→            </div>
+   563→   563→            <div className="flex flex-col items-center">
+   564→   564→              <div className="relative">
+   565→   565→                <CircleGauge value={data.replyRate} size={120} strokeWidth={10} label="Reply Rate" />
+   566→   566→              </div>
+   567→   567→              <div className="w-full mt-6 space-y-3">
+   568→   568→                <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-slate-50">
+   569→   569→                  <span className="text-xs font-medium text-[#475569]">Won Deals</span>
+   570→   570→                  <span className="text-sm font-bold text-slate-900 tabular-nums">{data.wonCount}</span>
+   571→   571→                </div>
+   572→   572→                <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-slate-50">
+   573→   573→                  <span className="text-xs font-medium text-[#475569]">Active Campaigns</span>
+   574→   574→                  <span className="text-sm font-bold text-slate-900 tabular-nums">{data.activeCampaigns}</span>
+   575→   575→                </div>
+   576→   576→                <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-slate-50">
+   577→   577→                  <span className="text-xs font-medium text-[#475569]">Total Outreach</span>
+   578→   578→                  <span className="text-sm font-bold text-slate-900 tabular-nums">{data.outreachSent}</span>
+   579→   579→                </div>
+   580→   580→              </div>
+   581→   581→            </div>
+   582→   582→          </Card>
+   583→   583→        </motion.div>
+   584→   584→
+   585→   585→        {/* Center: Recent Activity Feed */}
+   586→   586→        <motion.div variants={fadeUp}>
+   587→   587→          <Card className="bg-white rounded-2xl border-0 shadow-sm p-6 h-full">
+   588→   588→            <div className="flex items-center justify-between mb-5">
+   589→   589→              <div className="flex items-center gap-2.5">
+   590→   590→                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+   591→   591→                  <Activity className="w-4 h-4 text-[#2563EB]" />
+   592→   592→                </div>
+   593→   593→                <h3 className="text-sm font-semibold text-[#0F172A]">Recent Activity</h3>
+   594→   594→              </div>
+   595→   595→              <span className="text-xs text-[#94A3B8] font-medium bg-slate-50 rounded-full px-2.5 py-0.5">
+   596→   596→                Last 10
+   597→   597→              </span>
+   598→   598→            </div>
+   599→   599→            {data.recentActivities.length === 0 ? (
+   600→   600→              <div className="flex flex-col items-center justify-center py-14">
+   601→   601→                <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center mb-3">
+   602→   602→                  <Clock className="w-5 h-5 text-slate-300" />
+   603→   603→                </div>
+   604→   604→                <p className="text-sm text-[#475569] font-medium">No activity yet</p>
+   605→   605→                <p className="text-xs text-[#94A3B8] mt-1">Start by discovering leads</p>
+   606→   606→              </div>
+   607→   607→            ) : (
+   608→   608→              <ScrollArea className="max-h-[320px]">
+   609→   609→                <div className="relative pl-5">
+   610→   610→                  {/* Timeline line */}
+   611→   611→                  <div className="absolute left-[7px] top-2 bottom-2 w-px bg-slate-100" />
+   612→   612→                  <motion.div
+   613→   613→                    variants={container}
+   614→   614→                    initial="hidden"
+   615→   615→                    animate="show"
+   616→   616→                    className="space-y-0.5"
+   617→   617→                  >
+   618→   618→                    {data.recentActivities.slice(0, 10).map((a) => {
+   619→   619→                      const ActionIcon = ACTION_ICONS[a.action] || ArrowUpRight
+   620→   620→                      const dotColor = ACTION_DOT_COLORS[a.action] || 'bg-slate-400'
+   621→   621→                      return (
+   622→   622→                        <motion.div
+   623→   623→                          key={a.id}
+   624→   624→                          variants={fadeUp}
+   625→   625→                          className="relative py-2.5 group"
+   626→   626→                        >
+   627→   627→                          {/* Timeline dot */}
+   628→   628→                          <div className={`absolute -left-5 top-4 w-3.5 h-3.5 rounded-full ${dotColor} ring-4 ring-white z-10`} />
+   629→   629→                          <div className="ml-1">
+   630→   630→                            <div className="flex items-center gap-2 mb-0.5">
+   631→   631→                              <ActionIcon className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
+   632→   632→                              <p className="text-xs text-[#0F172A] font-medium leading-relaxed truncate">
+   633→   633→                                {a.details || a.action.replace(/_/g, ' ')}
+   634→   634→                              </p>
+   635→   635→                            </div>
+   636→   636→                            <div className="flex items-center gap-1.5 ml-5.5">
+   637→   637→                              <span className="text-[11px] text-[#94A3B8]">
+   638→   638→                                {a.user?.name || 'System'}
+   639→   639→                              </span>
+   640→   640→                              {a.lead?.business?.name && (
+   641→   641→                                <>
+   642→   642→                                  <span className="text-[11px] text-slate-300">·</span>
+   643→   643→                                  <span className="text-[11px] text-[#475569] truncate">
+   644→   644→                                    {a.lead.business.name}
+   645→   645→                                  </span>
+   646→   646→                                </>
+   647→   647→                              )}
+   648→   648→                              <span className="text-[11px] text-slate-300">·</span>
+   649→   649→                              <span className="text-[11px] text-[#94A3B8]">
+   650→   650→                                {formatDistanceToNow(new Date(a.createdAt), {
+   651→   651→                                  addSuffix: true,
+   652→   652→                                })}
+   653→   653→                              </span>
+   654→   654→                            </div>
+   655→   655→                          </div>
+   656→   656→                        </motion.div>
+   657→   657→                      )
+   658→   658→                    })}
+   659→   659→                  </motion.div>
+   660→   660→                </div>
+   661→   661→              </ScrollArea>
+   662→   662→            )}
+   663→   663→          </Card>
+   664→   664→        </motion.div>
+   665→   665→
+   666→   666→        {/* Right: Industry Breakdown */}
+   667→   667→        <motion.div variants={fadeUp}>
+   668→   668→          <Card className="bg-white rounded-2xl border-0 shadow-sm p-6 h-full">
+   669→   669→            <div className="flex items-center gap-2.5 mb-5">
+   670→   670→              <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
+   671→   671→                <Flame className="w-4 h-4 text-purple-600" />
+   672→   672→              </div>
+   673→   673→              <h3 className="text-sm font-semibold text-[#0F172A]">Leads by Industry</h3>
+   674→   674→            </div>
+   675→   675→            {data.leadsByIndustry.length === 0 ? (
+   676→   676→              <div className="flex flex-col items-center justify-center py-14">
+   677→   677→                <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center mb-3">
+   678→   678→                  <BarChart3 className="w-5 h-5 text-slate-300" />
+   679→   679→                </div>
+   680→   680→                <p className="text-sm text-[#475569] font-medium">No industry data</p>
+   681→   681→                <p className="text-xs text-[#94A3B8] mt-1">Add leads to see breakdown</p>
+   682→   682→              </div>
+   683→   683→            ) : (
+   684→   684→              <div className="space-y-3.5">
+   685→   685→                {data.leadsByIndustry
+   686→   686→                  .sort((a, b) => b._count.industry - a._count.industry)
+   687→   687→                  .slice(0, 8)
+   688→   688→                  .map((item, idx) => {
+   689→   689→                    const maxCount = data.leadsByIndustry[0]?._count.industry || 1
+   690→   690→                    const barPct = (item._count.industry / maxCount) * 100
+   691→   691→                    const color = INDUSTRY_COLORS[idx % INDUSTRY_COLORS.length]
+   692→   692→                    return (
+   693→   693→                      <div key={item.industry || 'unknown'}>
+   694→   694→                        <div className="flex items-center justify-between mb-1.5">
+   695→   695→                          <span className="text-xs font-medium text-[#475569] truncate max-w-[160px]">
+   696→   696→                            {item.industry || 'Unknown'}
+   697→   697→                          </span>
+   698→   698→                          <span className="text-xs font-bold text-[#0F172A] tabular-nums">
+   699→   699→                            {item._count.industry}
+   700→   700→                          </span>
+   701→   701→                        </div>
+   702→   702→                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+   703→   703→                          <motion.div
+   704→   704→                            className={`h-full rounded-full ${color}`}
+   705→   705→                            initial={{ width: 0 }}
+   706→   706→                            animate={{ width: `${barPct}%` }}
+   707→   707→                            transition={{ duration: 0.7, ease: 'easeOut', delay: 0.4 + idx * 0.06 }}
+   708→   708→                          />
+   709→   709→                        </div>
+   710→   710→                      </div>
+   711→   711→                    )
+   712→   712→                  })}
+   713→   713→              </div>
+   714→   714→            )}
+   715→   715→          </Card>
+   716→   716→        </motion.div>
+   717→   717→      </div>
+   718→   718→
+   719→   719→      {/* ─── 5. Campaign Performance ────────────────────────────────── */}
+   720→   720→      <motion.div variants={fadeUp}>
+   721→   721→        <Card className="bg-white rounded-2xl border-0 shadow-sm p-6">
+   722→   722→          <div className="flex items-center justify-between mb-5">
+   723→   723→            <div className="flex items-center gap-2.5">
+   724→   724→              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+   725→   725→                <Target className="w-4 h-4 text-[#2563EB]" />
+   726→   726→              </div>
+   727→   727→              <h3 className="text-sm font-semibold text-[#0F172A]">Campaign Performance</h3>
+   728→   728→            </div>
+   729→   729→            <span className="text-xs text-[#94A3B8] font-medium bg-blue-50 text-blue-600 rounded-full px-2.5 py-0.5">
+   730→   730→              Top 5 by reply rate
+   731→   731→            </span>
+   732→   732→          </div>
+   733→   733→          {topCampaigns.length === 0 ? (
+   734→   734→            <div className="flex flex-col items-center justify-center py-14">
+   735→   735→              <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center mb-3">
+   736→   736→                <Target className="w-5 h-5 text-slate-300" />
+   737→   737→              </div>
+   738→   738→              <p className="text-sm text-[#475569] font-medium">No active campaigns yet</p>
+   739→   739→              <p className="text-xs text-[#94A3B8] mt-1">Create a campaign to start tracking performance</p>
+   740→   740→            </div>
+   741→   741→          ) : (
+   742→   742→            <div className="overflow-hidden">
+   743→   743→              <ScrollArea className="max-h-[280px]">
+   744→   744→                <table className="w-full text-sm">
+   745→   745→                  <thead>
+   746→   746→                    <tr className="border-b border-slate-100">
+   747→   747→                      <th className="text-left pb-3 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider">Campaign</th>
+   748→   748→                      <th className="text-right pb-3 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider">Sent</th>
+   749→   749→                      <th className="text-right pb-3 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider">Replies</th>
+   750→   750→                      <th className="text-right pb-3 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider">Reply Rate</th>
+   751→   751→                    </tr>
+   752→   752→                  </thead>
+   753→   753→                  <tbody>
+   754→   754→                    {topCampaigns.map((c, i) => (
+   755→   755→                      <tr key={c.id} className="border-b border-slate-50 last:border-0 hover:bg-blue-50/40 transition-colors">
+   756→   756→                        <td className="py-3">
+   757→   757→                          <div className="flex items-center gap-2.5">
+   758→   758→                            <span className="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-bold text-[#475569]">
+   759→   759→                              {i + 1}
+   760→   760→                            </span>
+   761→   761→                            <div className="min-w-0">
+   762→   762→                              <p className="text-xs font-semibold text-[#0F172A] truncate max-w-[160px]">
+   763→   763→                                {c.name}
+   764→   764→                              </p>
+   765→   765→                              {c.industry && (
+   766→   766→                                <p className="text-[11px] text-[#94A3B8] truncate">
+   767→   767→                                  {c.industry}
+   768→   768→                                </p>
+   769→   769→                              )}
+   770→   770→                            </div>
+   771→   771→                          </div>
+   772→   772→                        </td>
+   773→   773→                        <td className="py-3 text-right text-xs text-[#475569] tabular-nums font-medium">
+   774→   774→                          {c.sentCount}
+   775→   775→                        </td>
+   776→   776→                        <td className="py-3 text-right text-xs text-[#475569] tabular-nums font-medium">
+   777→   777→                          {c.replyCount}
+   778→   778→                        </td>
+   779→   779→                        <td className="py-3 text-right">
+   780→   780→                          <div className="flex items-center justify-end gap-2">
+   781→   781→                            <Progress
+   782→   782→                              value={c.replyRate}
+   783→   783→                              className="w-14 h-1.5 bg-slate-100"
+   784→   784→                            />
+   785→   785→                            <span className="text-xs font-bold text-emerald-600 tabular-nums w-9 text-right">
+   786→   786→                              {c.replyRate}%
+   787→   787→                            </span>
+   788→   788→                          </div>
+   789→   789→                        </td>
+   790→   790→                      </tr>
+   791→   791→                    ))}
+   792→   792→                  </tbody>
+   793→   793→                </table>
+   794→   794→              </ScrollArea>
+   795→   795→            </div>
+   796→   796→          )}
+   797→   797→        </Card>
+   798→   798→      </motion.div>
+   799→   799→
+   800→   800→      {/* ─── 6. Quick Actions ─────────────────────────────────────── */}
+   801→   801→      <motion.div variants={fadeUp}>
+   802→   802→        <p className="text-xs font-semibold text-[#94A3B8] uppercase tracking-wider mb-3">
+   803→   803→          Quick Actions
+   804→   804→        </p>
+   805→   805→        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+   806→   806→          {quickActions.map((action) => {
+   807→   807→            const Icon = action.icon
+   808→   808→            return (
+   809→   809→              <motion.button
+   810→   810→                key={action.view}
+   811→   811→                onClick={() => setView(action.view)}
+   812→   812→                whileHover={{ y: -1 }}
+   813→   813→                whileTap={{ scale: 0.98 }}
+   814→   814→                className={`flex items-center gap-3 px-5 py-4 rounded-2xl text-white ${action.color} shadow-sm hover:shadow-md transition-shadow text-left`}
+   815→   815→              >
+   816→   816→                <Icon className="w-5 h-5 opacity-90" />
+   817→   817→                <span className="text-sm font-semibold">{action.label}</span>
+   818→   818→                <ChevronRight className="w-4 h-4 ml-auto opacity-60" />
+   819→   819→              </motion.button>
+   820→   820→            )
+   821→   821→          })}
+   822→   822→        </div>
+   823→   823→      </motion.div>
+   824→   824→    </motion.div>
+   825→   825→  )
+   826→   826→}

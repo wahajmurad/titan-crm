@@ -159,7 +159,7 @@ export default function HomeClient() {
       case 'prompts': return <PromptsView />
       case 'team': return <TeamView />
       case 'settings': return <SettingsView />
-      default: return <DashboardView />
+      default: return <DashboardView userName={user.name} />
     }
   }
 
