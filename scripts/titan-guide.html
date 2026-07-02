@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+@page {
+    size: 720px 1020px;
+    margin: 0;
+}
+:root {
+    --c-bg: #F8FAFC;
+    --c-dark: #0F172A;
+    --c-primary: #2563EB;
+    --c-primary-light: #EFF6FF;
+    --c-accent: #3B82F6;
+    --c-text: #1E293B;
+    --c-text-secondary: #64748B;
+    --c-border: #E2E8F0;
+    --c-card-bg: #FFFFFF;
+}
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 720px;
+    background: var(--c-bg);
+    color: var(--c-text);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+@media screen {
+    html {
+        height: auto;
+        display: flex;
+        justify-content: center;
+        background: #E2E8F0;
+    }
+    body {
+        transform-origin: top center;
+        margin: 20px auto;
+        box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+        border-radius: 8px;
+    }
+}
+
+/* ── Cover ── */
+.cover {
+    width: 720px;
+    height: 1020px;
+    box-sizing: border-box;
+    break-after: page;
+    overflow: hidden;
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F172A 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 70px 65px;
+}
+.cover::before {
+    content: '';
+    position: absolute;
+    top: 40px;
+    right: 40px;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: rgba(37, 99, 235, 0.06);
+}
+.cover::after {
+    content: '';
+    position: absolute;
+    bottom: 60px;
+    left: 40px;
+    width: 250px;
+    height: 250px;
+    border-radius: 50%;
+    background: rgba(59, 130, 246, 0.04);
+}
+.cover-grid {
+    position: absolute;
+    inset: 0;
+    opacity: 0.03;
+    background-image: linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px);
+    background-size: 60px 60px;
+}
+.cover-badge {
+    position: relative;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(37, 99, 235, 0.15);
+    border: 1px solid rgba(37, 99, 235, 0.25);
+    border-radius: 10px;
+    padding: 8px 18px;
+    margin-bottom: 48px;
+}
+.cover-badge-icon {
+    width: 22px;
+    height: 22px;
+    background: linear-gradient(135deg, #2563EB, #3B82F6);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.cover-badge-icon svg { width: 13px; height: 13px; }
+.cover-badge span {
+    color: #93C5FD;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+.cover-title {
+    position: relative;
+    z-index: 2;
+    font-size: 58px;
+    font-weight: 900;
+    color: #FFFFFF;
+    line-height: 1.08;
+    text-align: center;
+    margin: 0 0 16px 0;
+    letter-spacing: -1.5px;
+}
+.cover-title em {
+    font-style: normal;
+    background: linear-gradient(135deg, #93C5FD, #60A5FA);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.cover-subtitle {
+    position: relative;
+    z-index: 2;
+    font-size: 17px;
+    color: #94A3B8;
+    line-height: 1.6;
+    text-align: center;
+    max-width: 480px;
+    margin: 0 auto 56px auto;
+    font-weight: 400;
+}
+.cover-meta {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+.cover-meta-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+.cover-meta-item .label {
+    font-size: 10px;
+    color: #64748B;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 500;
+}
+.cover-meta-item .value {
+    font-size: 13px;
+    color: #CBD5E1;
+    font-weight: 600;
+}
+.cover-footer {
+    position: absolute;
+    bottom: 32px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    z-index: 2;
+}
+.cover-footer span {
+    font-size: 11px;
+    color: #475569;
+    letter-spacing: 0.5px;
+}
+
+/* ── Main Content ── */
+.main-content {
+    padding: 50px 60px 40px 60px;
+}
+
+/* ── Section Header ── */
+.chapter-header {
+    break-after: avoid;
+    break-inside: avoid;
+    margin-top: 28px;
+}
+.section-tag {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--c-primary);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+}
+.section-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--c-dark);
+    line-height: 1.2;
+    margin: 0 0 8px 0;
+    letter-spacing: -0.5px;
+}
+.divider {
+    width: 40px;
+    height: 3px;
+    background: var(--c-primary);
+    border-radius: 2px;
+    margin-bottom: 20px;
+}
+
+/* ── Body Text ── */
+.body-text {
+    font-size: 14.5px;
+    line-height: 1.7;
+    color: var(--c-text);
+    margin: 0 0 14px 0;
+    font-weight: 400;
+}
+
+/* ── Subsection ── */
+.subsection {
+    break-inside: avoid;
+    margin-top: 22px;
+    margin-bottom: 8px;
+}
+.subsection-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--c-dark);
+    margin: 0 0 10px 0;
+    letter-spacing: -0.2px;
+}
+
+/* ── Card ── */
+.card {
+    break-inside: avoid;
+    background: var(--c-card-bg);
+    border: 1px solid var(--c-border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 12px;
+}
+.card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--c-dark);
+    margin: 0 0 6px 0;
+}
+.card-text {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--c-text-secondary);
+    margin: 0;
+}
+
+/* ── Feature List ── */
+.feature-row {
+    break-inside: avoid;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 14px;
+    padding: 14px 18px;
+    background: var(--c-card-bg);
+    border: 1px solid var(--c-border);
+    border-radius: 12px;
+}
+.feature-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: var(--c-primary-light);
+    color: var(--c-primary);
+    font-weight: 700;
+    font-size: 14px;
+}
+.feature-content {
+    flex: 1;
+    min-width: 0;
+}
+.feature-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--c-dark);
+    margin: 0 0 3px 0;
+}
+.feature-desc {
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--c-text-secondary);
+    margin: 0;
+}
+
+/* ── Info Box ── */
+.info-box {
+    break-inside: avoid;
+    background: #EFF6FF;
+    border-left: 3px solid #2563EB;
+    border-radius: 0 10px 10px 0;
+    padding: 14px 18px;
+    margin: 14px 0;
+}
+.info-box p {
+    font-size: 13px;
+    line-height: 1.6;
+    color: #1E40AF;
+    margin: 0;
+}
+.info-box strong {
+    color: #1E3A8A;
+}
+
+/* ── Steps ── */
+.step {
+    break-inside: avoid;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 12px;
+}
+.step-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--c-primary);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+.step-content {
+    flex: 1;
+    min-width: 0;
+}
+.step-content p {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--c-text);
+    margin: 0;
+}
+.step-content strong {
+    color: var(--c-dark);
+}
+
+/* ── Table ── */
+.table-wrap {
+    break-inside: avoid;
+    margin: 14px 0;
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    overflow: hidden;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+}
+thead th {
+    background: #F1F5F9;
+    color: var(--c-dark);
+    font-weight: 600;
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+tbody td {
+    padding: 10px 14px;
+    border-top: 1px solid var(--c-border);
+    color: var(--c-text);
+    line-height: 1.5;
+    vertical-align: top;
+}
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* ── Code Block ── */
+.code-block {
+    break-inside: avoid;
+    background: #1E293B;
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin: 12px 0;
+    overflow-x: auto;
+}
+.code-block code {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #E2E8F0;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+/* ── Bullet List ── */
+.bullet-list {
+    margin: 8px 0 14px 0;
+    padding: 0;
+    list-style: none;
+}
+.bullet-list li {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--c-text);
+    padding-left: 20px;
+    position: relative;
+    margin-bottom: 6px;
+}
+.bullet-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 9px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--c-accent);
+}
+
+/* ── Ending Page ── */
+.ending {
+    width: 720px;
+    height: 1020px;
+    box-sizing: border-box;
+    break-before: page;
+    overflow: hidden;
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 60px;
+}
+.ending-icon {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #2563EB, #3B82F6);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 28px;
+    box-shadow: 0 8px 30px rgba(37, 99, 235, 0.3);
+}
+.ending-icon svg { width: 28px; height: 28px; color: white; }
+.ending-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: #FFFFFF;
+    margin: 0 0 12px 0;
+    text-align: center;
+}
+.ending-text {
+    font-size: 15px;
+    color: #94A3B8;
+    text-align: center;
+    max-width: 420px;
+    line-height: 1.7;
+    margin: 0;
+}
+
+/* ── TOC ── */
+.toc-item {
+    break-inside: avoid;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--c-border);
+}
+.toc-item:last-child { border-bottom: none; }
+.toc-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--c-text);
+}
+.toc-dots {
+    flex: 1;
+    border-bottom: 1px dotted var(--c-border);
+    margin: 0 12px;
+    min-width: 40px;
+}
+.toc-page {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--c-primary);
+    min-width: 20px;
+    text-align: right;
+}
+
+/* ── Two Column Grid ── */
+.two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 12px 0;
+}
+.two-col .card { margin-bottom: 0; }
+
+p, td, li, .content {
+    overflow-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════ COVER PAGE ════════════════ -->
+<div class="cover">
+    <div class="cover-badge">
+        <div class="cover-badge-icon">
+            <svg viewBox="0 0 24 24" fill="white" stroke="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <span>User Guide</span>
+    </div>
+    <h1 class="cover-title">Project <em>TITAN</em></h1>
+    <p class="cover-subtitle">Complete guide to running and using the AI-powered sales and outreach platform. Covers all features, setup instructions, and operational workflows.</p>
+    <div class="cover-meta">
+        <div class="cover-meta-item">
+            <span class="label">Version</span>
+            <span class="value">1.0</span>
+        </div>
+        <div class="cover-meta-item">
+            <span class="label">Stack</span>
+            <span class="value">Next.js 16</span>
+        </div>
+        <div class="cover-meta-item">
+            <span class="label">Pages</span>
+            <span class="value">19 Features</span>
+        </div>
+    </div>
+    <div class="cover-footer">
+        <span>TITAN AI Sales Platform &mdash; Confidential</span>
+    </div>
+</div>
+
+<!-- ════════════════ MAIN CONTENT ════════════════ -->
+<div class="main-content">
+
+    <!-- Table of Contents -->
+    <div class="chapter-header">
+        <div class="section-tag">Contents</div>
+        <div class="section-title">Table of Contents</div>
+        <div class="divider"></div>
+    </div>
+    <div class="toc-item"><span class="toc-label">1. Getting Started</span><span class="toc-dots"></span><span class="toc-page">2</span></div>
+    <div class="toc-item"><span class="toc-label">2. System Overview</span><span class="toc-dots"></span><span class="toc-page">3</span></div>
+    <div class="toc-item"><span class="toc-label">3. Main Section Features</span><span class="toc-dots"></span><span class="toc-page">4</span></div>
+    <div class="toc-item"><span class="toc-label">4. Campaign Section Features</span><span class="toc-dots"></span><span class="toc-page">6</span></div>
+    <div class="toc-item"><span class="toc-label">5. Intelligence Section Features</span><span class="toc-dots"></span><span class="toc-page">8</span></div>
+    <div class="toc-item"><span class="toc-label">6. Operations Section Features</span><span class="toc-dots"></span><span class="toc-page">11</span></div>
+    <div class="toc-item"><span class="toc-label">7. Technical Reference</span><span class="toc-dots"></span><span class="toc-page">14</span></div>
+
+    <!-- ════════════════ CHAPTER 1: GETTING STARTED ════════════════ -->
+    <div class="chapter-header">
+        <div class="section-tag">Chapter 1</div>
+        <div class="section-title">Getting Started</div>
+        <div class="divider"></div>
+    </div>
+
+    <div class="subsection">
+        <div class="subsection-title">System Requirements</div>
+        <p class="body-text">Project TITAN is built on a modern web technology stack that requires specific runtime environments for both development and production use. Before you begin, ensure that your system meets the following prerequisites: Node.js version 18 or later must be installed on your machine. You will also need either npm or bun as your package manager, with bun being the recommended option for faster startup times. A SQLite-compatible environment is required for the database layer, which comes bundled with the Prisma ORM. For deployment, Vercel is the recommended hosting platform, though any Node.js-compatible server will work.</p>
+    </div>
+
+    <div class="subsection">
+        <div class="subsection-title">Installation Steps</div>
+        <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-content"><p><strong>Clone the repository</strong> from your GitHub remote. Open a terminal window and navigate to your preferred working directory, then run the git clone command with your repository URL. This will download all project files including the source code, configuration files, and the Prisma schema definitions.</p></div>
+        </div>
+        <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-content"><p><strong>Install dependencies</strong> by running <code>npm install</code> or <code>bun install</code> in the project root directory. This command reads the package.json file and downloads all required packages including Next.js 16, React 19, Prisma ORM, Framer Motion, React Flow, Recharts, shadcn/ui components, and the Zustand state management library. The postinstall hook will automatically run <code>prisma generate</code> to create the database client.</p></div>
+        </div>
+        <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-content"><p><strong>Set up the database</strong> by running <code>npx prisma db push</code>. This command creates the SQLite database file and applies the schema defined in prisma/schema.prisma. It creates tables for Users, Permissions, Businesses, Leads, Campaigns, Outreach records, Meetings, Workflows, and all supporting models. If you need to reset the database at any point, use <code>npx prisma migrate reset</code>.</p></div>
+        </div>
+        <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-content"><p><strong>Start the development server</strong> by running <code>npm run dev</code> or <code>bun dev</code>. The application will start on port 3000 by default. Open your browser and navigate to <code>http://localhost:3000</code>. On first launch, you will be presented with the Setup screen to create your admin account.</p></div>
+        </div>
+        <div class="step">
+            <div class="step-num">5</div>
+            <div class="step-content"><p><strong>Create your admin account</strong> through the initial setup screen. Enter your full name, email address, and a secure password (minimum requirements apply). This first account is automatically assigned the OWNER role with full permissions across all modules. After submission, the system reloads and takes you to the login page where you can sign in with the credentials you just created.</p></div>
+        </div>
+    </div>
+
+    <div class="info-box">
+        <p><strong>Quick Login Tip:</strong> The system uses stateless JWT-based authentication. Your session is stored in an httpOnly cookie. If you get logged out, simply sign in again with your email and password. There is no session expiration in the current version, so your session persists until you manually sign out or clear your browser cookies.</p>
+    </div>
+
+    <div class="subsection">
+        <div class="subsection-title">Running in Production</div>
+        <p class="body-text">To run TITAN in production mode, first build the application with <code>npm run build</code>. This creates an optimized bundle in the <code>.next</code> directory. Then start the server with <code>npm run start</code>, which runs the standalone server file. For Vercel deployment, simply connect your GitHub repository to Vercel and it will automatically detect the Next.js framework and configure the build settings. Ensure your environment variables (particularly DATABASE_URL) are configured in the Vercel project settings dashboard.</p>
+    </div>
+
+    <!-- ════════════════ CHAPTER 2: SYSTEM OVERVIEW ════════════════ -->
+    <div class="chapter-header">
+        <div class="section-tag">Chapter 2</div>
+        <div class="section-title">System Overview</div>
+        <div class="divider"></div>
+    </div>
+
+    <p class="body-text">Project TITAN is a comprehensive AI-powered sales and outreach platform designed to automate and intelligence-enhance every stage of the B2B sales pipeline. The system is organized into four primary sections accessible through the left sidebar navigation: Main, Campaigns, Intelligence, and Operations. Each section contains multiple feature modules that work together to create a seamless workflow from lead discovery to deal closure.</p>
+
+    <p class="body-text">The platform uses a single-page application architecture built on Next.js 16 with the App Router pattern. Navigation between views is handled client-side using Zustand state management, which means transitions are instant and do not require full page reloads. Each view is lazy-loaded using Next.js dynamic imports, ensuring that only the code needed for the current view is loaded into the browser, resulting in fast initial load times and efficient memory usage.</p>
+
+    <div class="subsection">
+        <div class="subsection-title">Technology Stack</div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Layer</th><th>Technology</th><th>Purpose</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>Framework</strong></td><td>Next.js 16 (App Router)</td><td>Full-stack React framework with server-side rendering and API routes</td></tr>
+                    <tr><td><strong>Frontend</strong></td><td>React 19 + TypeScript</td><td>Component-based UI with strict type safety</td></tr>
+                    <tr><td><strong>Styling</strong></td><td>Tailwind CSS 4 + shadcn/ui</td><td>Utility-first CSS with pre-built accessible components</td></tr>
+                    <tr><td><strong>Animation</strong></td><td>Framer Motion</td><td>Smooth page transitions, hover effects, and micro-interactions</td></tr>
+                    <tr><td><strong>State</strong></td><td>Zustand</td><td>Lightweight global state management for view routing and UI state</td></tr>
+                    <tr><td><strong>Database</strong></td><td>SQLite + Prisma ORM</td><td>Relational data storage with type-safe query builder</td></tr>
+                    <tr><td><strong>Auth</strong></td><td>JWT (jose library)</td><td>Stateless token-based authentication via httpOnly cookies</td></tr>
+                    <tr><td><strong>Workflow</strong></td><td>React Flow v12</td><td>Visual node-based workflow builder with drag-and-drop</td></tr>
+                    <tr><td><strong>Charts</strong></td><td>Recharts</td><td>Data visualization for dashboards and analytics</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="subsection">
+        <div class="subsection-title">Database Models</div>
+        <p class="body-text">The TITAN database consists of 16 interconnected models that store all application data. The core entities include User accounts with role-based permissions (OWNER or TEAM), Business records that serve as company profiles, and Lead records that track each prospect through a nine-stage sales pipeline. Campaigns group leads and track outreach performance metrics. Outreach records store individual email communications with status tracking from draft through replied. Meeting records manage scheduled interactions with leads. Additional models include WebsiteAudit for site analysis scores across 10 categories, CompanyIntel for AI-generated business intelligence, Workflow and WorkflowRun for automation, PersonalizationScore for email quality metrics, AIMemory for system learning, PromptTemplate for AI prompt management, LeadProvider for data source configuration, and CampaignAnalytics for daily performance tracking.</p>
+    </div>
+
+    <div class="subsection">
+        <div class="subsection-title">Navigation and UI</div>
+        <p class="body-text">The sidebar navigation is organized into four collapsible sections. When the sidebar is expanded (260px width), you see full labels for each item along with section headers. When collapsed (72px width), only icons are displayed with tooltips appearing on hover. The sidebar can be toggled using the arrow button on its right edge. At the top of the main content area, a sticky header displays the current view name, a Command+K shortcut hint for the command palette, a search button, and a dark/light theme toggle. The notification bell shows unread count and a dropdown of recent notifications. The Command Palette (activated by pressing Cmd+K or Ctrl+K) provides quick navigation to any view or action across the system.</p>
+    </div>
+
+    <!-- ════════════════ CHAPTER 3: MAIN SECTION ════════════════ -->
+    <div class="chapter-header">
+        <div class="section-tag">Chapter 3</div>
+        <div class="section-title">Main Section Features</div>
+        <div class="divider"></div>
+    </div>
+
+    <p class="body-text">The Main section contains the four most frequently used modules in the TITAN platform. These form the core workflow: discovering leads, auditing their websites, managing the lead pipeline, and monitoring overall performance through the dashboard. Each module connects to the next, creating a natural progression from prospect identification to qualified opportunity.</p>
+
+    <div class="subsection">
+        <div class="subsection-title">Dashboard</div>
+        <p class="body-text">The Dashboard is your central command center that provides a real-time overview of your entire sales operation. When you log in, this is the first screen you see. It displays key performance indicators including total leads discovered, leads qualified through the pipeline, audits completed, emails sent, reply rate percentage, meetings booked, estimated revenue potential, and active campaign count. The data refreshes automatically by polling the dashboard API endpoint, giving you a live view of your team's activity. Below the stats row, you will find recent activity feeds, pipeline stage distribution charts, and quick-action shortcuts to navigate to other sections. The dashboard uses the user's name to provide a personalized greeting at the top of the page.</p>
+    </div>
+
+    <div class="subsection">
+        <div class="subsection-title">AI Command Center</div>
+        <p class="body-text">The AI Command Center is a powerful natural language interface that lets you control the entire TITAN system through conversational commands. Instead of navigating through multiple screens, you can type instructions like "discover 20 leads in the healthcare industry in New York" or "audit the website example.com" and the system will execute the appropriate actions. The command center supports multiple action types including lead discovery, website auditing, lead qualification, email generation, campaign creation, data analysis, business intelligence generation, workflow creation, and report generation. Each command is processed through an AI interpretation layer that extracts the intent, parameters, and required actions. Results are displayed inline with step-by-step progress indicators showing what the AI is doing in real time.</p>
+        <p class="body-text">The interface features a chat-style layout with your commands appearing on the right and system responses on the left. Each response includes the action taken, the outcome, and any data generated. You can also use the command center to chain multiple actions together, for example discovering leads and then immediately auditing their websites in a single workflow. This makes it the fastest way to execute multi-step sales processes without leaving a single screen.</p>
+    </div>
+
+    <div class="subsection">
+        <div class="subsection-title">Lead Discovery</div>
+        <p class="body-text">The Lead Discovery module is where you find new potential customers for your outreach campaigns. You can search for businesses by specifying criteria such as industry type, geographic location (country and city), business size category, and specific keywords or service offerings. The discovery engine supports multiple lead provider sources including Google Places, Yelp, custom APIs, Serper search, and web scraping. Each lead provider can be configured separately in the Lead Providers settings section with their own API credentials, authentication methods, and priority levels.</p>
+        <p class="body-text">When you initiate a discovery search, the system queries the configured lead providers and returns a list of matching businesses. Each result includes the business name, website URL (if available), industry classification, location, contact information, and a preliminary relevance score. You can review the results, select which businesses to add as leads, and the system will automatically create Business records and corresponding Lead records in the database with the initial stage set to DISCOVERED. The module also supports bulk operations, allowing you to add multiple leads to a specific campaign at once.</p>
+    </div>
+
+    <div class="subsection">
+        <div class="subsection-title">Website Audit</div>
+        <p class="body-text">The Website Audit module performs a comprehensive 10-category analysis of any target website. When you enter a URL and initiate an audit, the system evaluates the website across UI Design, User Experience, SEO Optimization, Performance, Accessibility, Mobile Responsiveness, Security, AI Readiness, Automation Potential, and Conversion Optimization. Each category receives a score from 0 to 100, along with a detailed text analysis of specific findings, issues identified, and actionable recommendations.</p>
+        <p class="body-text">The audit results go beyond technical scoring by also generating business intelligence. This includes an executive summary of the website's current state, a list of specific problems found, growth opportunities identified, automation and AI adoption opportunities, and a tailored pitch strategy with talking points designed to help you craft compelling outreach. The audit data is stored in the WebsiteAudit model linked to the corresponding Business record, making it available for email personalization and campaign strategy. This module is particularly valuable because it transforms a simple website analysis into a complete sales enablement package that gives you meaningful talking points for every prospect.</p>
+    </div>
+
+    <div class="subsection">
+        <div class="subsection-title">Leads Management</div>
+        <p class="body-text">The Leads module is the central hub for managing your sales pipeline. It displays all leads in a filterable, sortable table with columns for business name, industry, stage, temperature (HOT/WARM/COLD), qualification score, assigned team member, and creation date. You can filter leads by any combination of these fields, and the table updates in real time as you adjust the filters. Clicking on any lead row navigates to the Lead Detail view, which provides a comprehensive profile of that prospect.</p>
+        <p class="body-text">The Lead Detail view shows the full business information, all audit scores and findings, AI-generated analysis, the complete outreach history with sent emails and replies, scheduled and completed meetings, and an activity timeline. You can update the lead's stage manually by clicking through the pipeline stages: Discovered, Audited, Qualified, Outreach Sent, Replied, Meeting Booked, Proposal Sent, Won, or Lost. Each stage transition is logged in the activity feed. The lead detail also displays the AI's recommended solution, identified pain points, and decision maker information when available. From this view, you can compose new outreach emails, schedule meetings, assign the lead to a team member, or add notes.</p>
+    </div>
+
+    <!-- ════════════════ CHAPTER 4: CAMPAIGNS ════════════════ -->
+    <div class="chapter-header">
+        <div class="section-tag">Chapter 4</div>
+        <div class="section-title">Campaign Section Features</div>
+        <div class="divider"></div>
+    </div>
+
+    <p class="body-text">The Campaigns section provides tools for organizing, executing, and tracking your outreach efforts at scale. Instead of sending individual emails one at a time, campaigns allow you to group leads by industry, location, or service offering and manage their outreach collectively. This section includes the Campaigns management view, the Email Center for composing and managing messages, and the Inbox for tracking replies.</p>
+
+    <div class="subsection">
+        <div class="subsection-title">Campaigns</div>
+        <p class="body-text">The Campaigns module lets you create and manage outreach campaigns that group related leads together. When creating a campaign, you specify the campaign name, target industry, geographic location (country and city), target business size, the service offering you want to promote, and a daily sending limit to control the pace of outreach. Each campaign tracks aggregate performance metrics including the number of leads added, emails sent, emails opened, replies received, meetings booked, and deals won, along with a running revenue total.</p>
+        <p class="body-text">The campaign list view shows all campaigns with their current status (ACTIVE, PAUSED, or COMPLETED) and key metrics at a glance. You can pause or resume campaigns, adjust the daily sending limit, and view the campaign's analytics over time through the CampaignAnalytics data which tracks daily performance metrics. Campaigns can be assigned to specific team members (the owner), and leads within a campaign inherit the campaign's targeting parameters for consistent messaging. This module is essential for running systematic, measurable outreach programs rather than ad-hoc email sending.</p>
+    </div>
+
+    <div class="subsection">
+        <div class="subsection-title">Email Center</div>
+        <p class="body-text">The Email Center is your command post for composing, scheduling, and managing outreach emails. It provides a rich composition interface where you can write personalized emails to individual leads or create template-based messages for campaign-wide distribution. The email editor supports subject line optimization, body text with personalization variables, and attachment of generated assets such as audit reports, HTML demo pages, or ROI calculations.</p>
+        <p class="body-text">Each email created in the Email Center is stored as an Outreach record with status tracking through the pipeline: DRAFT, SENT, OPENED, REPLIED, BOUNCED, or FAILED. The system tracks when emails are sent, opened, and replied to, with timestamps recorded for each event. You can schedule emails to be sent at optimal times, set up follow-up sequences, and view the complete email history for any lead. The Email Center also provides analytics on email performance including open rates, reply rates, and bounce rates, helping you continuously improve your outreach messaging and timing strategies.</p>
+    </div>
+
+    <div class="subsection">
+        <div class="subsection-title">Inbox</div>
+        <p class="body-text">The Inbox module aggregates all incoming replies and responses from your outreach efforts into a unified view. Instead of checking multiple email accounts, the Inbox shows all replies sorted by date with the most recent first. Each reply is linked to the original outreach email and the corresponding lead, giving you full context without switching between screens. The inbox supports filtering by read/unread status, lead, campaign, and date range. You can mark replies as read, archive them, or take direct action such as scheduling a meeting or sending a follow-up response. The notification bell in the header also provides a real-time count of unread inbox messages, ensuring you never miss a time-sensitive reply from a prospect.</p>
+    </div>
+
+    <!-- ════════════════ CHAPTER 5: INTELLIGENCE ════════════════ -->
+    <div class="chapter-header">
+        <div class="section-tag">Chapter 5</div>
+        <div class="section-title">Intelligence Section Features</div>
+        <div class="divider"></div>
+    </div>
+
+    <p class="body-text">The Intelligence section houses TITAN's AI-powered capabilities that provide deep insights, expert knowledge, and strategic guidance for your sales operations. These modules leverage AI models to analyze data, generate content, and provide recommendations that would otherwise require significant manual research and expertise. Each intelligence module serves a distinct purpose in augmenting your sales team's capabilities.</p>
+
+    <div class="subsection">
+        <div class="subsection-title">AI Assistant</div>
+        <p class="body-text">The AI Assistant is a conversational chat interface that provides on-demand help with any aspect of your sales workflow. You can ask questions about specific leads, request help drafting emails, get advice on sales strategies, or ask for analysis of your campaign performance. The assistant has access to your system data and can reference lead information, audit results, and campaign metrics in its responses. The chat interface supports a continuous conversation thread, so you can ask follow-up questions and refine your requests naturally.</p>
+        <p class="body-text">The AI Assistant is always accessible from the sidebar and is one of the two modules (along with Dashboard) that every user can access regardless of their permission settings. It uses the AI API endpoint to process queries and generate responses. The interface includes quick-action suggestion chips that let you jump to common tasks such as "Analyze my campaign performance," "Draft a follow-up email," or "Which leads should I prioritize?" This makes it an indispensable tool for both experienced sales professionals and new team members who are learning the system.</p>
+    </div>
+
+    <div class="subsection">
+        <div class="subsection-title">AI Agents</div>
+        <p class="body-text">The AI Agents module provides a gallery of specialized AI agents, each designed to handle a specific aspect of the sales and outreach process. Each agent has its own configuration including system prompt, input schema, output format, temperature setting, and token limit. The available agent types include Lead Discovery Agent for finding prospects, Research Agent for deep company analysis, Website Intelligence Agent for automated site evaluation, Business Intelligence Agent for generating company profiles, Industry Expert Agent for domain-specific insights, Solution Architect Agent for designing service proposals, Offer Generator Agent for creating pricing packages, Personalization Agent for tailoring outreach content, Campaign Strategy Agent for planning outreach campaigns, Outreach Agent for generating email copy, and Learning Agent for improving system performance over time.</p>
+        <p class="body-text">Each agent card in the gallery displays its name, description, configuration details, and a status indicator showing whether it is available for use. You can view and modify an agent's configuration, test it with sample inputs, and integrate it into your workflows through the Workflow Builder. The AI Agents module serves as the control center for managing TITAN's autonomous capabilities, allowing you to fine-tune each agent's behavior to match your specific industry and sales methodology.</p>
+    </div>
+
+    <div class="subsection">
+        <div class="subsection-title">Industry Expert</div>
+        <p class="body-text">The Industry Expert module provides deep, domain-specific knowledge and insights for any industry vertical you are targeting. Instead of relying on generic sales advice, this module gives you access to AI-curated industry intelligence including market trends, common pain points, regulatory considerations, technology adoption patterns, and competitive landscapes specific to the industry you select. This information is invaluable for crafting outreach messages that demonstrate genuine understanding of a prospect's industry challenges.</p>
+        <p class="body-text">When you select an industry, the module generates a comprehensive briefing that covers the current state of the industry, key terminology and jargon used by professionals in that space, typical budget ranges for services like yours, the decision-making process and common stakeholders involved, and seasonal patterns that might affect buying timing. You can use this intelligence to tailor your website audit findings, email messaging, and sales proposals to resonate with prospects in specific industries, dramatically increasing your credibility and response rates.</p>
+    </div>
+
+    <div class="subsection">
+        <div class="subsection-title">Strategy AI</div>
+        <p class="body-text">The Strategy AI module is your strategic planning companion that helps you design and refine your overall sales approach. It analyzes your existing campaign data, lead pipeline metrics, and outreach performance to provide actionable recommendations for improving conversion rates at each pipeline stage. The module can identify bottlenecks in your sales process, suggest optimal lead qualification criteria, recommend the best times to send emails based on your historical open rates, and propose A/B testing strategies for your outreach messaging.</p>
+        <p class="body-text">The Strategy AI interface presents its findings through a combination of data visualizations and narrative recommendations. You will see charts showing your conversion funnel from discovery to closed deal, comparisons of performance across different industries or geographies, and trend analysis of your key metrics over time. Each recommendation includes the reasoning behind it, the expected impact, and the specific actions you should take. This module transforms raw data into strategic insights, helping you make data-driven decisions about where to focus your sales efforts for maximum return on investment.</p>
+    </div>
+
+    <div class="subsection">
+        <div class="subsection-title">Prompt Library</div>
+        <p class="body-text">The Prompt Library is a centralized repository for managing all the AI prompts used throughout the TITAN system. Prompts are organized into seven categories: Website Audit prompts for generating audit analyses, Industry Research prompts for gathering market intelligence, Lead Qualification prompts for scoring and prioritizing prospects, Email Generation prompts for crafting outreach messages, Sales Strategy prompts for planning approaches, Proposal Writing prompts for creating service proposals, and Campaign Analysis prompts for evaluating performance. Each prompt template has a name, category, the full prompt text, and a flag indicating whether it is the default prompt for its category.</p>
+        <p class="body-text">You can create new prompt templates, edit existing ones, and set any prompt as the default for its category. The default prompt is automatically used by the corresponding AI module when no custom prompt is specified. This system allows you to continuously refine your AI interactions by improving the prompts based on real-world results. For example, if you notice that email generation is producing messages that are too generic, you can edit the Email Generation prompt to include more specific instructions about tone, personalization depth, and call-to-action placement. Changes to prompts take effect immediately across all modules that use them.</p>
+    </div>
+
+    <!-- ════════════════ CHAPTER 6: OPERATIONS ════════════════ -->
+    <div class="chapter-header">
+        <div class="section-tag">Chapter 6</div>
+        <div class="section-title">Operations Section Features</div>
+        <div class="divider"></div>
+    </div>
+
+    <p class="body-text">The Operations section contains the tools and settings that keep your TITAN system running smoothly. This includes the advanced Hyper-Personalization engine for crafting highly targeted outreach, the visual Workflow Builder for automating multi-step processes, the Meetings scheduler for managing prospect interactions, the Lead Providers configuration for connecting external data sources, the Team management interface for user administration, and the Settings panel for system-wide configuration.</p>
+
+    <div class="subsection">
+        <div class="subsection-title">Hyper-Personalization</div>
+        <p class="body-text">The Hyper-Personalization module is TITAN's most advanced outreach capability. It goes beyond simple mail-merge by running a comprehensive multi-stage pipeline that gathers and synthesizes data from multiple sources to create deeply personalized outreach content. The pipeline progresses through several stages: Research (gathering company data and market context), Audit (analyzing the prospect's website across 10 categories), Industry Analysis (understanding the competitive landscape and market position), Competitor Research (identifying who the prospect competes with), Problem Identification (determining pain points and challenges), Opportunity Mapping (finding areas where your services can add value), Solution Design (crafting tailored service recommendations), Sales Angle Generation (creating multiple persuasive approaches), Outreach Creation (writing the actual email content), and Quality Scoring (evaluating the personalization depth of the final output).</p>
+        <p class="body-text">The quality scoring system evaluates each personalized email across six dimensions: Specificity (how much company-specific detail is included), Relevance (how well the content matches the prospect's needs), Value (how clearly the benefits are communicated), Tone (how appropriate the writing style is for the audience), CTA Quality (how compelling the call to action is), and an Overall score that combines all dimensions. Each score ranges from 0 to 100, and the system provides specific improvement suggestions for any dimension that scores below the threshold. The module also maintains AI Memory entries that store learnings about what personalization approaches work best for different industries and lead types, continuously improving its output quality over time.</p>
+    </div>
+
+    <div class="subsection">
+        <div class="subsection-title">Workflow Builder</div>
+        <p class="body-text">The Workflow Builder provides a visual, drag-and-drop interface for creating automated multi-step processes. Built on React Flow v12, it displays a canvas where you can add, connect, and configure workflow nodes. Each node represents an action or condition in your automation pipeline, such as "Discover Leads," "Run Website Audit," "Generate Personalized Email," "Check Quality Score," "Send Email," or "Schedule Meeting." Nodes are connected by edges that define the flow of execution, and the canvas supports zooming, panning, and a minimap for navigating complex workflows.</p>
+        <p class="body-text">Workflows can be triggered in four ways: manually by clicking a run button, on a schedule (cron-style timing), via webhook (external system triggers), or by system events (such as a new lead being added or an email being replied to). Each workflow maintains a version history and tracks execution statistics including total runs, error count, and the timestamp of the last run. The WorkflowRun model captures detailed execution data including the current node being processed, input and output data in JSON format, error messages if any, and the total execution duration in milliseconds. This makes it possible to debug failed workflows and optimize performance. The Workflow Builder is the key to scaling your sales operations without proportionally increasing manual effort.</p>
+    </div>
+
+    <div class="subsection">
+        <div class="subsection-title">Meetings</div>
+        <p class="body-text">The Meetings module manages all scheduled interactions with your prospects and customers. It displays a calendar-style view of upcoming meetings along with a list view showing meeting details including the associated lead, meeting title and description, scheduled date and time, duration (default 30 minutes), status (SCHEDULED, COMPLETED, CANCELLED, or NO_SHOW), location or meeting link, and any preparatory notes. You can create new meetings, update existing ones, mark meetings as completed or cancelled, and add post-meeting notes. Each meeting is linked to a specific lead, so all meeting history is accessible from the Lead Detail view as well. The meetings module integrates with the notification system to send reminders about upcoming meetings, helping ensure that no prospect interaction falls through the cracks.</p>
+    </div>
+
+    <div class="subsection">
+        <div class="subsection-title">Lead Providers</div>
+        <p class="body-text">The Lead Providers module configures the external data sources that power the Lead Discovery engine. TITAN supports five provider types: Google Places (for local business search), Yelp (for business reviews and listings), Custom APIs (for proprietary data sources), Serper (for web search results), and Web Scraping (for extracting data from specific websites). Each provider configuration includes the provider name, type, API URL, authentication credentials (API key, auth type, headers, and query parameters), active status, default provider flag, priority ranking, and usage statistics tracking success and failure counts.</p>
+        <p class="body-text">You can add multiple providers of the same type with different configurations, for example two different Google Places API keys for different regions. The priority field determines the order in which providers are queried during lead discovery. Setting a provider as default means it will be used automatically when no specific provider is selected. The module tracks when each provider was last used and maintains a running count of successful and failed requests, giving you visibility into provider reliability and helping you decide when to rotate or replace underperforming data sources.</p>
+    </div>
+
+    <div class="subsection">
+        <div class="subsection-title">Team Management</div>
+        <p class="body-text">The Team module allows account owners to manage user accounts and permissions. You can invite new team members by providing their name and email address, assign them the TEAM role, and configure granular permissions for each module. The permission system is module-based, meaning you can control access at the level of individual features. For each module (Dashboard, Discovery, Audit, Leads, Campaigns, Email Center, Inbox, Meetings, AI Assistant, Prompts, Team, and Settings), you can independently toggle four permissions: Can View (access the module), Can Create (add new records), Can Edit (modify existing records), and Can Delete (remove records).</p>
+        <p class="body-text">Users with the OWNER role have unrestricted access to all modules and can manage team members. Users with the TEAM role can only access the modules and actions that have been explicitly granted to them. When a team member tries to access a module they do not have permission for, they see a "You don't have access to this section" message. The permission system ensures that sensitive operations like team management, system settings, and lead deletion are restricted to authorized personnel while still allowing team members to perform their day-to-day sales activities independently.</p>
+    </div>
+
+    <div class="subsection">
+        <div class="subsection-title">Settings</div>
+        <p class="body-text">The Settings module provides system-wide configuration options organized into several categories. General settings include application name, company information, and default preferences. API configuration allows you to set up and manage the AI service endpoints and API keys that power the intelligence features. Email settings configure the SMTP server for sending outreach emails, including server address, port, authentication credentials, and sender information. Notification preferences control which events trigger notifications and through which channels. The settings are stored in the AppSetting model as key-value pairs, making them easily extensible. Any changes to settings take effect immediately and apply to all users of the system.</p>
+    </div>
+
+    <!-- ════════════════ CHAPTER 7: TECHNICAL REFERENCE ════════════════ -->
+    <div class="chapter-header">
+        <div class="section-tag">Chapter 7</div>
+        <div class="section-title">Technical Reference</div>
+        <div class="divider"></div>
+    </div>
+
+    <div class="subsection">
+        <div class="subsection-title">API Endpoints</div>
+        <p class="body-text">TITAN exposes a comprehensive set of RESTful API endpoints through Next.js API routes. All endpoints require authentication via the JWT session cookie, with the exception of the initial setup endpoint. The API follows standard HTTP conventions: GET for retrieving data, POST for creating records, PUT for updates, and DELETE for removal. Responses are returned in JSON format. Below is the complete list of available API endpoints and their supported methods.</p>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Endpoint</th><th>Methods</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>/api/auth</strong></td><td>GET, POST, DELETE</td><td>User session management: check session, login, logout</td></tr>
+                <tr><td><strong>/api/setup</strong></td><td>GET, POST</td><td>Initial admin account creation (first-run only)</td></tr>
+                <tr><td><strong>/api/dashboard</strong></td><td>GET</td><td>Aggregated dashboard statistics and KPIs</td></tr>
+                <tr><td><strong>/api/leads</strong></td><td>GET, POST, PUT, DELETE</td><td>Full CRUD operations on lead records</td></tr>
+                <tr><td><strong>/api/audit</strong></td><td>GET, POST</td><td>Website audit creation and retrieval</td></tr>
+                <tr><td><strong>/api/campaigns</strong></td><td>GET, POST, PUT, DELETE</td><td>Campaign management and performance data</td></tr>
+                <tr><td><strong>/api/outreach</strong></td><td>GET, POST, PUT</td><td>Email outreach tracking and management</td></tr>
+                <tr><td><strong>/api/inbox</strong></td><td>GET, PUT</td><td>Inbox message retrieval and status updates</td></tr>
+                <tr><td><strong>/api/meetings</strong></td><td>GET, POST, PUT, DELETE</td><td>Meeting scheduling and management</td></tr>
+                <tr><td><strong>/api/team</strong></td><td>GET, POST, PUT, DELETE</td><td>Team member and permission management</td></tr>
+                <tr><td><strong>/api/settings</strong></td><td>GET, PUT</td><td>System-wide settings configuration</td></tr>
+                <tr><td><strong>/api/prompts</strong></td><td>GET, POST, PUT, DELETE</td><td>AI prompt template management</td></tr>
+                <tr><td><strong>/api/lead-providers</strong></td><td>GET, POST, PUT, DELETE</td><td>External data source configuration</td></tr>
+                <tr><td><strong>/api/workflows</strong></td><td>GET, POST, PUT, DELETE</td><td>Workflow and execution run management</td></tr>
+                <tr><td><strong>/api/ai</strong></td><td>POST</td><td>AI query processing for assistant and agents</td></tr>
+                <tr><td><strong>/api/generate</strong></td><td>POST</td><td>Content generation (emails, reports, intel)</td></tr>
+                <tr><td><strong>/api/notifications</strong></td><td>GET, PUT</td><td>Notification retrieval and read status</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="subsection">
+        <div class="subsection-title">Lead Pipeline Stages</div>
+        <p class="body-text">Every lead in TITAN progresses through a defined nine-stage sales pipeline. Understanding these stages is essential for managing your sales process effectively. Each stage represents a milestone in the prospect relationship, and the system tracks the timestamp of each transition. The stages, in order, are: DISCOVERED (initially found through lead discovery or manual entry), AUDITED (website audit has been completed), QUALIFIED (the lead meets your criteria and is worth pursuing), OUTREACH_SENT (initial contact email has been sent), REPLIED (the prospect has responded to your outreach), MEETING_BOOKED (a meeting has been scheduled with the prospect), PROPOSAL_SENT (a formal proposal or quote has been delivered), WON (the deal has been closed successfully), and LOST (the opportunity has been lost or the prospect has declined). Each stage has a corresponding color-coded badge that appears throughout the interface, making it easy to visually scan pipeline status at a glance.</p>
+    </div>
+
+    <div class="subsection">
+        <div class="subsection-title">Authentication and Security</div>
+        <p class="body-text">TITAN uses a stateless JWT authentication system built on the jose library. When a user logs in, the server verifies their credentials against the database, generates a JWT token containing the user's ID, email, name, and role, and sets it as an httpOnly cookie. This cookie is sent automatically with every subsequent request, and the server validates it on each API call using the getSession utility function. The httpOnly flag prevents client-side JavaScript from accessing the token, providing protection against cross-site scripting attacks. Passwords are hashed using SHA-256 before storage, ensuring that plaintext passwords are never persisted in the database. The authentication system supports two user roles: OWNER (full administrative access) and TEAM (restricted access based on configured permissions).</p>
+    </div>
+
+    <div class="subsection">
+        <div class="subsection-title">Useful Commands</div>
+        <div class="code-block"><code># Development
+npm run dev          # Start dev server on port 3000
+npm run build        # Create production build
+npm run start        # Start production server
+
+# Database
+npx prisma db push       # Apply schema to database
+npx prisma db generate   # Generate Prisma client
+npx prisma migrate reset # Reset database (destroys data)
+
+# Quality
+npm run lint         # Run ESLint checks
+npx prisma studio    # Open database GUI viewer</code></div>
+    </div>
+
+    <div class="info-box">
+        <p><strong>Tip:</strong> Use <code>npx prisma studio</code> to open a visual database browser. This is extremely useful for inspecting data, debugging issues, and understanding the relationships between your records. It runs on port 5555 by default and provides a spreadsheet-like interface for all your database tables.</p>
+    </div>
+
+</div>
+
+<!-- ════════════════ ENDING PAGE ════════════════ -->
+<div class="ending">
+    <div class="ending-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    </div>
+    <h2 class="ending-title">Ready to Dominate</h2>
+    <p class="ending-text">Project TITAN gives you the tools to discover, qualify, and convert leads at scale with AI-powered intelligence. Start exploring each module and let the system transform your sales operations.</p>
+</div>
+
+</body>
+</html>
