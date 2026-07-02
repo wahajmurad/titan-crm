@@ -7,6 +7,14 @@ const globalForPrisma = globalThis as unknown as {
 function createPrismaClient() {
   return new PrismaClient({
     log: ['error'],
+    // Vercel serverless: use connection pooling when DATABASE_URL has pgBouncer
+    ...(process.env.DATABASE_URL?.includes('pooler') ? {
+      datasources: {
+        db: {
+          url: process.env.DATABASE_URL,
+        },
+      },
+    } : {}),
   })
 }
 
