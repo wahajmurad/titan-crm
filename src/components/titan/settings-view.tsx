@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { cn } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,6 +26,7 @@ import {
  DialogTitle,
 } from '@/components/ui/dialog'
 import { Save, CheckCircle, Plus, Trash2, Globe, Key, Settings, Shield, ExternalLink, Zap, Heart, RefreshCw } from 'lucide-react'
+import { toast } from 'sonner'
 
 // ── Lead Provider Types ──────────────────────────────────────────────
 
@@ -101,14 +103,22 @@ export function SettingsView() {
  // ── Auto-Heal state ──
  const [healStatus, setHealStatus] = useState<'idle' | 'checking' | 'done'>('idle')
  const [healResult, setHealResult] = useState<{ status: string; summary: Record<string, number> } | null>(null)
+ const [healConfig, setHealConfig] = useState<{ configured: boolean; hasToken: boolean; hasRepo: boolean; tokenPreview: string | null; repo: string | null; totalFixes: number; lastFix: string | null } | null>(null)
+ const [ghToken, setGhToken] = useState('')
+ const [ghRepo, setGhRepo] = useState('')
+ const [savingHeal, setSavingHeal] = useState(false)
 
- // ── Load all settings (existing + providers) ──
+ // ── Load all settings (existing + providers + auto-heal) ──
  useEffect(() => {
-  Promise.all([fetch('/api/settings'), fetch('/api/auth')])
-   .then(([sRes, uRes]) => Promise.all([sRes.json(), uRes.json()]))
-   .then(([sData, uData]) => {
+  Promise.all([fetch('/api/settings'), fetch('/api/auth'), fetch('/api/self-heal')])
+   .then(([sRes, uRes, hRes]) => Promise.all([sRes.json(), uRes.json(), hRes.json()]))
+   .then(([sData, uData, hData]) => {
     if (uData.user) setName(uData.user.name)
     setSettings(sData.settings || {})
+    if (hData && !hData.error) {
+     setHealConfig(hData)
+     setGhRepo(hData.repo || '')
+    }
 
     // Parse lead providers from settings
     const raw = sData.settings?.lead_providers
@@ -298,12 +308,24 @@ export function SettingsView() {
     <CardHeader className="pb-3">
      <div className="flex items-center justify-between">
       <div className="flex items-center gap-2.5">
-       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-md shadow-blue-500/20">
+       <div className={cn(
+        'w-8 h-8 rounded-lg flex items-center justify-center shadow-md',
+        healConfig?.configured
+         ? 'bg-gradient-to-br from-emerald-500 to-green-600 shadow-emerald-500/20'
+         : 'bg-gradient-to-br from-blue-500 to-purple-600 shadow-blue-500/20'
+       )}>
         <Heart className="w-4 h-4 text-white" />
        </div>
        <div>
-        <CardTitle className="text-sm font-semibold">AI Auto-Heal System</CardTitle>
-        <p className="text-xs text-gray-500">AI khud bugs detect karta hai aur fix bhi kar deta hai</p>
+        <div className="flex items-center gap-2">
+         <CardTitle className="text-sm font-semibold">AI Auto-Heal</CardTitle>
+         {healConfig?.configured ? (
+          <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-[10px]">Active</Badge>
+         ) : (
+          <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-[10px]">Not Configured</Badge>
+         )}
+        </div>
+        <p className="text-xs text-gray-500">Detects bugs and fixes code automatically via GitHub</p>
        </div>
       </div>
       <Button
@@ -317,20 +339,42 @@ export function SettingsView() {
          const data = await res.json()
          setHealResult({ status: data.status, summary: data.summary })
          setHealStatus('done')
+         // Refresh config
+         const hRes = await fetch('/api/self-heal')
+         const hData = await hRes.json()
+         if (!hData.error) setHealConfig(hData)
         } catch { setHealStatus('idle') }
        }}
        disabled={healStatus === 'checking'}
       >
-       {healStatus === 'checking' ? <><RefreshCw className="w-3.5 h-3.5 mr-1 animate-spin" />Checking...</> : <><Zap className="w-3.5 h-3.5 mr-1" />Run Health Check</>}
+       {healStatus === 'checking' ? <><RefreshCw className="w-3.5 h-3.5 mr-1 animate-spin" />Checking...</> : <><Zap className="w-3.5 h-3.5 mr-1" />Run Check</>}
       </Button>
      </div>
     </CardHeader>
     <CardContent className="space-y-4">
-     {/* Status display */}
+     {/* Stats row */}
+     {healConfig && (
+      <div className="grid grid-cols-3 gap-2">
+       <div className="rounded-lg bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] p-2.5 text-center">
+        <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{healConfig.totalFixes}</p>
+        <p className="text-[10px] text-gray-500">Fixes Applied</p>
+       </div>
+       <div className="rounded-lg bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] p-2.5 text-center">
+        <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{healConfig.hasToken ? 'Yes' : 'No'}</p>
+        <p className="text-[10px] text-gray-500">Token Set</p>
+       </div>
+       <div className="rounded-lg bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] p-2.5 text-center">
+        <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{healConfig.hasRepo ? 'Yes' : 'No'}</p>
+        <p className="text-[10px] text-gray-500">Repo Set</p>
+       </div>
+      </div>
+     )}
+
+     {/* Health check result */}
      {healResult && (
       <div className="rounded-lg bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] p-3 space-y-2">
        <div className="flex items-center gap-2">
-        <span className={`w-2 h-2 rounded-full ${healResult.status === 'all_clear' ? 'bg-emerald-500' : healResult.status === 'auto_fixed' ? 'bg-amber-500' : 'bg-red-500'}`} />
+        <span className={cn('w-2 h-2 rounded-full', healResult.status === 'all_clear' ? 'bg-emerald-500' : healResult.status === 'auto_fixed' ? 'bg-amber-500' : 'bg-red-500')} />
         <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
          {healResult.status === 'all_clear' ? 'All systems healthy' : healResult.status === 'auto_fixed' ? 'Issues were auto-fixed' : 'Issues detected'}
         </span>
@@ -339,58 +383,113 @@ export function SettingsView() {
         {healResult.summary.healthy !== undefined && <span>Healthy: {healResult.summary.healthy}</span>}
         {healResult.summary.detected !== undefined && <span>Detected: {healResult.summary.detected}</span>}
         {healResult.summary.fixed !== undefined && <span className="text-emerald-600 font-medium">Fixed: {healResult.summary.fixed}</span>}
-        {healResult.summary.failed !== undefined && <span className="text-red-500">Failed: {healResult.summary.failed}</span>}
        </div>
       </div>
      )}
 
-     {/* Setup guide */}
-     <div className="rounded-lg bg-blue-50/80 dark:bg-blue-500/[0.06] border border-blue-100 dark:border-blue-500/20 p-4 space-y-3">
-      <p className="text-xs font-semibold text-blue-800 dark:text-blue-300 flex items-center gap-1.5">
-       <Shield className="w-3.5 h-3.5" /> Setup Guide — Auto-Fix ke liye yeh 2 cheezein chahiye
-      </p>
+     {/* GitHub Token Input */}
+     <div className="space-y-3">
+      <div className="flex items-center gap-2">
+       <Key className="w-4 h-4 text-gray-500" />
+       <Label className="text-xs font-semibold">GitHub Configuration</Label>
+      </div>
+
       <div className="space-y-2.5">
-       <div className="flex items-start gap-2.5">
-        <span className="mt-0.5 w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">1</span>
-        <div className="flex-1">
-         <p className="text-xs font-medium text-gray-800 dark:text-gray-200">GitHub Token banao</p>
-         <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">
-          GitHub → Settings → Developer settings → Personal access tokens → Generate new token → <code className="bg-blue-100 dark:bg-blue-500/20 px-1 rounded text-[10px]">repo</code> scope tick karo → Copy token
-         </p>
-         <a href="https://github.com/settings/tokens/new" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-700 font-medium mt-1">
-          <ExternalLink className="w-3 h-3" /> github.com/settings/tokens/new
-         </a>
-        </div>
-       </div>
-       <div className="flex items-start gap-2.5">
-        <span className="mt-0.5 w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">2</span>
-        <div className="flex-1">
-         <p className="text-xs font-medium text-gray-800 dark:text-gray-200">Vercel me Environment Variables add karo</p>
-         <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">
-          Vercel Dashboard → Project → Settings → Environment Variables → Add:
-         </p>
-         <div className="mt-1.5 space-y-1">
-          <div className="flex items-center gap-2 bg-white dark:bg-white/[0.04] rounded-md border border-gray-200 dark:border-white/[0.08] px-2.5 py-1.5">
-           <Key className="w-3 h-3 text-gray-400" />
-           <code className="text-[10px] font-mono text-gray-700 dark:text-gray-300">GITHUB_TOKEN</code>
-           <span className="text-[10px] text-gray-400">=</span>
-           <span className="text-[10px] text-gray-500 font-mono">ghp_xxxx...</span>
-          </div>
-          <div className="flex items-center gap-2 bg-white dark:bg-white/[0.04] rounded-md border border-gray-200 dark:border-white/[0.08] px-2.5 py-1.5">
-           <Key className="w-3 h-3 text-gray-400" />
-           <code className="text-[10px] font-mono text-gray-700 dark:text-gray-300">GITHUB_REPO</code>
-           <span className="text-[10px] text-gray-400">=</span>
-           <span className="text-[10px] text-gray-500 font-mono">owner/repo-name</span>
-          </div>
+       <div>
+        <Label className="text-[11px] text-gray-500 mb-1 block">GitHub Personal Access Token</Label>
+        <div className="relative">
+         <Input
+          type="password"
+          value={ghToken}
+          onChange={e => setGhToken(e.target.value)}
+          placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+          className="pr-20 text-[12px] font-mono"
+         />
+         <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          {healConfig?.tokenPreview && !ghToken && (
+           <span className="text-[10px] text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded font-mono">{healConfig.tokenPreview}</span>
+          )}
          </div>
         </div>
+        <p className="text-[10px] text-gray-400 mt-1">
+         Needs <code className="bg-gray-100 dark:bg-white/[0.06] px-1 rounded">repo</code> scope.{' '}
+         <a href="https://github.com/settings/tokens/new" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 underline">
+          Create token <ExternalLink className="w-2.5 h-2.5 inline" />
+         </a>
+        </p>
+       </div>
+
+       <div>
+        <Label className="text-[11px] text-gray-500 mb-1 block">GitHub Repository</Label>
+        <Input
+          value={ghRepo}
+          onChange={e => setGhRepo(e.target.value)}
+          placeholder="owner/repo-name"
+          className="text-[12px] font-mono"
+        />
+        <p className="text-[10px] text-gray-400 mt-1">Format: username/repository-name</p>
+       </div>
+
+       <div className="flex items-center gap-2 pt-1">
+        <Button
+         size="sm"
+         onClick={async () => {
+          setSavingHeal(true)
+          try {
+           const res = await fetch('/api/self-heal', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ github_token: ghToken || undefined, github_repo: ghRepo || undefined }),
+           })
+           const data = await res.json()
+           if (!res.ok) throw new Error(data.error || 'Failed to save')
+           // Refresh config
+           const hRes = await fetch('/api/self-heal')
+           const hData = await hRes.json()
+           if (!hData.error) setHealConfig(hData)
+           setGhToken('')
+           toast.success(data.message || 'Auto-Heal configuration saved!')
+          } catch (e) {
+           toast.error(e instanceof Error ? e.message : 'Failed to save')
+          } finally {
+           setSavingHeal(false)
+          }
+         }}
+         disabled={savingHeal}
+         className="bg-blue-600 hover:bg-blue-700 text-white"
+        >
+         {savingHeal ? <><RefreshCw className="w-3.5 h-3.5 mr-1 animate-spin" />Saving...</> : <><Save className="w-3.5 h-3.5 mr-1" />Save Configuration</>}
+        </Button>
+        {healConfig?.configured && (
+         <Button
+          size="sm"
+          variant="ghost"
+          className="text-red-600 hover:text-red-700 hover:bg-red-50 text-[11px]"
+          onClick={async () => {
+           if (!confirm('Remove the stored GitHub token? Auto-heal will stop working.')) return
+           await fetch('/api/self-heal', { method: 'DELETE' })
+           const hRes = await fetch('/api/self-heal')
+           const hData = await hRes.json()
+           if (!hData.error) setHealConfig(hData)
+           toast.success('Auto-Heal configuration removed')
+          }}
+         >
+         <Trash2 className="w-3.5 h-3.5 mr-1" />Remove Token
+        </Button>
+        )}
        </div>
       </div>
-      <div className="flex items-center gap-1.5 pt-1">
-       <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-       <p className="text-[11px] text-gray-500 dark:text-gray-400">
-        Har 5 minute mein silent health check chalti hai. Token set hone pe AI khud code fix karke push kar dega.
-       </p>
+     </div>
+
+     {/* How it works */}
+     <div className="rounded-lg bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] p-3 space-y-2">
+      <p className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">How it works</p>
+      <div className="space-y-1.5 text-[11px] text-gray-500 dark:text-gray-400">
+       <p>1. You report a bug via the floating button (bottom-right)</p>
+       <p>2. AI analyzes the issue and generates a complete fix</p>
+       <p>3. Fix is pushed directly to GitHub via API</p>
+       <p>4. Vercel detects the push and auto-redeploys</p>
+       <p>5. Silent health checks run every 5 minutes</p>
       </div>
      </div>
     </CardContent>

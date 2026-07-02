@@ -393,7 +393,7 @@ function SilentHealthWatcher() {
         const data = await res.json()
         if (data.summary && data.summary.fixed > 0) {
           toast.success(`Auto-Heal: ${data.summary.fixed} issue(s) silently fixed`, {
-            description: 'Vercel pe redeploy ho raha hai...',
+            description: 'Vercel is redeploying with the fix...',
             duration: 8000,
           })
         }

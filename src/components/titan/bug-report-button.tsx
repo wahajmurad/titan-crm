@@ -7,9 +7,10 @@ import {
   Bug, X, Upload, Sparkles, CheckCircle2,
   AlertTriangle, Loader2, Copy, Check, FileCode, MessageSquare,
   Trash2, ChevronDown, ChevronUp, ExternalLink, Shield, RefreshCw,
-  Zap
+  Zap, Settings
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useAppStore } from '@/lib/store'
 
 type FixStatus = 'idle' | 'analyzing' | 'pushing' | 'done' | 'error'
 
@@ -40,7 +41,6 @@ export function BugReportButton() {
 
   const addLog = useCallback((msg: string) => setLogs(prev => [...prev, msg]), [])
 
-  // Countdown timer when auto-fixed (Vercel redeploy time)
   useEffect(() => {
     if (countdown <= 0) return
     const timer = setInterval(() => setCountdown(c => c - 1), 1000)
@@ -73,11 +73,11 @@ export function BugReportButton() {
   }, [handleFile])
 
   const handleSubmit = async () => {
-    if (!screenshot && !description.trim()) { toast.error('Screenshot ya description do'); return }
+    if (!screenshot && !description.trim()) { toast.error('Please provide a screenshot or description'); return }
 
     setStatus('analyzing')
     setResult(null); setLogs([]); setShowFixCode(false)
-    addLog('🔍 Analyzing bug report...')
+    addLog('Analyzing bug report...')
 
     try {
       const res = await fetch('/api/bug-report', {
@@ -96,27 +96,31 @@ export function BugReportButton() {
       if (data.logs) setLogs(data.logs)
       if (!res.ok) throw new Error(data.error || 'Analysis failed')
 
-      addLog('✅ Analysis complete!')
+      addLog('Analysis complete!')
 
       if (data.autoFixed) {
-        addLog('🚀 Auto-fix pushed to GitHub!')
-        addLog('⏳ Vercel redeploying...')
+        addLog('Auto-fix pushed to GitHub!')
+        addLog('Vercel is redeploying...')
         setStatus('pushing')
-        setCountdown(60) // 60 sec for Vercel deploy
+        setCountdown(60)
 
         setTimeout(() => {
           setStatus('done')
           setResult(data.result)
-          toast.success('Auto-fixed! Vercel pe redeploy ho raha hai ~60 seconds')
+          toast.success('Auto-fixed! Vercel is redeploying (~60 seconds)')
         }, 2000)
       } else {
         setStatus('done')
         setResult(data.result)
-        toast.success(data.result.autoFixed ? 'Auto-fixed!' : 'Analysis complete — fix ready')
+        if (data.result.autoFixed) {
+          toast.success('Fix applied and pushed!')
+        } else {
+          toast.info('Analysis complete — see results below')
+        }
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error'
-      addLog(`❌ ${msg}`)
+      addLog(`Error: ${msg}`)
       setStatus('error')
       toast.error(msg)
     }
@@ -145,7 +149,7 @@ export function BugReportButton() {
 
   return (
     <>
-      {/* ── Floating Button ── */}
+      {/* Floating Button */}
       <motion.button
         onClick={() => setOpen(true)}
         className={cn(
@@ -164,7 +168,7 @@ export function BugReportButton() {
         <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-500 border-2 border-white dark:border-gray-900" />
       </motion.button>
 
-      {/* ── Modal ── */}
+      {/* Modal */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -190,7 +194,7 @@ export function BugReportButton() {
                   </div>
                   <div>
                     <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">AI Auto-Heal</h2>
-                    <p className="text-[11px] text-gray-400 dark:text-gray-500">Report karo, AI khud theek kar dega</p>
+                    <p className="text-[11px] text-gray-400 dark:text-gray-500">Report a bug — AI will fix it automatically</p>
                   </div>
                 </div>
                 <button onClick={() => { setOpen(false); reset() }} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/[0.06] text-gray-400 transition-colors">
@@ -221,7 +225,7 @@ export function BugReportButton() {
                         <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-white/[0.06] flex items-center justify-center mb-3">
                           <Upload className="w-5 h-5 text-gray-400" />
                         </div>
-                        <p className="text-[12px] font-medium text-gray-600 dark:text-gray-300">Click, drag & drop, or Ctrl+V paste</p>
+                        <p className="text-[12px] font-medium text-gray-600 dark:text-gray-300">Click, drag & drop, or paste (Ctrl+V)</p>
                         <p className="text-[11px] text-gray-400 mt-1">PNG, JPG, GIF, WebP — 10MB max</p>
                         <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />
                       </div>
@@ -233,18 +237,18 @@ export function BugReportButton() {
                 {!result && (
                   <div>
                     <label className="text-[12px] font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-                      <span className="flex items-center gap-1.5"><MessageSquare className="w-3.5 h-3.5" /> Issue describe karo</span>
+                      <span className="flex items-center gap-1.5"><MessageSquare className="w-3.5 h-3.5" /> Describe the issue</span>
                     </label>
                     <textarea
                       value={description} onChange={(e) => setDescription(e.target.value)}
-                      placeholder='e.g. "Dashboard pe chart nahi dikh raha" ya "Internal server error aa raha hai"...'
+                      placeholder='e.g. "Dashboard charts not loading" or "Getting 500 internal server error"...'
                       rows={3}
                       className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-gray-900 dark:text-gray-100 text-[13px] px-4 py-3 resize-none placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 dark:focus:border-blue-500/40 transition-all duration-150"
                     />
                   </div>
                 )}
 
-                {/* AI Process Logs */}
+                {/* Process Logs */}
                 {logs.length > 0 && (
                   <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.02] overflow-hidden">
                     <div className="px-3 py-2 border-b border-gray-100 dark:border-white/[0.06] flex items-center gap-2">
@@ -264,10 +268,9 @@ export function BugReportButton() {
                   </div>
                 )}
 
-                {/* ── Auto-Fixed Result (Green Banner) ── */}
+                {/* Auto-Fixed Result (Green Banner) */}
                 {result?.autoFixed && (
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-                    {/* Big green success banner */}
                     <div className="rounded-xl border-2 border-emerald-300 dark:border-emerald-500/40 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-500/[0.08] dark:to-green-500/[0.04] p-5 text-center space-y-3">
                       <div className="flex justify-center">
                         <motion.div
@@ -279,36 +282,34 @@ export function BugReportButton() {
                       </div>
                       <div>
                         <h3 className="text-base font-bold text-emerald-800 dark:text-emerald-200">Auto-Fixed!</h3>
-                        <p className="text-[12px] text-emerald-600 dark:text-emerald-400 mt-1">AI ne code fix karke GitHub pe push kar diya</p>
+                        <p className="text-[12px] text-emerald-600 dark:text-emerald-400 mt-1">AI detected and pushed the fix to GitHub</p>
                       </div>
 
-                      {/* Redeploy countdown */}
                       {countdown > 0 && (
                         <div className="flex items-center justify-center gap-2 text-emerald-700 dark:text-emerald-300">
                           <RefreshCw className="w-4 h-4 animate-spin" />
-                          <span className="text-[12px] font-medium">Vercel redeploy ho raha hai... {countdown}s</span>
+                          <span className="text-[12px] font-medium">Vercel is redeploying... {countdown}s</span>
                         </div>
                       )}
 
-                      {/* Commit link */}
                       {result.commitUrl && (
                         <a href={result.commitUrl} target="_blank" rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 text-[12px] font-medium text-emerald-700 dark:text-emerald-300 hover:text-emerald-800 dark:hover:text-emerald-200 transition-colors mx-auto">
                           <ExternalLink className="w-3.5 h-3.5" />
-                          GitHub Commit dekho
+                          View GitHub Commit
                         </a>
                       )}
 
                       <button onClick={() => window.location.reload()}
                         className="inline-flex items-center gap-2 h-9 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] font-medium shadow-md shadow-emerald-500/20 transition-colors mx-auto">
                         <RefreshCw className="w-3.5 h-3.5" />
-                        Page Reload Karo
+                        Reload Page
                       </button>
                     </div>
 
-                    {/* What was fixed (collapsible) */}
+                    {/* What was fixed */}
                     <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
-                      <p className="text-[12px] font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2">Kya fix hua</p>
+                      <p className="text-[12px] font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2">What was fixed</p>
                       <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100">{result.errorFound}</p>
                       <p className="text-[12px] text-gray-500 dark:text-gray-400 mt-1">{result.rootCause}</p>
                       <div className="mt-2 flex items-center gap-2">
@@ -319,7 +320,7 @@ export function BugReportButton() {
                   </motion.div>
                 )}
 
-                {/* ── Manual Fix Result (when auto-push failed) ── */}
+                {/* Manual Fix Result (when auto-push failed - no token) */}
                 {result && !result.autoFixed && (
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
                     <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 space-y-3">
@@ -345,15 +346,15 @@ export function BugReportButton() {
                       </div>
                     </div>
 
-                    {/* Fix */}
-                    <div className="rounded-xl border border-amber-200 dark:border-amber-500/20 bg-amber-50/50 dark:bg-amber-500/[0.04] p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                        <span className="text-[12px] font-semibold text-amber-800 dark:text-amber-300">Fix (Manual)</span>
-                      </div>
-                      <p className="text-[12px] text-amber-700 dark:text-amber-400 leading-relaxed">{result.fixDescription}</p>
+                    {/* Fix code */}
+                    {result.fixCode && result.fixCode.length > 20 && (
+                      <div className="rounded-xl border border-amber-200 dark:border-amber-500/20 bg-amber-50/50 dark:bg-amber-500/[0.04] p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                          <span className="text-[12px] font-semibold text-amber-800 dark:text-amber-300">Generated Fix</span>
+                        </div>
+                        <p className="text-[12px] text-amber-700 dark:text-amber-400 leading-relaxed">{result.fixDescription}</p>
 
-                      {result.fixCode && result.fixCode.length > 20 && (
                         <div className="mt-3">
                           <button onClick={() => setShowFixCode(!showFixCode)} className="flex items-center gap-1.5 text-[11px] font-medium text-amber-700 dark:text-amber-400 transition-colors">
                             {showFixCode ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -372,13 +373,13 @@ export function BugReportButton() {
                             )}
                           </AnimatePresence>
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
 
-                    {/* Tip for auto-fix */}
+                    {/* Setup prompt */}
                     <div className="rounded-xl border border-blue-100 dark:border-blue-500/20 bg-blue-50/50 dark:bg-blue-500/[0.04] p-3">
                       <p className="text-[11px] text-blue-700 dark:text-blue-400">
-                        <strong>Tip:</strong> Auto-fix ke liye Vercel me <code className="bg-blue-100 dark:bg-blue-500/20 px-1 rounded text-[10px]">GITHUB_TOKEN</code> env var set karo. Phir AI khud push kar dega.
+                        <strong>Enable auto-fix:</strong> Go to <button onClick={() => { setOpen(false); useAppStore.getState().setView('settings') }} className="underline font-semibold hover:text-blue-800">Settings → Auto-Heal</button> and add your GitHub token. AI will then push fixes automatically.
                       </p>
                     </div>
                   </motion.div>
@@ -387,7 +388,7 @@ export function BugReportButton() {
                 {/* Error State */}
                 {status === 'error' && !result && (
                   <div className="rounded-xl border border-red-200 dark:border-red-500/20 bg-red-50/50 dark:bg-red-500/[0.04] p-4">
-                    <p className="text-[12px] text-red-700 dark:text-red-400">Analysis failed. Dobara try karo ya zyada detail do.</p>
+                    <p className="text-[12px] text-red-700 dark:text-red-400">Analysis failed. Please try again with more details.</p>
                   </div>
                 )}
               </div>
