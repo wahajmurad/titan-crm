@@ -3,14 +3,31 @@ import { verifyPassword, generateToken, type UserSession, type PermissionMap, MO
 import { cookies } from 'next/headers'
 
 const TOKEN_COOKIE = 'titan_token'
+const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000 // 24 hours
 
 export async function createSession(user: { id: string; email: string; name: string; role: string; avatar?: string | null }): Promise<string> {
   const token = generateToken()
+  const expiresAt = new Date(Date.now() + SESSION_MAX_AGE_MS)
+
   await db.appSetting.upsert({
     where: { key: `session_${token}` },
     update: { value: user.id, updatedAt: new Date() },
-    create: { key: `session_${token}`, value: user.id },
+    create: {
+      key: `session_${token}`,
+      value: user.id,
+    },
   })
+
+  // Store expiry separately for cleanup
+  await db.appSetting.upsert({
+    where: { key: `session_exp_${token}` },
+    update: { value: expiresAt.toISOString(), updatedAt: new Date() },
+    create: {
+      key: `session_exp_${token}`,
+      value: expiresAt.toISOString(),
+    },
+  })
+
   return token
 }
 
@@ -18,6 +35,23 @@ export async function getSession(): Promise<(UserSession & { permissions: Permis
   const cookieStore = await cookies()
   const token = cookieStore.get(TOKEN_COOKIE)?.value
   if (!token) return null
+
+  // Check session expiry
+  try {
+    const expSetting = await db.appSetting.findUnique({
+      where: { key: `session_exp_${token}` },
+    })
+    if (!expSetting) return null
+
+    const expiresAt = new Date(expSetting.value)
+    if (Date.now() > expiresAt.getTime()) {
+      // Session expired, clean up
+      await destroySession(token)
+      return null
+    }
+  } catch {
+    return null
+  }
 
   const session = await db.appSetting.findUnique({
     where: { key: `session_${token}` },
@@ -59,7 +93,12 @@ export async function getSession(): Promise<(UserSession & { permissions: Permis
 
 export async function destroySession(token: string): Promise<void> {
   await db.appSetting.deleteMany({
-    where: { key: { startsWith: `session_${token}` } },
+    where: {
+      OR: [
+        { key: `session_${token}` },
+        { key: `session_exp_${token}` },
+      ],
+    },
   })
 }
 
@@ -69,6 +108,41 @@ export function getTokenCookieOptions() {
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax' as const,
     path: '/',
-    maxAge: 60 * 60 * 24 * 30, // 30 days
+    maxAge: 60 * 60 * 24, // 24 hours (matches SESSION_MAX_AGE_MS)
+  }
+}
+
+// Clean up expired sessions periodically
+export async function cleanupExpiredSessions() {
+  try {
+    const expiredSessions = await db.appSetting.findMany({
+      where: {
+        key: { startsWith: 'session_exp_' },
+      },
+    })
+
+    const now = Date.now()
+    const expiredTokens: string[] = []
+
+    for (const session of expiredSessions) {
+      const expiresAt = new Date(session.value)
+      if (now > expiresAt.getTime()) {
+        const token = session.key.replace('session_exp_', '')
+        expiredTokens.push(token)
+      }
+    }
+
+    if (expiredTokens.length > 0) {
+      const conditions = expiredTokens.flatMap(token => [
+        { key: `session_${token}` },
+        { key: `session_exp_${token}` },
+      ])
+
+      await db.appSetting.deleteMany({
+        where: { OR: conditions },
+      })
+    }
+  } catch {
+    // Silent fail — cleanup is best-effort
   }
 }

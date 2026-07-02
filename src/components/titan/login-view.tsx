@@ -4,16 +4,20 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Zap, ArrowRight, Sparkles } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { Zap, ArrowRight, Sparkles, Eye, EyeOff, ArrowLeft, Check } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+
+type AuthStep = 'login' | 'forgot' | 'reset-success'
 
 export function LoginView({ onLogin }: { onLogin: (user: unknown) => void }) {
+  const [step, setStep] = useState<AuthStep>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
@@ -25,27 +29,58 @@ export function LoginView({ onLogin }: { onLogin: (user: unknown) => void }) {
         credentials: 'same-origin',
       })
       const data = await res.json()
-      if (!res.ok) { setError(data.error); return }
+
+      if (res.status === 429) {
+        setError('Too many login attempts. Please wait a few minutes.')
+        return
+      }
+      if (!res.ok) { setError(data.error || 'Login failed.'); return }
+
       const sessionRes = await fetch('/api/auth', { credentials: 'same-origin' })
       const sessionData = await sessionRes.json()
       if (sessionData.user) onLogin(sessionData.user)
-    } catch { setError('Something went wrong') }
+    } catch {
+      setError('Network error. Please check your connection.')
+    }
+    finally { setLoading(false) }
+  }
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email) {
+      setError('Please enter your email address.')
+      return
+    }
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error || 'Request failed.'); return }
+      setStep('reset-success')
+    } catch {
+      setError('Network error. Please try again.')
+    }
     finally { setLoading(false) }
   }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left Panel - Blue Gradient Branding */}
-      <div className="hidden lg:flex lg:w-[55%] relative bg-gradient-to-br from-[#2563EB] via-[#2563EB] to-[#1D4ED8] overflow-hidden items-center justify-center">
+    <div className="min-h-screen flex" role="main">
+      {/* Left Panel - Branding */}
+      <div className="hidden lg:flex lg:w-[55%] relative bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460] overflow-hidden items-center justify-center">
         {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-white/5 rounded-full translate-y-1/2 -translate-x-1/3" />
-        <div className="absolute top-1/4 left-1/4 w-3 h-3 bg-white/20 rounded-full" />
-        <div className="absolute top-1/3 right-1/3 w-2 h-2 bg-white/15 rounded-full" />
-        <div className="absolute bottom-1/3 left-1/2 w-4 h-4 bg-white/10 rounded-full" />
-        <div className="absolute top-2/3 right-1/4 w-2.5 h-2.5 bg-white/20 rounded-full" />
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-white/[0.03] rounded-full -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-white/[0.03] rounded-full translate-y-1/2 -translate-x-1/3" />
+        <div className="absolute top-1/4 left-1/4 w-3 h-3 bg-white/10 rounded-full" />
+        <div className="absolute top-1/3 right-1/3 w-2 h-2 bg-white/[0.07] rounded-full" />
+        <div className="absolute bottom-1/3 left-1/2 w-4 h-4 bg-white/[0.05] rounded-full" />
+        <div className="absolute top-2/3 right-1/4 w-2.5 h-2.5 bg-white/10 rounded-full" />
         {/* Grid pattern */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{
+        <div className="absolute inset-0 opacity-[0.02]" style={{
           backgroundImage: 'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)',
           backgroundSize: '60px 60px'
         }} />
@@ -60,7 +95,7 @@ export function LoginView({ onLogin }: { onLogin: (user: unknown) => void }) {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.1, ease: [0.25, 0.1, 0.25, 1] }}
-            className="mx-auto w-16 h-16 bg-white/15 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-8 border border-white/20 shadow-2xl"
+            className="mx-auto w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-8 border border-white/10"
           >
             <Zap className="w-8 h-8 text-white" fill="white" />
           </motion.div>
@@ -73,9 +108,9 @@ export function LoginView({ onLogin }: { onLogin: (user: unknown) => void }) {
           >
             <h1 className="text-4xl font-bold text-white tracking-tight mb-2">TITAN AI</h1>
             <div className="flex items-center justify-center gap-2">
-              <div className="h-px w-8 bg-white/30" />
-              <Sparkles className="w-4 h-4 text-white/60" />
-              <div className="h-px w-8 bg-white/30" />
+              <div className="h-px w-8 bg-white/20" />
+              <Sparkles className="w-4 h-4 text-white/40" />
+              <div className="h-px w-8 bg-white/20" />
             </div>
           </motion.div>
 
@@ -83,7 +118,7 @@ export function LoginView({ onLogin }: { onLogin: (user: unknown) => void }) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="text-lg text-white/80 font-medium leading-relaxed"
+            className="text-lg text-white/70 font-medium leading-relaxed"
           >
             AI-Powered Growth<br />Operating System
           </motion.p>
@@ -92,30 +127,26 @@ export function LoginView({ onLogin }: { onLogin: (user: unknown) => void }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.5 }}
-            className="mt-12 flex items-center justify-center gap-6 text-white/50 text-sm"
+            className="mt-12 flex items-center justify-center gap-6 text-white/40 text-sm"
           >
-            <div className="flex flex-col items-center gap-1">
-              <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white/70 font-bold text-xs">10x</div>
-              <span className="text-[11px]">Faster</span>
-            </div>
-            <div className="w-px h-8 bg-white/10" />
-            <div className="flex flex-col items-center gap-1">
-              <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white/70 font-bold text-xs">AI</div>
-              <span className="text-[11px]">Native</span>
-            </div>
-            <div className="w-px h-8 bg-white/10" />
-            <div className="flex flex-col items-center gap-1">
-              <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white/70 font-bold text-xs">24/7</div>
-              <span className="text-[11px]">Active</span>
-            </div>
+            {[
+              { val: '10x', label: 'Faster' },
+              { val: 'AI', label: 'Native' },
+              { val: '24/7', label: 'Active' },
+            ].map((item, i) => (
+              <div key={i} className="flex flex-col items-center gap-1">
+                <div className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center text-white/50 font-bold text-xs">{item.val}</div>
+                <span className="text-[11px]">{item.label}</span>
+              </div>
+            ))}
+            <div className="w-px h-8 bg-white/10 hidden sm:block" />
           </motion.div>
         </motion.div>
       </div>
 
-      {/* Right Panel - Login Form */}
-      <div className="flex-1 flex items-center justify-center bg-[#F8FAFC] p-6 relative">
-        {/* Subtle background pattern */}
-        <div className="absolute inset-0 opacity-[0.02]" style={{
+      {/* Right Panel - Auth Form */}
+      <div className="flex-1 flex items-center justify-center bg-[#FAFAFA] p-6 relative">
+        <div className="absolute inset-0 opacity-[0.015]" style={{
           backgroundImage: 'radial-gradient(circle at 1px 1px, #0F172A 1px, transparent 0)',
           backgroundSize: '32px 32px'
         }} />
@@ -128,77 +159,203 @@ export function LoginView({ onLogin }: { onLogin: (user: unknown) => void }) {
         >
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-2.5 mb-8 justify-center">
-            <div className="w-10 h-10 bg-gradient-to-br from-[#2563EB] to-[#3B82F6] rounded-xl flex items-center justify-center shadow-sm shadow-blue-500/20">
+            <div className="w-10 h-10 bg-gradient-to-br from-[#1a1a2e] to-[#0f3460] rounded-xl flex items-center justify-center shadow-sm">
               <Zap className="w-5 h-5 text-white" fill="white" />
             </div>
             <span className="font-bold text-[#0F172A] text-lg tracking-tight">TITAN</span>
-            <span className="text-[10px] bg-gradient-to-r from-[#2563EB] to-[#3B82F6] text-white font-bold rounded-md px-1.5 py-0.5 leading-none">AI</span>
+            <span className="text-[10px] bg-gradient-to-r from-[#1a1a2e] to-[#0f3460] text-white font-bold rounded-md px-1.5 py-0.5 leading-none">AI</span>
           </div>
 
-          {/* Premium card */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200/60 p-8">
-            <div className="mb-8">
-              <h2 className="text-xl font-bold text-[#0F172A] tracking-tight">Welcome back</h2>
-              <p className="text-sm text-[#475569] mt-1.5">Sign in to your TITAN account</p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {error && (
+          {/* Card */}
+          <div className="bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.04),0_0_0_1px_rgba(0,0,0,0.03)] p-8">
+            <AnimatePresence mode="wait">
+              {/* ── Login Step ── */}
+              {step === 'login' && (
                 <motion.div
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-sm text-red-600 bg-red-50 border border-red-100 p-3 rounded-xl"
+                  key="login"
+                  initial={{ opacity: 0, x: -12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 12 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  {error}
+                  <div className="mb-8">
+                    <h2 className="text-xl font-semibold text-[#0F172A] tracking-tight">Welcome back</h2>
+                    <p className="text-sm text-[#64748B] mt-1.5">Sign in to your TITAN account</p>
+                  </div>
+
+                  <form onSubmit={handleLogin} className="space-y-5" noValidate>
+                    {error && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        role="alert"
+                        className="text-sm text-red-600 bg-red-50 border border-red-100 p-3 rounded-xl"
+                      >
+                        {error}
+                      </motion.div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label htmlFor="login-email" className="text-[13px] font-medium text-[#334155]">Email</Label>
+                      <Input
+                        id="login-email"
+                        type="email"
+                        autoComplete="email"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        placeholder="you@company.com"
+                        required
+                        aria-required="true"
+                        className="h-11 bg-[#F8FAFC] border-[#E2E8F0] text-[#0F172A] placeholder:text-[#94A3B8] rounded-xl focus-visible:ring-2 focus-visible:ring-[#2563EB]/20 focus-visible:border-[#2563EB] transition-all duration-200"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="login-password" className="text-[13px] font-medium text-[#334155]">Password</Label>
+                        <button
+                          type="button"
+                          onClick={() => setStep('forgot')}
+                          className="text-[12px] text-[#2563EB] hover:text-[#1D4ED8] font-medium transition-colors"
+                        >
+                          Forgot password?
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <Input
+                          id="login-password"
+                          type={showPassword ? 'text' : 'password'}
+                          autoComplete="current-password"
+                          value={password}
+                          onChange={e => setPassword(e.target.value)}
+                          placeholder="Your password"
+                          required
+                          aria-required="true"
+                          className="h-11 bg-[#F8FAFC] border-[#E2E8F0] text-[#0F172A] placeholder:text-[#94A3B8] rounded-xl pr-11 focus-visible:ring-2 focus-visible:ring-[#2563EB]/20 focus-visible:border-[#2563EB] transition-all duration-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#475569] transition-colors"
+                          aria-label={showPassword ? 'Hide password' : 'Show password'}
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <Button
+                      type="submit"
+                      className="w-full h-11 bg-[#0F172A] hover:bg-[#1E293B] text-white font-medium rounded-xl transition-all duration-200 mt-2"
+                      disabled={loading}
+                      aria-busy={loading}
+                    >
+                      {loading ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Signing in...</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span>Sign In</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </div>
+                      )}
+                    </Button>
+                  </form>
                 </motion.div>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-[13px] font-medium text-[#0F172A]">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="you@company.com"
-                  required
-                  className="h-11 bg-[#F8FAFC] border-gray-200 text-[#0F172A] placeholder:text-[#94A3B8] rounded-xl focus-visible:ring-2 focus-visible:ring-[#2563EB]/20 focus-visible:border-[#2563EB] transition-all duration-200"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-[13px] font-medium text-[#0F172A]">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="Your password"
-                  required
-                  className="h-11 bg-[#F8FAFC] border-gray-200 text-[#0F172A] placeholder:text-[#94A3B8] rounded-xl focus-visible:ring-2 focus-visible:ring-[#2563EB]/20 focus-visible:border-[#2563EB] transition-all duration-200"
-                />
-              </div>
-
-              <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
-                <Button
-                  type="submit"
-                  className="w-full h-11 bg-gradient-to-r from-[#2563EB] to-[#3B82F6] hover:from-[#2563EB] hover:to-[#3B82F6] text-white font-medium rounded-xl shadow-sm shadow-blue-500/20 transition-all duration-200 mt-2"
-                  disabled={loading}
+              {/* ── Forgot Password Step ── */}
+              {step === 'forgot' && (
+                <motion.div
+                  key="forgot"
+                  initial={{ opacity: 0, x: 12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -12 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  {loading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Signing in...</span>
+                  <button
+                    type="button"
+                    onClick={() => { setStep('login'); setError('') }}
+                    className="flex items-center gap-1.5 text-sm text-[#64748B] hover:text-[#0F172A] font-medium transition-colors mb-6"
+                  >
+                    <ArrowLeft className="w-4 h-4" /> Back to sign in
+                  </button>
+
+                  <div className="mb-8">
+                    <h2 className="text-xl font-semibold text-[#0F172A] tracking-tight">Reset password</h2>
+                    <p className="text-sm text-[#64748B] mt-1.5">Enter your email and we&apos;ll send a reset link.</p>
+                  </div>
+
+                  <form onSubmit={handleForgotPassword} className="space-y-5" noValidate>
+                    {error && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        role="alert"
+                        className="text-sm text-red-600 bg-red-50 border border-red-100 p-3 rounded-xl"
+                      >
+                        {error}
+                      </motion.div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label htmlFor="forgot-email" className="text-[13px] font-medium text-[#334155]">Email address</Label>
+                      <Input
+                        id="forgot-email"
+                        type="email"
+                        autoComplete="email"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        placeholder="you@company.com"
+                        required
+                        aria-required="true"
+                        className="h-11 bg-[#F8FAFC] border-[#E2E8F0] text-[#0F172A] placeholder:text-[#94A3B8] rounded-xl focus-visible:ring-2 focus-visible:ring-[#2563EB]/20 focus-visible:border-[#2563EB] transition-all duration-200"
+                      />
                     </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <span>Sign In</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </div>
-                  )}
-                </Button>
-              </motion.div>
-            </form>
+
+                    <Button
+                      type="submit"
+                      className="w-full h-11 bg-[#0F172A] hover:bg-[#1E293B] text-white font-medium rounded-xl transition-all duration-200"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Sending...</span>
+                        </div>
+                      ) : 'Send Reset Link'}
+                    </Button>
+                  </form>
+                </motion.div>
+              )}
+
+              {/* ── Reset Success Step ── */}
+              {step === 'reset-success' && (
+                <motion.div
+                  key="success"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                  className="text-center py-4"
+                >
+                  <div className="mx-auto w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mb-4">
+                    <Check className="w-6 h-6 text-emerald-600" />
+                  </div>
+                  <h2 className="text-xl font-semibold text-[#0F172A] tracking-tight mb-2">Check your email</h2>
+                  <p className="text-sm text-[#64748B] mb-6">
+                    If an account with this email exists, a password reset link has been generated.
+                  </p>
+                  <Button
+                    onClick={() => { setStep('login'); setError('') }}
+                    className="h-11 bg-[#0F172A] hover:bg-[#1E293B] text-white font-medium rounded-xl transition-all duration-200"
+                  >
+                    Back to sign in
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           <p className="text-center text-xs text-[#94A3B8] mt-6">

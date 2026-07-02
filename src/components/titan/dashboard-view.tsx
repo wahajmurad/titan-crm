@@ -192,20 +192,16 @@ export function DashboardView({ userName }: { userName: string }) {
   const activities = data?.recentActivities || []
 
   return (
-    <motion.div className="mx-auto max-w-7xl space-y-6 px-1 pb-12" variants={containerVariants} initial="hidden" animate="visible">
+    <motion.div className="space-y-6 pb-12" variants={containerVariants} initial="hidden" animate="visible">
 
       {/* ─── Welcome ─────────────────────────────────────────────── */}
       <motion.div variants={itemVariants} className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
-            {getGreeting()},{' '}
-            <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 bg-clip-text text-transparent">{firstName}</span>
+          <h1 className="text-2xl sm:text-[28px] font-semibold tracking-tight text-[#0F172A] dark:text-white">
+            {getGreeting()}, <span className="text-[#94A3B8] dark:text-white/40">{firstName}</span>
           </h1>
-          <p className="mt-1 text-sm text-gray-500">{today}</p>
+          <p className="mt-1 text-sm text-[#64748B] dark:text-white/40">{today}</p>
         </div>
-        <Badge variant="secondary" className="w-fit gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-blue-700 bg-blue-50 border-blue-100">
-          <Activity className="h-3 w-3" /> Dashboard
-        </Badge>
       </motion.div>
 
       {/* ─── KPI Cards ───────────────────────────────────────────── */}

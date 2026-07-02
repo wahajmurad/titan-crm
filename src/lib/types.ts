@@ -1,15 +1,58 @@
-import { createHash, randomBytes } from 'crypto'
+import { randomBytes } from 'crypto'
+import bcrypt from 'bcryptjs'
 
 export function hashPassword(password: string): string {
-  return createHash('sha256').update(password).digest('hex')
+  return bcrypt.hashSync(password, 12)
 }
 
 export function verifyPassword(password: string, hash: string): boolean {
-  return hashPassword(password) === hash
+  return bcrypt.compareSync(password, hash)
 }
 
 export function generateToken(): string {
   return randomBytes(32).toString('hex')
+}
+
+// ── Rate Limiter (in-memory) ──
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+
+export function rateLimit(key: string, maxAttempts: number, windowMs: number = 60000): { allowed: boolean; retryAfterMs: number } {
+  const now = Date.now()
+  const entry = rateLimitMap.get(key)
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + windowMs })
+    return { allowed: true, retryAfterMs: 0 }
+  }
+
+  if (entry.count >= maxAttempts) {
+    return { allowed: false, retryAfterMs: entry.resetAt - now }
+  }
+
+  entry.count++
+  return { allowed: true, retryAfterMs: 0 }
+}
+
+// ── Input Sanitization ──
+export function sanitizeString(input: string): string {
+  return input
+    .replace(/[<>]/g, '') // strip angle brackets
+    .trim()
+    .slice(0, 10000) // max length
+}
+
+export function sanitizeEmail(email: string): string {
+  return email.toLowerCase().trim().slice(0, 254)
+}
+
+// ── Password Validation ──
+export function validatePassword(password: string): { valid: boolean; errors: string[] } {
+  const errors: string[] = []
+  if (password.length < 8) errors.push('At least 8 characters')
+  if (!/[A-Z]/.test(password)) errors.push('One uppercase letter')
+  if (!/[a-z]/.test(password)) errors.push('One lowercase letter')
+  if (!/[0-9]/.test(password)) errors.push('One number')
+  return { valid: errors.length === 0, errors }
 }
 
 export const MODULES = ['dashboard', 'discovery', 'audit', 'leads', 'campaigns', 'email-center', 'inbox', 'meetings', 'ai-assistant', 'prompts', 'team', 'settings'] as const
@@ -234,7 +277,7 @@ export interface SalesAngle {
   emotionalTrigger: string
   bestFor: 'cold' | 'warm' | 'follow_up'
   estimatedEffectiveness: 'High' | 'Medium' | 'Low'
-  effectivenessScore?: number // 0-100
+  effectivenessScore?: number
 }
 
 // ── ROI Data Types ──
