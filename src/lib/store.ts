@@ -24,6 +24,7 @@ export type AppView =
   | 'knowledge-base'
   | 'ai-proposals'
   | 'meeting-prep'
+  | 'outreach'
 
 interface AppState {
   currentView: AppView

@@ -7,7 +7,8 @@ import {
   LayoutDashboard, Search, Globe2, Users, Target, Mail, Inbox,
   Calendar, Brain, BookOpen, UserCog, Settings, LogOut,
   ChevronLeft, ChevronRight, Zap, GraduationCap, Plug, Lightbulb,
-  Sparkles, Workflow, BookMarked, FileText, CalendarCheck
+  Sparkles, Workflow, BookMarked, FileText, CalendarCheck, Send,
+  Command, Bot
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
@@ -30,6 +31,7 @@ const NAV_SECTIONS = [
       { view: 'campaigns' as AppView, label: 'Campaigns', icon: Target },
       { view: 'workflow-builder' as AppView, label: 'Workflow Builder', icon: Workflow },
       { view: 'email-center' as AppView, label: 'Email Center', icon: Mail },
+      { view: 'outreach' as AppView, label: 'Outreach', icon: Send },
       { view: 'inbox' as AppView, label: 'Inbox', icon: Inbox },
     ],
   },
@@ -54,6 +56,8 @@ const NAV_SECTIONS = [
       { view: 'knowledge-base' as AppView, label: 'Knowledge Base', icon: BookMarked },
       { view: 'ai-proposals' as AppView, label: 'AI Proposals', icon: FileText },
       { view: 'meeting-prep' as AppView, label: 'Meeting Prep', icon: CalendarCheck },
+      { view: 'ai-agents' as AppView, label: 'AI Agents', icon: Bot },
+      { view: 'command-center' as AppView, label: 'Command Center', icon: Command },
     ],
   },
   {
@@ -110,7 +114,6 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
         className={cn(
           'glass-sidebar fixed left-0 top-0 z-40 flex flex-col overflow-hidden',
           'ml-3 mt-3 mb-3 rounded-[22px]',
-          'shadow-lg shadow-black/[0.04]',
           'h-[calc(100vh-24px)]'
         )}
       >
@@ -118,7 +121,7 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
         <div className="flex items-center shrink-0 h-14 px-4">
           {sidebarOpen ? (
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-[12px] gradient-blue flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
+              <div className="w-8 h-8 rounded-[12px] bg-white/10 backdrop-blur-sm flex items-center justify-center shrink-0 border border-white/10 shadow-lg shadow-blue-500/20">
                 <Zap className="w-4 h-4 text-white" />
               </div>
               <AnimatePresence mode="wait">
@@ -130,7 +133,7 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
                   variants={textVariants}
                   className="flex items-center gap-1.5 overflow-hidden"
                 >
-                  <span className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-100">
+                  <span className="text-[15px] font-bold tracking-tight text-white">
                     TITAN
                   </span>
                   <span className="text-[9px] bg-blue-500 text-white font-bold rounded-md px-1.5 py-0.5 leading-none tracking-wide">
@@ -141,7 +144,7 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
             </div>
           ) : (
             <div className="flex items-center justify-center w-full">
-              <div className="w-8 h-8 rounded-[12px] gradient-blue flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
+              <div className="w-8 h-8 rounded-[12px] bg-white/10 backdrop-blur-sm flex items-center justify-center shrink-0 border border-white/10">
                 <Zap className="w-4 h-4 text-white" />
               </div>
             </div>
@@ -160,7 +163,7 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
                     animate="show"
                     exit="hide"
                     variants={sectionLabelVariants}
-                    className="text-[10px] font-semibold uppercase tracking-[0.1em] text-gray-400 dark:text-gray-500 px-2.5 mb-1.5 select-none"
+                    className="text-[10px] font-semibold uppercase tracking-[0.1em] text-white/30 px-2.5 mb-1.5 select-none"
                   >
                     {section.label}
                   </motion.p>
@@ -188,15 +191,15 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
                         'transition-all duration-200 relative',
                         'px-2.5 py-[9px]',
                         active
-                          ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400'
-                          : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/80 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-white/5'
+                          ? 'bg-white/10 text-white'
+                          : 'text-white/50 hover:text-white/90 hover:bg-white/[0.06]'
                       )}
                     >
-                      {/* Active indicator — Linear-style left bar */}
+                      {/* Active indicator */}
                       {active && (
                         <motion.div
                           layoutId="sidebar-active-indicator"
-                          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full bg-blue-500 dark:bg-blue-400"
+                          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full bg-blue-400"
                           transition={{ type: 'spring', stiffness: 350, damping: 30 }}
                         />
                       )}
@@ -205,8 +208,8 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
                         className={cn(
                           'w-[18px] h-[18px] shrink-0 transition-colors duration-200',
                           active
-                            ? 'text-blue-600 dark:text-blue-400'
-                            : 'text-gray-400 dark:text-gray-500'
+                            ? 'text-blue-400'
+                            : 'text-white/40'
                         )}
                       />
 
@@ -229,7 +232,7 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
                         <motion.div
                           initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400 shrink-0"
+                          className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0"
                         />
                       )}
                     </button>
@@ -242,7 +245,7 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
                         <TooltipContent
                           side="right"
                           sideOffset={8}
-                          className="rounded-[10px] shadow-lg shadow-black/[0.08] bg-gray-900 dark:bg-gray-800 text-white text-[13px] font-medium px-3 py-1.5 border-0"
+                          className="rounded-[10px] shadow-lg shadow-black/30 bg-[#1a1a2e] text-white text-[13px] font-medium px-3 py-1.5 border border-white/10"
                         >
                           {item.label}
                         </TooltipContent>
@@ -266,8 +269,7 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
                 onClick={() => setSidebarOpen(false)}
                 className={cn(
                   'w-full flex items-center gap-2.5 rounded-[12px] px-2.5 py-[9px]',
-                  'text-gray-400 hover:text-gray-600 hover:bg-gray-100/80',
-                  'dark:text-gray-500 dark:hover:text-gray-300 dark:hover:bg-white/5',
+                  'text-white/30 hover:text-white/60 hover:bg-white/[0.06]',
                   'transition-all duration-200 text-[13px] font-medium'
                 )}
               >
@@ -291,8 +293,7 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
                     onClick={() => setSidebarOpen(true)}
                     className={cn(
                       'w-full flex items-center justify-center rounded-[12px] py-[9px]',
-                      'text-gray-400 hover:text-gray-600 hover:bg-gray-100/80',
-                      'dark:text-gray-500 dark:hover:text-gray-300 dark:hover:bg-white/5',
+                      'text-white/30 hover:text-white/60 hover:bg-white/[0.06]',
                       'transition-all duration-200'
                     )}
                   >
@@ -302,7 +303,7 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
                 <TooltipContent
                   side="right"
                   sideOffset={8}
-                  className="rounded-[10px] shadow-lg shadow-black/[0.08] bg-gray-900 dark:bg-gray-800 text-white text-[13px] font-medium px-3 py-1.5 border-0"
+                  className="rounded-[10px] shadow-lg shadow-black/30 bg-[#1a1a2e] text-white text-[13px] font-medium px-3 py-1.5 border border-white/10"
                 >
                   Expand
                 </TooltipContent>
@@ -311,7 +312,7 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
           </div>
 
           {/* Divider */}
-          <div className="mx-3 border-t border-gray-200/60 dark:border-gray-700/40" />
+          <div className="mx-3 border-t border-white/[0.08]" />
 
           {/* User Section */}
           <div className="p-2.5">
@@ -322,8 +323,8 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
                   onClick={onLogout}
                   className={cn(
                     'w-full flex items-center gap-2.5 rounded-[12px] px-2.5 py-[7px] mb-1',
-                    'text-[13px] font-medium text-gray-400',
-                    'hover:text-red-600 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-red-500/10',
+                    'text-[13px] font-medium text-white/30',
+                    'hover:text-red-400 hover:bg-white/[0.06]',
                     'transition-all duration-200'
                   )}
                 >
@@ -333,8 +334,8 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
 
                 {/* User Info */}
                 <div className="flex items-center gap-2.5 px-2 py-2">
-                  <Avatar className="h-8 w-8 shrink-0 ring-2 ring-blue-500/20">
-                    <AvatarFallback className="bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold">
+                  <Avatar className="h-8 w-8 shrink-0 ring-2 ring-white/10">
+                    <AvatarFallback className="bg-white/10 text-white text-xs font-bold">
                       {initials}
                     </AvatarFallback>
                   </Avatar>
@@ -347,10 +348,10 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
                       variants={textVariants}
                       className="flex-1 min-w-0"
                     >
-                      <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100 truncate leading-tight">
+                      <p className="text-[13px] font-medium text-white truncate leading-tight">
                         {userName}
                       </p>
-                      <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate leading-tight">
+                      <p className="text-[11px] text-white/40 truncate leading-tight">
                         {userRole}
                       </p>
                     </motion.div>
@@ -362,8 +363,8 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
                 {/* Avatar */}
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Avatar className="h-8 w-8 ring-2 ring-blue-500/20 cursor-default">
-                      <AvatarFallback className="bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold">
+                    <Avatar className="h-8 w-8 ring-2 ring-white/10 cursor-default">
+                      <AvatarFallback className="bg-white/10 text-white text-xs font-bold">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
@@ -371,11 +372,11 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
                   <TooltipContent
                     side="right"
                     sideOffset={8}
-                    className="rounded-[10px] shadow-lg shadow-black/[0.08] bg-gray-900 dark:bg-gray-800 text-white text-[13px] font-medium px-3 py-1.5 border-0"
+                    className="rounded-[10px] shadow-lg shadow-black/30 bg-[#1a1a2e] text-white text-[13px] font-medium px-3 py-1.5 border border-white/10"
                   >
                     <div>
                       <p className="font-semibold">{userName}</p>
-                      <p className="text-[11px] text-gray-400 dark:text-gray-400 font-normal">{userRole}</p>
+                      <p className="text-[11px] text-white/40 font-normal">{userRole}</p>
                     </div>
                   </TooltipContent>
                 </Tooltip>
@@ -387,8 +388,7 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
                       onClick={onLogout}
                       className={cn(
                         'flex items-center justify-center rounded-[10px] p-1.5',
-                        'text-gray-400 hover:text-red-600 hover:bg-red-50',
-                        'dark:text-gray-500 dark:hover:text-red-400 dark:hover:bg-red-500/10',
+                        'text-white/30 hover:text-red-400 hover:bg-white/[0.06]',
                         'transition-all duration-200'
                       )}
                     >
@@ -398,7 +398,7 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
                   <TooltipContent
                     side="right"
                     sideOffset={8}
-                    className="rounded-[10px] shadow-lg shadow-black/[0.08] bg-gray-900 dark:bg-gray-800 text-white text-[13px] font-medium px-3 py-1.5 border-0"
+                    className="rounded-[10px] shadow-lg shadow-black/30 bg-[#1a1a2e] text-white text-[13px] font-medium px-3 py-1.5 border border-white/10"
                   >
                     Sign Out
                   </TooltipContent>

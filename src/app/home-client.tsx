@@ -39,6 +39,7 @@ const PersonalizationView = dynamic(() => import('@/components/titan/personaliza
 const KnowledgeBaseView = dynamic(() => import('@/components/titan/knowledge-base-view').then(m => ({ default: m.KnowledgeBaseView })), { loading: () => <PageSkeleton /> })
 const AIProposalsView = dynamic(() => import('@/components/titan/ai-proposals-view').then(m => ({ default: m.AIProposalsView })), { loading: () => <PageSkeleton /> })
 const MeetingPrepView = dynamic(() => import('@/components/titan/meeting-prep-view').then(m => ({ default: m.MeetingPrepView })), { loading: () => <PageSkeleton /> })
+const OutreachView = dynamic(() => import('@/components/titan/outreach-view').then(m => ({ default: m.OutreachView })), { loading: () => <PageSkeleton /> })
 
 function PageSkeleton() {
   return (
@@ -136,15 +137,15 @@ export default function HomeClient() {
           className="flex flex-col items-center gap-5"
         >
           <motion.div
-            className="w-14 h-14 bg-[#0F172A] dark:bg-white rounded-2xl flex items-center justify-center shadow-lg"
+            className="w-14 h-14 bg-gradient-to-br from-[#1a1a2e] to-[#0f3460] rounded-2xl flex items-center justify-center shadow-lg border border-white/10"
             animate={{ boxShadow: ['0 4px 20px rgba(15,23,42,0.15)', '0 4px 30px rgba(15,23,42,0.25)', '0 4px 20px rgba(15,23,42,0.15)'] }}
             transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
           >
-            <Zap className="w-7 h-7 text-white dark:text-[#0F172A]" fill="currentColor" />
+            <Zap className="w-7 h-7 text-white" fill="white" />
           </motion.div>
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-[#0F172A] dark:text-white tracking-tight">TITAN</span>
-            <span className="text-[10px] bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] font-bold rounded-md px-1.5 py-0.5 leading-none">AI</span>
+            <span className="text-[10px] bg-gradient-to-r from-[#1a1a2e] to-[#0f3460] text-white font-bold rounded-md px-1.5 py-0.5 leading-none">AI</span>
           </div>
           <div className="flex items-center gap-1.5 mt-1">
             {[0, 150, 300].map((delay, i) => (
@@ -181,6 +182,7 @@ export default function HomeClient() {
       case 'lead-detail': return <LeadDetailView />
       case 'campaigns': return <CampaignsView />
       case 'email-center': return <EmailCenterView />
+      case 'outreach': return <OutreachView />
       case 'inbox': return <InboxView />
       case 'meetings': return <MeetingsView />
       case 'ai-assistant': return <AIAssistantView />
@@ -205,7 +207,7 @@ export default function HomeClient() {
   const isWorkflow = currentView === 'workflows'
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-foreground font-sans antialiased">
+    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#070A13] text-[#0F172A] dark:text-gray-100 font-sans antialiased">
       {/* Desktop Layout */}
       <div className="hidden lg:block">
         {!isWorkflow && <Sidebar userName={user.name} userRole={user.role} onLogout={handleLogout} />}
@@ -218,32 +220,32 @@ export default function HomeClient() {
           {!isWorkflow && (
             <header className="sticky top-0 z-30 glass-header h-14 px-6 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <h1 className="text-[13px] font-semibold text-foreground">{viewLabel}</h1>
+                <h1 className="text-[13px] font-semibold text-white">{viewLabel}</h1>
                 {currentView === 'dashboard' && (
-                  <span className="text-[13px] text-muted-foreground">Welcome back, {user.name.split(' ')[0]}</span>
+                  <span className="text-[13px] text-white/50">Welcome back, {user.name.split(' ')[0]}</span>
                 )}
               </div>
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setCommandOpen(true)}
-                  className="h-8 px-3 rounded-[10px] bg-muted/50 hover:bg-muted text-muted-foreground text-[12px] font-medium flex items-center gap-2 transition-colors"
+                  className="h-8 px-3 rounded-[10px] bg-white/[0.06] hover:bg-white/10 text-white/60 hover:text-white/90 text-[12px] font-medium flex items-center gap-2 transition-colors"
                 >
                   <Search className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Search</span>
-                  <kbd className="hidden sm:inline-flex h-5 px-1.5 rounded-[6px] bg-background border border-border text-[10px] font-medium text-muted-foreground">
+                  <kbd className="hidden sm:inline-flex h-5 px-1.5 rounded-[6px] bg-white/[0.08] border border-white/10 text-[10px] font-medium text-white/50">
                     ⌘K
                   </kbd>
                 </button>
                 <NotificationCenter open={notifOpen} onOpenChange={setNotifOpen} />
                 <button
                   onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                  className="h-8 w-8 rounded-[10px] hover:bg-muted/50 flex items-center justify-center transition-colors"
+                  className="h-8 w-8 rounded-[10px] hover:bg-white/[0.08] flex items-center justify-center transition-colors text-white/60 hover:text-white"
                   aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
                 >
                   {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                 </button>
-                <Avatar className="h-8 w-8 ring-2 ring-border">
-                  <AvatarFallback className="bg-primary/10 text-primary text-[11px] font-bold">
+                <Avatar className="h-8 w-8 ring-2 ring-white/10">
+                  <AvatarFallback className="bg-white/10 text-white text-[11px] font-bold">
                     {user.name.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -295,20 +297,20 @@ export default function HomeClient() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="p-2 rounded-[10px] hover:bg-muted/50 transition-colors -ml-2"
+              className="p-2 rounded-[10px] hover:bg-white/[0.08] transition-colors -ml-2 text-white/60 hover:text-white"
               aria-label="Open navigation menu"
             >
               <Menu className="w-5 h-5" />
             </button>
-            <h1 className="text-[13px] font-semibold">{viewLabel}</h1>
+            <h1 className="text-[13px] font-semibold text-white">{viewLabel}</h1>
           </div>
           <div className="flex items-center gap-1">
-            <button onClick={() => setCommandOpen(true)} className="p-2 rounded-[10px] hover:bg-muted/50 transition-colors" aria-label="Search">
-              <Search className="w-[18px] h-[18px] text-muted-foreground" />
+            <button onClick={() => setCommandOpen(true)} className="p-2 rounded-[10px] hover:bg-white/[0.08] transition-colors text-white/60 hover:text-white" aria-label="Search">
+              <Search className="w-[18px] h-[18px]" />
             </button>
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="p-2 rounded-[10px] hover:bg-muted/50 transition-colors"
+              className="p-2 rounded-[10px] hover:bg-white/[0.08] transition-colors text-white/60 hover:text-white"
               aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
             >
               <Sun className="w-[18px] h-[18px] hidden dark:block" />
@@ -330,7 +332,7 @@ export default function HomeClient() {
             </motion.div>
           </AnimatePresence>
         </div>
-        <nav className="fixed bottom-0 left-0 right-0 h-16 glass-header border-t border-border/50 z-30 flex items-center justify-around px-2 safe-area-bottom" aria-label="Mobile navigation">
+        <nav className="fixed bottom-0 left-0 right-0 h-16 bg-[#1a1a2e]/95 backdrop-blur-lg border-t border-white/[0.06] z-30 flex items-center justify-around px-2 safe-area-bottom" aria-label="Mobile navigation">
           {[
             { view: 'dashboard' as const, icon: Zap, label: 'Home' },
             { view: 'discovery' as const, icon: Search, label: 'Leads' },
@@ -345,13 +347,13 @@ export default function HomeClient() {
                 onClick={() => { useAppStore.getState().setView(item.view); setSidebarOpen(false) }}
                 className={cn(
                   'flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors min-w-[48px]',
-                  active ? 'text-foreground' : 'text-muted-foreground'
+                  active ? 'text-blue-400' : 'text-white/40'
                 )}
                 aria-label={item.label}
                 aria-current={active ? 'page' : undefined}
               >
-                <item.icon className={cn('w-5 h-5', active && 'text-blue-600 dark:text-blue-400')} />
-                <span className={cn('text-[10px] font-medium', active && 'text-blue-600 dark:text-blue-400')}>{item.label}</span>
+                <item.icon className="w-5 h-5" />
+                <span className="text-[10px] font-medium">{item.label}</span>
               </button>
             )
           })}

@@ -10,7 +10,8 @@ import {
   LayoutDashboard, Search, Globe, Users, Mail, Inbox, Calendar,
   Bot, Brain, Zap, Target, Settings, UsersRound, FileText,
   Moon, Sun, Building2, BarChart3,
-  Lightbulb, ChevronRight, Sparkles, Box, Pause
+  Lightbulb, ChevronRight, Sparkles, Box, Pause,
+  Send, Workflow, BookOpen, CalendarCheck, Command, BookMarked
 } from 'lucide-react'
 
 interface CommandCenterProps {
@@ -24,16 +25,22 @@ const VIEW_ITEMS = [
   { id: 'audit', label: 'Website Audit', icon: Globe, shortcut: 'A' },
   { id: 'leads', label: 'Leads', icon: Users, shortcut: '' },
   { id: 'campaigns', label: 'Campaigns', icon: Target, shortcut: 'C' },
+  { id: 'workflow-builder', label: 'Workflow Builder', icon: Workflow, shortcut: 'W' },
   { id: 'email-center', label: 'Email Center', icon: Mail, shortcut: 'E' },
+  { id: 'outreach', label: 'Outreach', icon: Send, shortcut: 'O' },
   { id: 'inbox', label: 'Inbox', icon: Inbox, shortcut: 'I' },
   { id: 'meetings', label: 'Meetings', icon: Calendar, shortcut: 'M' },
   { id: 'ai-assistant', label: 'AI Assistant', icon: Bot, shortcut: '' },
   { id: 'industry-expert', label: 'Industry Expert', icon: Brain, shortcut: '' },
   { id: 'strategy-assistant', label: 'Strategy Assistant', icon: Lightbulb, shortcut: '' },
   { id: 'personalization', label: 'AI Pipeline', icon: Sparkles, shortcut: 'P' },
-  { id: 'outreach-packages', label: 'Outreach Packages', icon: Box, shortcut: 'O' },
+  { id: 'knowledge-base', label: 'Knowledge Base', icon: BookOpen, shortcut: '' },
+  { id: 'ai-proposals', label: 'AI Proposals', icon: FileText, shortcut: '' },
+  { id: 'meeting-prep', label: 'Meeting Prep', icon: CalendarCheck, shortcut: '' },
+  { id: 'ai-agents', label: 'AI Agents', icon: Bot, shortcut: '' },
+  { id: 'command-center', label: 'Command Center', icon: Command, shortcut: '' },
   { id: 'lead-providers', label: 'Lead Providers', icon: Building2, shortcut: '' },
-  { id: 'prompts', label: 'Prompt Library', icon: FileText, shortcut: '' },
+  { id: 'prompts', label: 'Prompt Library', icon: BookMarked, shortcut: '' },
   { id: 'team', label: 'Team Management', icon: UsersRound, shortcut: '' },
   { id: 'settings', label: 'Settings', icon: Settings, shortcut: ',' },
 ]

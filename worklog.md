@@ -18,3 +18,31 @@ Stage Summary:
 - Updated `package.json` dev/start scripts to run init-db.sh before server start
 - Verified full auth flow: setup (create owner) → login → session check — all pass
 - Removed debug code from setup route, committed and pushed to origin/main
+
+---
+Task ID: 2
+Agent: Main
+Task: Apply sign-in page navy theme to entire app + restore all missing features
+
+Work Log:
+- Explored full project structure — 21 views exist, 45 API routes, 27 app components
+- Identified missing sidebar nav items: Outreach, Command Center, AI Agents (views existed but weren't wired)
+- Identified theme mismatch: sign-in uses dark navy (#1a1a2e→#16213e→#0f3460) but app used light glass sidebar/header
+- Updated globals.css: glass-sidebar, glass-header, glass-float → dark navy gradient backgrounds
+- Updated gradient-blue utility to match sign-in page navy palette
+- Rewrote sidebar.tsx: always-dark navy bg, white text, added Outreach/Command Center/AI Agents to nav
+- Updated home-client.tsx: dark navy header with white text, navy loading screen, added OutreachView import
+- Updated layout.tsx: body bg to #FAFAFA (light content area)
+- Updated command-palette.tsx: all 22 views listed + missing icon imports
+- Updated notification-center.tsx: navy-compatible bell button and popover
+- Added 'outreach' to AppView type in store.ts
+- Verified all view components (dashboard, leads, campaigns, ai-assistant, settings, setup) — zero theme clashes
+- Final build: ✓ Compiled successfully, 45/45 routes, zero errors, zero warnings
+
+Stage Summary:
+- Navy theme now consistent across sign-in → sidebar → header → mobile nav
+- All 22 views accessible via sidebar navigation (was 19 before)
+- All 22 views accessible via command palette (⌘K) (was 17 before)
+- Content area remains light (#FAFAFA) with white cards for readability
+- Mobile bottom nav uses navy background matching header
+- Dark mode still works with even deeper navy tones
