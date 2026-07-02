@@ -51,8 +51,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ leads, total, page, limit })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('Leads GET error:', e)
+    return NextResponse.json({ error: 'Internal server error. Please try again.' }, { status: 500 })
   }
 }
 
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ lead }, { status: 201 })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('Leads POST error:', e)
+    return NextResponse.json({ error: 'Internal server error. Please try again.' }, { status: 500 })
   }
 }

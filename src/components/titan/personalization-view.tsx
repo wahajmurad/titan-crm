@@ -916,20 +916,20 @@ export function PersonalizationView() {
               <>
                 <Card className="bg-white dark:bg-gray-900 rounded-2xl border-0 shadow-sm p-5">
                   <div className="text-[11px] text-gray-500 font-medium uppercase tracking-wide mb-3">Recommended Approach</div>
-                  {linkedin.recommendedApproach && (
+                  {(linkedin as any)?.recommendedApproach && (
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center gap-2">
                         <Badge className={cn(
                           'text-[10px] font-bold',
-                          (linkedin.recommendedApproach as Record<string, unknown>).firstAction === 'engage_post' && 'bg-blue-50 text-blue-700',
-                          (linkedin.recommendedApproach as Record<string, unknown>).firstAction === 'connect_first' && 'bg-emerald-50 text-emerald-700',
-                          (linkedin.recommendedApproach as Record<string, unknown>).firstAction === 'view_profile' && 'bg-purple-50 text-purple-700',
+                          ((linkedin as any).recommendedApproach as Record<string, unknown>).firstAction === 'engage_post' && 'bg-blue-50 text-blue-700',
+                          ((linkedin as any).recommendedApproach as Record<string, unknown>).firstAction === 'connect_first' && 'bg-emerald-50 text-emerald-700',
+                          ((linkedin as any).recommendedApproach as Record<string, unknown>).firstAction === 'view_profile' && 'bg-purple-50 text-purple-700',
                         )}>
-                          {String((linkedin.recommendedApproach as Record<string, unknown>).firstAction || '').replace(/_/g, ' ')}
+                          {String(((linkedin as any).recommendedApproach as Record<string, unknown>).firstAction || '').replace(/_/g, ' ')}
                         </Badge>
-                        <span className="text-xs text-gray-500">{String((linkedin.recommendedApproach as Record<string, unknown>).timeline || '')}</span>
+                        <span className="text-xs text-gray-500">{String(((linkedin as any).recommendedApproach as Record<string, unknown>).timeline || '')}</span>
                       </div>
-                      <p className="text-sm text-gray-700 dark:text-gray-300">{String((linkedin.recommendedApproach as Record<string, unknown>).reasoning || '')}</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">{String(((linkedin as any).recommendedApproach as Record<string, unknown>).reasoning || '')}</p>
                     </div>
                   )}
                 </Card>
@@ -937,34 +937,34 @@ export function PersonalizationView() {
                 <Card className="bg-white dark:bg-gray-900 rounded-2xl border-0 shadow-sm p-5">
                   <div className="flex items-center justify-between mb-3">
                     <div className="text-[11px] text-gray-500 font-medium uppercase tracking-wide">Connection Request</div>
-                    <Button variant="ghost" size="sm" onClick={() => copyToClipboard(String((linkedin.connectionRequest as Record<string, unknown>)?.text || ''), 'conn')} className="h-7 text-xs">
+                    <Button variant="ghost" size="sm" onClick={() => copyToClipboard(String(((linkedin as any).connectionRequest as Record<string, unknown>)?.text || ''), 'conn')} className="h-7 text-xs">
                       {copiedField === 'conn' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                     </Button>
                   </div>
                   <p className="text-sm text-gray-700 dark:text-gray-300 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl p-3">
-                    {String((linkedin.connectionRequest as Record<string, unknown>)?.text || 'No connection request generated')}
+                    {String(((linkedin as any).connectionRequest as Record<string, unknown>)?.text || 'No connection request generated')}
                   </p>
                 </Card>
 
                 <Card className="bg-white dark:bg-gray-900 rounded-2xl border-0 shadow-sm p-5">
                   <div className="flex items-center justify-between mb-3">
                     <div className="text-[11px] text-gray-500 font-medium uppercase tracking-wide">First Message (After Connection)</div>
-                    <Button variant="ghost" size="sm" onClick={() => copyToClipboard(String((linkedin.firstMessage as Record<string, unknown>)?.text || ''), 'firstmsg')} className="h-7 text-xs">
+                    <Button variant="ghost" size="sm" onClick={() => copyToClipboard(String(((linkedin as any).firstMessage as Record<string, unknown>)?.text || ''), 'firstmsg')} className="h-7 text-xs">
                       {copiedField === 'firstmsg' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                     </Button>
                   </div>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">{String((linkedin.firstMessage as Record<string, unknown>)?.text || 'No first message generated')}</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">{String(((linkedin as any).firstMessage as Record<string, unknown>)?.text || 'No first message generated')}</p>
                   <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
                     <Clock className="w-3 h-3" />
-                    {String((linkedin.firstMessage as Record<string, unknown>)?.timing || 'Timing not specified')}
+                    {String(((linkedin as any).firstMessage as Record<string, unknown>)?.timing || 'Timing not specified')}
                   </div>
                 </Card>
 
-                {linkedin.followUpSequence && Array.isArray(linkedin.followUpSequence) && (
+                {(linkedin as any).followUpSequence && Array.isArray((linkedin as any).followUpSequence) && (
                   <Card className="bg-white dark:bg-gray-900 rounded-2xl border-0 shadow-sm p-5">
                     <div className="text-[11px] text-gray-500 font-medium uppercase tracking-wide mb-3">Follow-Up Sequence</div>
                     <div className="space-y-3">
-                      {(linkedin.followUpSequence as Array<Record<string, unknown>>).map((step, i) => (
+                      {((linkedin as any).followUpSequence as Array<Record<string, unknown>>).map((step, i) => (
                         <div key={i} className="flex gap-3">
                           <div className="w-6 h-6 bg-gradient-to-br from-rose-500 to-pink-500 rounded-lg flex items-center justify-center text-white text-[10px] font-bold shrink-0">{i + 1}</div>
                           <div className="flex-1">
@@ -1119,7 +1119,7 @@ export function PersonalizationView() {
                             <div className="text-[11px] text-gray-500">{String(s.description || '')}</div>
                             <div className="flex items-center gap-2 mt-1">
                               <Badge variant="outline" className="text-[9px] h-4">{String(s.category || '')}</Badge>
-                              {s.confidence && <span className="text-[9px] text-gray-400">Confidence: {String(s.confidence)}</span>}
+                              {s.confidence != null && <span className="text-[9px] text-gray-400">Confidence: {String(s.confidence)}</span>}
                             </div>
                           </div>
                         </div>

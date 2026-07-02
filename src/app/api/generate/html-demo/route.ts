@@ -341,16 +341,16 @@ ${blueprintData ? `<div class="section">
   <div class="section-title"><span class="dot" style="background:#D97706"></span>AI Growth Blueprint</div>
   <div class="timeline">
     <div class="timeline-item">
-      <h4>Days 1-30: ${esc(String(blueprintData.thirtyDayPlan?.focus || 'Foundation & Quick Wins'))}</h4>
-      <p>${esc(String(blueprintData.thirtyDayPlan?.expectedResults || ''))}</p>
+      <h4>Days 1-30: ${esc(String((blueprintData.thirtyDayPlan as any)?.focus || 'Foundation & Quick Wins'))}</h4>
+      <p>${esc(String((blueprintData.thirtyDayPlan as any)?.expectedResults || ''))}</p>
     </div>
     <div class="timeline-item">
-      <h4>Days 31-60: ${esc(String(blueprintData.sixtyDayPlan?.focus || 'Growth & Optimization'))}</h4>
-      <p>${esc(String(blueprintData.sixtyDayPlan?.expectedResults || ''))}</p>
+      <h4>Days 31-60: ${esc(String((blueprintData.sixtyDayPlan as any)?.focus || 'Growth & Optimization'))}</h4>
+      <p>${esc(String((blueprintData.sixtyDayPlan as any)?.expectedResults || ''))}</p>
     </div>
     <div class="timeline-item">
-      <h4>Days 61-90: ${esc(String(blueprintData.ninetyDayPlan?.focus || 'Scale & Expand'))}</h4>
-      <p>${esc(String(blueprintData.ninetyDayPlan?.expectedResults || ''))}</p>
+      <h4>Days 61-90: ${esc(String((blueprintData.ninetyDayPlan as any)?.focus || 'Scale & Expand'))}</h4>
+      <p>${esc(String((blueprintData.ninetyDayPlan as any)?.expectedResults || ''))}</p>
     </div>
   </div>
 </div>` : ''}

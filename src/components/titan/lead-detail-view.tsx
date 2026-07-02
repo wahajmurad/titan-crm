@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { LEAD_STAGES, STAGE_COLORS, STAGE_DOT_COLORS } from '@/lib/types'
 import { ArrowLeft, ExternalLink, Phone, Mail, Globe, MapPin, Building2, Send, Calendar, Trash2, Heart } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { motion } from 'framer-motion'
 
@@ -158,7 +159,7 @@ export function LeadDetailView() {
     fetch(`/api/leads/${selectedLeadId}`)
       .then(r => r.json())
       .then(d => setLead(d.lead))
-      .catch(() => {})
+      .catch(() => toast.error('Failed to load lead'))
       .finally(() => setLoading(false))
   }, [selectedLeadId, refreshKey])
 
@@ -166,10 +167,11 @@ export function LeadDetailView() {
 
   const updateStage = async (stage: string) => {
     if (!lead) return
-    await fetch(`/api/leads/${lead.id}`, {
+    const res = await fetch(`/api/leads/${lead.id}`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ stage }),
     })
+    if (!res.ok) { toast.error('Failed to update stage'); return }
     setEditingStage(false)
     refresh()
   }
@@ -177,10 +179,11 @@ export function LeadDetailView() {
   const updateNotes = async () => {
     if (!lead || !newNote.trim()) return
     const updated = [lead.notes, newNote.trim()].filter(Boolean).join('\n---\n')
-    await fetch(`/api/leads/${lead.id}`, {
+    const res = await fetch(`/api/leads/${lead.id}`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ notes: updated }),
     })
+    if (!res.ok) { toast.error('Failed to save note'); return }
     setNewNote('')
     refresh()
   }
@@ -188,7 +191,8 @@ export function LeadDetailView() {
   const deleteLead = async () => {
     if (!lead) return
     if (!confirm('Delete this lead? This cannot be undone.')) return
-    await fetch(`/api/leads/${lead.id}`, { method: 'DELETE' })
+    const res = await fetch(`/api/leads/${lead.id}`, { method: 'DELETE' })
+    if (!res.ok) { toast.error('Failed to delete lead'); return }
     setView('leads')
   }
 

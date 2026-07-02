@@ -23,7 +23,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Search,
   MapPin,
@@ -41,12 +40,10 @@ import {
   MessageSquare,
   Radar,
   X,
-  Shield,
-  Cpu,
-  Briefcase,
   Bot,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 
 /* ──────────── Types ──────────── */
 
@@ -224,7 +221,7 @@ export function DiscoveryView() {
         setAddedIds((prev) => new Set(prev).add(lead.placeId || lead.name))
       }
     } catch {
-      // silently fail
+      toast.error('Failed to add lead. Please try again.')
     }
   }, [])
 

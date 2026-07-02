@@ -7,10 +7,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { LEAD_STAGES, STAGE_COLORS, STAGE_DOT_COLORS, type LeadStage } from '@/lib/types'
-import { Plus, Search, ChevronRight, ExternalLink, Phone, Mail, Globe, Globe2, Target, Loader2, CheckCircle2, LayoutGrid, List } from 'lucide-react'
+import { Plus, Search, ChevronRight, Mail, Globe2, Target, Loader2, CheckCircle2, LayoutGrid, List } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
@@ -93,11 +92,14 @@ export function LeadsView() {
     const params = new URLSearchParams()
     if (search) params.set('search', search)
     if (stageFilter !== 'ALL') params.set('stage', stageFilter)
-    fetch(`/api/leads?${params}`)
-      .then(r => r.json())
-      .then(d => setLeads(d.leads || []))
-      .catch(() => {})
-      .finally(() => setLoading(false))
+    const timer = setTimeout(() => {
+      fetch(`/api/leads?${params}`)
+        .then(r => r.json())
+        .then(d => setLeads(d.leads || []))
+        .catch(() => toast.error('Failed to load leads'))
+        .finally(() => setLoading(false))
+    }, 300)
+    return () => clearTimeout(timer)
   }, [search, stageFilter, refreshKey])
 
   const refresh = () => setRefreshKey(k => k + 1)
@@ -199,7 +201,7 @@ export function LeadsView() {
             >
               All
             </button>
-            {stages.slice(0, 5).map(s => (
+            {stages.map(s => (
               <button
                 key={s}
                 onClick={() => setStageFilter(s)}
@@ -498,7 +500,7 @@ function AddLeadDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpe
         onOpenChange(false)
         onCreated()
       }
-    } catch {}
+    } catch { toast.error('Failed to save lead') }
     setLoading(false)
   }
 

@@ -58,7 +58,7 @@ export function CommandPalette({ open, onOpenChange }: CommandCenterProps) {
 
   // Search leads when query changes
   useEffect(() => {
-    if (!search || search.length < 2) { setLeads([]); return }
+    if (!search || search.length < 2) return
     const timer = setTimeout(async () => {
       try {
         const res = await fetch(`/api/leads?search=${encodeURIComponent(search)}&limit=5`)
@@ -68,7 +68,7 @@ export function CommandPalette({ open, onOpenChange }: CommandCenterProps) {
         }
       } catch {}
     }, 300)
-    return () => clearTimeout(timer)
+    return () => { clearTimeout(timer); setLeads([]) }
   }, [search])
 
   const handleSelect = useCallback((id: string) => {

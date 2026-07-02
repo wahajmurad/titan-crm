@@ -37,9 +37,7 @@ import {
   ScanSearch,
   Mail,
   CheckCircle2,
-  ArrowRight,
   Clock,
-  BarChart3,
   AlertTriangle,
   Sparkles,
   Gauge,
@@ -48,6 +46,7 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 
 /* ──────────── types ──────────── */
 
@@ -203,14 +202,14 @@ function parseStringList(val: unknown): string[] {
         }
         return String(item).trim()
       })
-      .filter((s) => s.length > 0 && !s.startsWith('[object'))
+      .filter((s) => (s as any).length > 0 && !(s as any).startsWith('[object'))
   }
   if (typeof val === 'string') {
     try {
       const parsed = JSON.parse(val)
       if (Array.isArray(parsed)) return parseStringList(parsed)
     } catch {
-      return val.split(/[\n]/).map(s => s.replace(/^\d+[\.\)\-]\s*/, '').trim()).filter(Boolean)
+      return val.split(/[\n]/).map(s => (s as any).replace(/^\d+[\.\)\-]\s*/, '').trim()).filter(Boolean)
     }
   }
   return []
@@ -524,7 +523,7 @@ export function AuditView() {
         }
       }
     } catch {
-      // silent fail for recent audits
+      toast.error('Failed to load recent audits')
     }
   }, [])
 
@@ -539,7 +538,7 @@ export function AuditView() {
         }
       }
     } catch {
-      // silent fail
+      toast.error('Failed to load campaigns')
     }
   }, [])
 
@@ -558,26 +557,25 @@ export function AuditView() {
   }, [])
 
   /* ──── normalize raw API data into AuditResult ──── */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function normalizeAudit(raw: any): AuditResult {
+  function normalizeAudit(raw: Record<string, unknown>): AuditResult {
     const rawUrl = String(raw.url ?? '')
     const s = (raw.scores && typeof raw.scores === 'object') ? raw.scores : {}
     const scores = {
-      ui: clampScore(raw.uiScore ?? raw.ui ?? s.uiScore ?? s.ui ?? 0),
-      ux: clampScore(raw.uxScore ?? raw.ux ?? s.uxScore ?? s.ux ?? 0),
-      seo: clampScore(raw.seoScore ?? raw.seo ?? s.seoScore ?? s.seo ?? 0),
-      performance: clampScore(raw.performanceScore ?? raw.performance ?? s.performanceScore ?? s.performance ?? 0),
-      accessibility: clampScore(raw.accessibilityScore ?? raw.accessibility ?? s.accessibilityScore ?? s.accessibility ?? 0),
-      mobile: clampScore(raw.mobileScore ?? raw.mobile ?? s.mobileScore ?? s.mobile ?? 0),
-      security: clampScore(raw.securityScore ?? raw.security ?? s.securityScore ?? s.security ?? 0),
-      aiReadiness: clampScore(raw.aiReadinessScore ?? raw.aiReadiness ?? s.aiReadinessScore ?? s.aiReadiness ?? 0),
-      automation: clampScore(raw.automationScore ?? raw.automation ?? s.automationScore ?? s.automation ?? 0),
-      conversion: clampScore(raw.conversionScore ?? raw.conversion ?? s.conversionScore ?? s.conversion ?? 0),
-      overall: clampScore(raw.overallScore ?? raw.overall ?? s.overallScore ?? s.overall ?? 0),
+      ui: clampScore((raw as any).uiScore ?? raw.ui ?? (s as any).uiScore ?? (s as any).ui ?? 0),
+      ux: clampScore(raw.uxScore ?? raw.ux ?? (s as any).uxScore ?? (s as any).ux ?? 0),
+      seo: clampScore(raw.seoScore ?? raw.seo ?? (s as any).seoScore ?? (s as any).seo ?? 0),
+      performance: clampScore(raw.performanceScore ?? raw.performance ?? (s as any).performanceScore ?? (s as any).performance ?? 0),
+      accessibility: clampScore(raw.accessibilityScore ?? raw.accessibility ?? (s as any).accessibilityScore ?? (s as any).accessibility ?? 0),
+      mobile: clampScore(raw.mobileScore ?? raw.mobile ?? (s as any).mobileScore ?? (s as any).mobile ?? 0),
+      security: clampScore(raw.securityScore ?? raw.security ?? (s as any).securityScore ?? (s as any).security ?? 0),
+      aiReadiness: clampScore(raw.aiReadinessScore ?? raw.aiReadiness ?? (s as any).aiReadinessScore ?? (s as any).aiReadiness ?? 0),
+      automation: clampScore(raw.automationScore ?? raw.automation ?? (s as any).automationScore ?? (s as any).automation ?? 0),
+      conversion: clampScore(raw.conversionScore ?? raw.conversion ?? (s as any).conversionScore ?? (s as any).conversion ?? 0),
+      overall: clampScore(raw.overallScore ?? raw.overall ?? (s as any).overallScore ?? (s as any).overall ?? 0),
     }
 
     // calculate overall if not provided
-    if (!raw.overallScore && !s.overallScore && !raw.overall && !s.overall) {
+    if (!raw.overallScore && !(s as any).overallScore && !raw.overall && !(s as any).overall) {
       const vals = [scores.ui, scores.ux, scores.seo, scores.performance, scores.accessibility, scores.mobile, scores.security, scores.aiReadiness, scores.automation, scores.conversion]
       scores.overall = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length)
     }

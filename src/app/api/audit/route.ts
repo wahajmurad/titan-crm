@@ -407,8 +407,8 @@ export async function POST(req: NextRequest) {
       updatedAt: audit.updatedAt,
     }, { status: 201 })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('Audit POST error:', e)
+    return NextResponse.json({ error: 'Internal server error. Please try again.' }, { status: 500 })
   }
 }
 
@@ -530,7 +530,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ audits: result })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('Audit GET error:', e)
+    return NextResponse.json({ error: 'Internal server error. Please try again.' }, { status: 500 })
   }
 }

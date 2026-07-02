@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     if (msg.includes('Unique')) {
       return NextResponse.json({ error: 'Email already exists' }, { status: 400 })
     }
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error. Please try again.' }, { status: 500 })
   }
 }
 

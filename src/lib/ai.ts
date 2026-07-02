@@ -96,8 +96,16 @@ async function aiChatCompletions(messages: { role: string; content: string }[], 
   throw new Error(lastError || 'AI request failed after multiple retries. Please try again later.')
 }
 
-export async function aiChat(messages: { role: string; content: string }[]): Promise<string> {
-  return aiChatCompletions(messages)
+export async function aiChat(messages: { role: string; content: string }[]): Promise<string>
+export async function aiChat(prompt: string, temperature?: number, maxTokens?: number): Promise<string>
+export async function aiChat(promptOrMessages: string | { role: string; content: string }[], temperature?: number, maxTokens?: number): Promise<string> {
+  if (typeof promptOrMessages === 'string') {
+    return aiChatCompletions(
+      [{ role: 'user', content: promptOrMessages }],
+      { temperature: temperature ?? 0.7, maxTokens: maxTokens ?? 4000 }
+    )
+  }
+  return aiChatCompletions(promptOrMessages)
 }
 
 export async function aiAnalyzeWebsite(url: string, prompt: string): Promise<string> {

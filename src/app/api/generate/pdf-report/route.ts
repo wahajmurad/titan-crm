@@ -355,18 +355,18 @@ ${blueprintData ? `
 <div class="grid-3" style="margin-bottom:20px">
   <div class="card" style="border-left:4px solid #2563EB">
     <div class="card-label" style="color:#2563EB">Days 1-30</div>
-    <div style="font-size:13px;font-weight:700;color:#1E293B;margin-bottom:6px">${esc(String(blueprintData.thirtyDayPlan?.focus || 'Foundation'))}</div>
-    <p style="font-size:11px;color:#64748B">${esc(String(blueprintData.thirtyDayPlan?.expectedResults || ''))}</p>
+    <div style="font-size:13px;font-weight:700;color:#1E293B;margin-bottom:6px">${esc(String((blueprintData.thirtyDayPlan as any)?.focus || 'Foundation'))}</div>
+    <p style="font-size:11px;color:#64748B">${esc(String((blueprintData.thirtyDayPlan as any)?.expectedResults || ''))}</p>
   </div>
   <div class="card" style="border-left:4px solid #7C3AED">
     <div class="card-label" style="color:#7C3AED">Days 31-60</div>
-    <div style="font-size:13px;font-weight:700;color:#1E293B;margin-bottom:6px">${esc(String(blueprintData.sixtyDayPlan?.focus || 'Growth'))}</div>
-    <p style="font-size:11px;color:#64748B">${esc(String(blueprintData.sixtyDayPlan?.expectedResults || ''))}</p>
+    <div style="font-size:13px;font-weight:700;color:#1E293B;margin-bottom:6px">${esc(String((blueprintData.sixtyDayPlan as any)?.focus || 'Growth'))}</div>
+    <p style="font-size:11px;color:#64748B">${esc(String((blueprintData.sixtyDayPlan as any)?.expectedResults || ''))}</p>
   </div>
   <div class="card" style="border-left:4px solid #059669">
     <div class="card-label" style="color:#059669">Days 61-90</div>
-    <div style="font-size:13px;font-weight:700;color:#1E293B;margin-bottom:6px">${esc(String(blueprintData.ninetyDayPlan?.focus || 'Scale'))}</div>
-    <p style="font-size:11px;color:#64748B">${esc(String(blueprintData.ninetyDayPlan?.expectedResults || ''))}</p>
+    <div style="font-size:13px;font-weight:700;color:#1E293B;margin-bottom:6px">${esc(String((blueprintData.ninetyDayPlan as any)?.focus || 'Scale'))}</div>
+    <p style="font-size:11px;color:#64748B">${esc(String((blueprintData.ninetyDayPlan as any)?.expectedResults || ''))}</p>
   </div>
 </div>
 ` : '<p>Run the AI Growth Blueprint generator for a detailed 30/60/90 day plan.</p>'}

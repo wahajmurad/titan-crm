@@ -202,7 +202,7 @@ export async function POST(req: NextRequest) {
         effectivenessScore: Number(a.effectivenessScore) || (a.estimatedEffectiveness === 'High' ? 85 : a.estimatedEffectiveness === 'Medium' ? 60 : 35),
       }))
       // Sort by effectiveness score descending
-      context.salesAngles.sort((a: any, b: any) => (b.effectivenessScore || 0) - (a.effectivenessScore || 0))
+      ;(context.salesAngles as any[]).sort((a: any, b: any) => (b.effectivenessScore || 0) - (a.effectivenessScore || 0))
 
       context.assets = {
         email: null,

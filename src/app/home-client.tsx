@@ -205,13 +205,13 @@ export default function HomeClient() {
               <span>K</span>
             </button>
             {/* Search button */}
-            <button className="p-2 rounded-xl hover:bg-gray-100 transition-colors duration-150">
+            <button onClick={() => setCommandOpen(true)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-150">
               <Search className="w-4 h-4 text-[#475569]" />
             </button>
             {/* Theme toggle */}
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-150"
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-150"
             >
               <Sun className="w-4 h-4 text-gray-500 hidden dark:block" />
               <Moon className="w-4 h-4 text-gray-500 block dark:hidden" />

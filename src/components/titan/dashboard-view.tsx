@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 import {
   Users, Globe, Target, Mail, TrendingUp, Sparkles, ArrowRight,
   Plus, BarChart3, Activity, Clock, Zap, Bot, Search, Shield,
-  CheckCircle, PieChart as PieIcon,
+  CheckCircle, PieChart as PieIcon, AlertCircle,
 } from 'lucide-react'
 import { formatDistanceToNow, format } from 'date-fns'
 import {
@@ -91,10 +91,10 @@ const ACTION_CONFIG = [
 ]
 
 const INSIGHTS = [
-  'Lead engagement peaks between 10 AM–12 PM — schedule outreach during this window for 34% higher reply rates.',
-  'Businesses with audit scores below 40 show 3x higher conversion when approached with a personalized report first.',
-  'Your reply rate is trending up. Doubling down on the audit-first outreach strategy is recommended.',
-  'Leads marked HOT have 5x higher meeting-booking probability. Prioritize follow-ups within 24 hours.',
+  'Schedule outreach during business hours (10 AM–12 PM) for the best response rates from decision makers.',
+  'Leads with completed website audits convert at higher rates. Run audits before sending your first email.',
+  'Follow up within 24 hours of a reply to maintain momentum and increase meeting-booking probability.',
+  'Focus on leads marked as HOT — they have the highest likelihood of converting to booked meetings.',
 ]
 
 // ─── Skeletons ─────────────────────────────────────────────────────────────
@@ -142,14 +142,18 @@ export function DashboardView({ userName }: { userName: string }) {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const [error, setError] = useState<string | null>(null)
+
   const fetchDashboard = useCallback(async () => {
     try {
+      setError(null)
       const res = await fetch('/api/dashboard')
-      if (res.ok) {
-        const json = await res.json()
-        setData(json)
-      }
-    } catch { /* silent */ } finally { setLoading(false) }
+      if (!res.ok) throw new Error('Failed to load dashboard')
+      const json = await res.json()
+      setData(json)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load dashboard data')
+    } finally { setLoading(false) }
   }, [])
 
   useEffect(() => { fetchDashboard() }, [fetchDashboard])
@@ -178,11 +182,11 @@ export function DashboardView({ userName }: { userName: string }) {
   }))
 
   const kpis = [
-    { label: 'Total Leads', value: data?.totalLeads ?? '—', icon: Users, color: 'text-blue-600', bg: 'bg-blue-50', trend: data?.totalLeads ? `+${Math.round(data.totalLeads * 0.12)}` : '—' },
-    { label: 'Qualified', value: data?.qualifiedCount ?? '—', icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50', trend: data?.qualifiedCount ? `+${Math.round(data.qualifiedCount * 0.08)}` : '—' },
-    { label: 'Active Campaigns', value: data?.activeCampaigns ?? '—', icon: Target, color: 'text-violet-600', bg: 'bg-violet-50', trend: data?.activeCampaigns ? `+${Math.max(1, Math.round(data.activeCampaigns * 0.3))}` : '—' },
-    { label: 'Emails Sent', value: data?.outreachSent ?? '—', icon: Mail, color: 'text-amber-600', bg: 'bg-amber-50', trend: data?.outreachSent ? `+${Math.round(data.outreachSent * 0.23)}` : '—' },
-    { label: 'Reply Rate', value: data?.replyRate != null ? `${data.replyRate}%` : '—', icon: TrendingUp, color: 'text-rose-600', bg: 'bg-rose-50', trend: data?.replyRate && data.replyRate > 0 ? `+${Math.max(1, Math.round(data.replyRate * 0.15))}%` : '—' },
+    { label: 'Total Leads', value: data?.totalLeads ?? '—', icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Qualified', value: data?.qualifiedCount ?? '—', icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Active Campaigns', value: data?.activeCampaigns ?? '—', icon: Target, color: 'text-violet-600', bg: 'bg-violet-50' },
+    { label: 'Emails Sent', value: data?.outreachSent ?? '—', icon: Mail, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { label: 'Reply Rate', value: data?.replyRate != null ? `${data.replyRate}%` : '—', icon: TrendingUp, color: 'text-rose-600', bg: 'bg-rose-50' },
   ]
 
   const activities = data?.recentActivities || []
@@ -200,11 +204,21 @@ export function DashboardView({ userName }: { userName: string }) {
           <p className="mt-1 text-sm text-gray-500">{today}</p>
         </div>
         <Badge variant="secondary" className="w-fit gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-blue-700 bg-blue-50 border-blue-100">
-          <Activity className="h-3 w-3" /> Live Dashboard
+          <Activity className="h-3 w-3" /> Dashboard
         </Badge>
       </motion.div>
 
       {/* ─── KPI Cards ───────────────────────────────────────────── */}
+      {error && (
+        <div className="rounded-2xl border border-red-100 bg-red-50 p-5 flex items-center gap-3">
+          <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-red-800">{error}</p>
+            <p className="text-xs text-red-600 mt-0.5">Check your connection and try again.</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={fetchDashboard} className="shrink-0">Retry</Button>
+        </div>
+      )}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {loading
           ? Array.from({ length: 5 }).map((_, i) => <KpiSkeleton key={i} />)
@@ -218,9 +232,6 @@ export function DashboardView({ userName }: { userName: string }) {
                     <div className={cn('flex h-9 w-9 items-center justify-center rounded-xl', kpi.bg)}>
                       <kpi.icon className={cn('h-[18px] w-[18px]', kpi.color)} />
                     </div>
-                    <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
-                      <TrendingUp className="h-3 w-3" />{kpi.trend}
-                    </span>
                   </div>
                   <p className="text-2xl font-bold tracking-tight text-gray-900">{kpi.value}</p>
                   <p className="mt-0.5 text-xs text-gray-500">{kpi.label}</p>
