@@ -12,7 +12,7 @@ import { LoginView } from '@/components/titan/login-view'
 import { CommandPalette } from '@/components/titan/command-palette'
 import { NotificationCenter } from '@/components/titan/notification-center'
 import { BugReportButton } from '@/components/titan/bug-report-button'
-import { Toaster } from 'sonner'
+import { Toaster, toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { Search, Sun, Moon, Zap, Menu, Brain, Target, Settings, Plus, Mail } from 'lucide-react'
 import type { PermissionMap } from '@/lib/types'
@@ -376,6 +376,36 @@ export default function HomeClient() {
       <Toaster position="top-right" />
       <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
       {state === 'app' && <BugReportButton />}
+      {state === 'app' && <SilentHealthWatcher />}
     </div>
   )
+}
+
+// ── Silent 5-minute health watcher ──
+function SilentHealthWatcher() {
+  useEffect(() => {
+    let active = true
+    const runCheck = async () => {
+      if (!active) return
+      try {
+        const res = await fetch('/api/health-check')
+        if (!res.ok || !active) return
+        const data = await res.json()
+        if (data.summary && data.summary.fixed > 0) {
+          toast.success(`Auto-Heal: ${data.summary.fixed} issue(s) silently fixed`, {
+            description: 'Vercel pe redeploy ho raha hai...',
+            duration: 8000,
+          })
+        }
+      } catch {
+        // Silently ignore — never disrupt the user
+      }
+    }
+    // Initial check after 30s
+    const initTimer = setTimeout(runCheck, 30_000)
+    // Then every 5 minutes
+    const interval = setInterval(runCheck, 5 * 60 * 1000)
+    return () => { active = false; clearTimeout(initTimer); clearInterval(interval) }
+  }, [])
+  return null
 }

@@ -24,7 +24,7 @@ import {
  DialogHeader,
  DialogTitle,
 } from '@/components/ui/dialog'
-import { Save, CheckCircle, Plus, Trash2, Globe, Key, Settings, Shield, ExternalLink } from 'lucide-react'
+import { Save, CheckCircle, Plus, Trash2, Globe, Key, Settings, Shield, ExternalLink, Zap, Heart, RefreshCw } from 'lucide-react'
 
 // ── Lead Provider Types ──────────────────────────────────────────────
 
@@ -97,6 +97,10 @@ export function SettingsView() {
  const [formHeaders, setFormHeaders] = useState('')
  const [formParams, setFormParams] = useState('')
  const [formActive, setFormActive] = useState(true)
+
+ // ── Auto-Heal state ──
+ const [healStatus, setHealStatus] = useState<'idle' | 'checking' | 'done'>('idle')
+ const [healResult, setHealResult] = useState<{ status: string; summary: Record<string, number> } | null>(null)
 
  // ── Load all settings (existing + providers) ──
  useEffect(() => {
@@ -287,6 +291,110 @@ export function SettingsView() {
     <h1 className="text-xl font-semibold text-gray-900">Settings</h1>
     <p className="text-sm text-gray-400 mt-0.5">Manage your profile and system configuration</p>
    </div>
+
+   {/* ── AI Auto-Heal System ── */}
+   <Card className="border-blue-200/60 shadow-sm rounded-xl overflow-hidden">
+    <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500" />
+    <CardHeader className="pb-3">
+     <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2.5">
+       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-md shadow-blue-500/20">
+        <Heart className="w-4 h-4 text-white" />
+       </div>
+       <div>
+        <CardTitle className="text-sm font-semibold">AI Auto-Heal System</CardTitle>
+        <p className="text-xs text-gray-500">AI khud bugs detect karta hai aur fix bhi kar deta hai</p>
+       </div>
+      </div>
+      <Button
+       size="sm"
+       variant="outline"
+       className="border-blue-200 text-blue-700 hover:bg-blue-50"
+       onClick={async () => {
+        setHealStatus('checking')
+        try {
+         const res = await fetch('/api/bug-report')
+         const data = await res.json()
+         setHealResult({ status: data.status, summary: data.summary })
+         setHealStatus('done')
+        } catch { setHealStatus('idle') }
+       }}
+       disabled={healStatus === 'checking'}
+      >
+       {healStatus === 'checking' ? <><RefreshCw className="w-3.5 h-3.5 mr-1 animate-spin" />Checking...</> : <><Zap className="w-3.5 h-3.5 mr-1" />Run Health Check</>}
+      </Button>
+     </div>
+    </CardHeader>
+    <CardContent className="space-y-4">
+     {/* Status display */}
+     {healResult && (
+      <div className="rounded-lg bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] p-3 space-y-2">
+       <div className="flex items-center gap-2">
+        <span className={`w-2 h-2 rounded-full ${healResult.status === 'all_clear' ? 'bg-emerald-500' : healResult.status === 'auto_fixed' ? 'bg-amber-500' : 'bg-red-500'}`} />
+        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+         {healResult.status === 'all_clear' ? 'All systems healthy' : healResult.status === 'auto_fixed' ? 'Issues were auto-fixed' : 'Issues detected'}
+        </span>
+       </div>
+       <div className="flex gap-4 text-[11px] text-gray-500">
+        {healResult.summary.healthy !== undefined && <span>Healthy: {healResult.summary.healthy}</span>}
+        {healResult.summary.detected !== undefined && <span>Detected: {healResult.summary.detected}</span>}
+        {healResult.summary.fixed !== undefined && <span className="text-emerald-600 font-medium">Fixed: {healResult.summary.fixed}</span>}
+        {healResult.summary.failed !== undefined && <span className="text-red-500">Failed: {healResult.summary.failed}</span>}
+       </div>
+      </div>
+     )}
+
+     {/* Setup guide */}
+     <div className="rounded-lg bg-blue-50/80 dark:bg-blue-500/[0.06] border border-blue-100 dark:border-blue-500/20 p-4 space-y-3">
+      <p className="text-xs font-semibold text-blue-800 dark:text-blue-300 flex items-center gap-1.5">
+       <Shield className="w-3.5 h-3.5" /> Setup Guide — Auto-Fix ke liye yeh 2 cheezein chahiye
+      </p>
+      <div className="space-y-2.5">
+       <div className="flex items-start gap-2.5">
+        <span className="mt-0.5 w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">1</span>
+        <div className="flex-1">
+         <p className="text-xs font-medium text-gray-800 dark:text-gray-200">GitHub Token banao</p>
+         <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">
+          GitHub → Settings → Developer settings → Personal access tokens → Generate new token → <code className="bg-blue-100 dark:bg-blue-500/20 px-1 rounded text-[10px]">repo</code> scope tick karo → Copy token
+         </p>
+         <a href="https://github.com/settings/tokens/new" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-700 font-medium mt-1">
+          <ExternalLink className="w-3 h-3" /> github.com/settings/tokens/new
+         </a>
+        </div>
+       </div>
+       <div className="flex items-start gap-2.5">
+        <span className="mt-0.5 w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">2</span>
+        <div className="flex-1">
+         <p className="text-xs font-medium text-gray-800 dark:text-gray-200">Vercel me Environment Variables add karo</p>
+         <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">
+          Vercel Dashboard → Project → Settings → Environment Variables → Add:
+         </p>
+         <div className="mt-1.5 space-y-1">
+          <div className="flex items-center gap-2 bg-white dark:bg-white/[0.04] rounded-md border border-gray-200 dark:border-white/[0.08] px-2.5 py-1.5">
+           <Key className="w-3 h-3 text-gray-400" />
+           <code className="text-[10px] font-mono text-gray-700 dark:text-gray-300">GITHUB_TOKEN</code>
+           <span className="text-[10px] text-gray-400">=</span>
+           <span className="text-[10px] text-gray-500 font-mono">ghp_xxxx...</span>
+          </div>
+          <div className="flex items-center gap-2 bg-white dark:bg-white/[0.04] rounded-md border border-gray-200 dark:border-white/[0.08] px-2.5 py-1.5">
+           <Key className="w-3 h-3 text-gray-400" />
+           <code className="text-[10px] font-mono text-gray-700 dark:text-gray-300">GITHUB_REPO</code>
+           <span className="text-[10px] text-gray-400">=</span>
+           <span className="text-[10px] text-gray-500 font-mono">owner/repo-name</span>
+          </div>
+         </div>
+        </div>
+       </div>
+      </div>
+      <div className="flex items-center gap-1.5 pt-1">
+       <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+       <p className="text-[11px] text-gray-500 dark:text-gray-400">
+        Har 5 minute mein silent health check chalti hai. Token set hone pe AI khud code fix karke push kar dega.
+       </p>
+      </div>
+     </div>
+    </CardContent>
+   </Card>
 
    {/* ── Lead Providers ── */}
    <Card className="border-gray-200/60 shadow-sm rounded-xl">
