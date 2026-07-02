@@ -10,6 +10,7 @@ import {
   AlertCircle, Loader2, Send
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 
 interface AgentCard {
   id: string
@@ -27,17 +28,17 @@ interface AgentCard {
 }
 
 const AGENTS: AgentCard[] = [
-  { id: 'lead_discovery', name: 'Lead Discovery', description: 'Finds and generates qualified business leads based on industry, location, and size criteria', icon: Search, color: 'text-emerald-600', bgColor: 'bg-emerald-50', borderColor: 'border-emerald-200', status: 'ready', runCount: 24, avgDuration: '3.2s', capabilities: ['Industry Filters', 'Location Targeting', 'Size Matching'] },
-  { id: 'research', name: 'AI Research Agent', description: 'Deep company research — the brain. Collects business overview, services, pain points, opportunities, and personalization data', icon: Globe, color: 'text-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', status: 'ready', runCount: 18, avgDuration: '4.1s', capabilities: ['Company Research', 'Pain Points', 'Opportunities'] },
-  { id: 'website_intel', name: 'Website Intelligence', description: 'Analyzes websites like a UX Consultant. 10-category scoring: UI, UX, SEO, Performance, Accessibility, Mobile, Security, AI, Automation, Conversion', icon: Bot, color: 'text-violet-600', bgColor: 'bg-violet-50', borderColor: 'border-violet-200', status: 'ready', runCount: 42, avgDuration: '5.8s', capabilities: ['UI/UX Scoring', 'SEO Analysis', 'Performance Audit'] },
-  { id: 'business_intel', name: 'Business Intelligence', description: 'Analyzes business model, revenue potential, decision maker profiles, competitive landscape, and deal readiness', icon: Brain, color: 'text-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', status: 'ready', runCount: 15, avgDuration: '3.5s', capabilities: ['Revenue Analysis', 'Decision Makers', 'Competitive Intel'] },
-  { id: 'industry_expert', name: 'Industry Expert', description: 'Deep industry knowledge — trends, problems, AI opportunities, outreach strategies, objections, and closing tactics', icon: Lightbulb, color: 'text-amber-600', bgColor: 'bg-amber-50', borderColor: 'border-amber-200', status: 'ready', runCount: 8, avgDuration: '6.2s', capabilities: ['Trend Analysis', 'Objection Handling', 'Closing Tactics'] },
-  { id: 'solution_architect', name: 'Solution Architect', description: 'Converts business problems into specific AI solutions with implementation plans, ROI estimates, and priority levels', icon: Wrench, color: 'text-cyan-600', bgColor: 'bg-cyan-50', borderColor: 'border-cyan-200', status: 'ready', runCount: 12, avgDuration: '3.8s', capabilities: ['Solution Design', 'ROI Estimates', 'Implementation Plans'] },
-  { id: 'offer_generator', name: 'Offer Generator', description: 'Creates irresistible outcome-based offers. Sells transformations, not technology. Primary, secondary, and upsell offers', icon: Gift, color: 'text-rose-600', bgColor: 'bg-rose-50', borderColor: 'border-rose-200', status: 'ready', runCount: 10, avgDuration: '4.0s', capabilities: ['Offer Design', 'Value Anchoring', 'Package Tiers'] },
-  { id: 'personalization', name: 'Hyper-Personalization', description: 'HIGHEST PRIORITY. Makes every outreach feel handcrafted. 90% quality threshold — regenerates if below. Never uses templates.', icon: PenTool, color: 'text-pink-600', bgColor: 'bg-pink-50', borderColor: 'border-pink-200', status: 'ready', runCount: 35, avgDuration: '2.9s', capabilities: ['Email Personalization', 'Quality Threshold', 'No Templates'] },
-  { id: 'campaign_strategy', name: 'Campaign Strategy', description: 'Automatically builds data-driven multi-step campaigns with AI decision nodes, follow-up strategy, and success metrics', icon: Target, color: 'text-orange-600', bgColor: 'bg-orange-50', borderColor: 'border-orange-200', status: 'ready', runCount: 6, avgDuration: '5.1s', capabilities: ['Multi-Step Design', 'AI Decision Nodes', 'Success Metrics'] },
-  { id: 'outreach', name: 'Outreach Agent', description: 'Executes personalized outreach across email, LinkedIn, and phone. Finalizes content, validates quality, prepares for sending.', icon: Send, color: 'text-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', status: 'ready', runCount: 42, avgDuration: '1.5s', capabilities: ['Email Sending', 'LinkedIn Outreach', 'Quality Validation'] },
-  { id: 'learning', name: 'Continuous Learning', description: 'Self-learning from every interaction — tracks best emails, open rates, conversions, and auto-optimizes future campaigns', icon: GraduationCap, color: 'text-teal-600', bgColor: 'bg-teal-50', borderColor: 'border-teal-200', status: 'ready', runCount: 3, avgDuration: '4.5s', capabilities: ['Auto-Optimization', 'Pattern Recognition', 'Performance Tracking'] },
+  { id: 'lead_discovery', name: 'Lead Discovery', description: 'Finds and generates qualified business leads based on industry, location, and size criteria', icon: Search, color: 'text-emerald-600', bgColor: 'bg-emerald-50', borderColor: 'border-emerald-200', status: 'ready', capabilities: ['Industry Filters', 'Location Targeting', 'Size Matching'] },
+  { id: 'research', name: 'AI Research Agent', description: 'Deep company research — the brain. Collects business overview, services, pain points, opportunities, and personalization data', icon: Globe, color: 'text-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', status: 'ready', capabilities: ['Company Research', 'Pain Points', 'Opportunities'] },
+  { id: 'website_intel', name: 'Website Intelligence', description: 'Analyzes websites like a UX Consultant. 10-category scoring: UI, UX, SEO, Performance, Accessibility, Mobile, Security, AI, Automation, Conversion', icon: Bot, color: 'text-violet-600', bgColor: 'bg-violet-50', borderColor: 'border-violet-200', status: 'ready', capabilities: ['UI/UX Scoring', 'SEO Analysis', 'Performance Audit'] },
+  { id: 'business_intel', name: 'Business Intelligence', description: 'Analyzes business model, revenue potential, decision maker profiles, competitive landscape, and deal readiness', icon: Brain, color: 'text-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', status: 'ready', capabilities: ['Revenue Analysis', 'Decision Makers', 'Competitive Intel'] },
+  { id: 'industry_expert', name: 'Industry Expert', description: 'Deep industry knowledge — trends, problems, AI opportunities, outreach strategies, objections, and closing tactics', icon: Lightbulb, color: 'text-amber-600', bgColor: 'bg-amber-50', borderColor: 'border-amber-200', status: 'ready', capabilities: ['Trend Analysis', 'Objection Handling', 'Closing Tactics'] },
+  { id: 'solution_architect', name: 'Solution Architect', description: 'Converts business problems into specific AI solutions with implementation plans, ROI estimates, and priority levels', icon: Wrench, color: 'text-cyan-600', bgColor: 'bg-cyan-50', borderColor: 'border-cyan-200', status: 'ready', capabilities: ['Solution Design', 'ROI Estimates', 'Implementation Plans'] },
+  { id: 'offer_generator', name: 'Offer Generator', description: 'Creates irresistible outcome-based offers. Sells transformations, not technology. Primary, secondary, and upsell offers', icon: Gift, color: 'text-rose-600', bgColor: 'bg-rose-50', borderColor: 'border-rose-200', status: 'ready', capabilities: ['Offer Design', 'Value Anchoring', 'Package Tiers'] },
+  { id: 'personalization', name: 'Hyper-Personalization', description: 'HIGHEST PRIORITY. Makes every outreach feel handcrafted. 90% quality threshold — regenerates if below. Never uses templates.', icon: PenTool, color: 'text-pink-600', bgColor: 'bg-pink-50', borderColor: 'border-pink-200', status: 'ready', capabilities: ['Email Personalization', 'Quality Threshold', 'No Templates'] },
+  { id: 'campaign_strategy', name: 'Campaign Strategy', description: 'Automatically builds data-driven multi-step campaigns with AI decision nodes, follow-up strategy, and success metrics', icon: Target, color: 'text-orange-600', bgColor: 'bg-orange-50', borderColor: 'border-orange-200', status: 'ready', capabilities: ['Multi-Step Design', 'AI Decision Nodes', 'Success Metrics'] },
+  { id: 'outreach', name: 'Outreach Agent', description: 'Executes personalized outreach across email, LinkedIn, and phone. Finalizes content, validates quality, prepares for sending.', icon: Send, color: 'text-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200', status: 'ready', capabilities: ['Email Sending', 'LinkedIn Outreach', 'Quality Validation'] },
+  { id: 'learning', name: 'Continuous Learning', description: 'Self-learning from every interaction — tracks best emails, open rates, conversions, and auto-optimizes future campaigns', icon: GraduationCap, color: 'text-teal-600', bgColor: 'bg-teal-50', borderColor: 'border-teal-200', status: 'ready', capabilities: ['Auto-Optimization', 'Pattern Recognition', 'Performance Tracking'] },
 ]
 
 const container = {
@@ -57,19 +58,31 @@ export function AIAgentsView() {
     setRunningAgent(agentId)
     setAgents(prev => prev.map(a => a.id === agentId ? { ...a, status: 'running' as const } : a))
 
-    // Simulate agent execution
-    await new Promise(r => setTimeout(r, 2000 + Math.random() * 3000))
+    try {
+      const res = await fetch('/api/ai/agent/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agentId }),
+      })
+      const data = await res.json()
 
-    setAgents(prev => prev.map(a => {
-      if (a.id !== agentId) return a
-      const success = Math.random() > 0.15
-      return {
-        ...a,
-        status: success ? 'completed' as const : 'error' as const,
-        runCount: (a.runCount || 0) + 1,
-      }
-    }))
-    setRunningAgent(null)
+      setAgents(prev => prev.map(a => {
+        if (a.id !== agentId) return a
+        return {
+          ...a,
+          status: data.success ? 'completed' as const : 'error' as const,
+          runCount: (a.runCount || 0) + 1,
+          lastRun: new Date().toLocaleTimeString(),
+        }
+      }))
+    } catch {
+      setAgents(prev => prev.map(a =>
+        a.id === agentId ? { ...a, status: 'error' as const } : a
+      ))
+      toast.error('Agent execution failed')
+    } finally {
+      setRunningAgent(null)
+    }
 
     // Reset status after a moment
     setTimeout(() => {

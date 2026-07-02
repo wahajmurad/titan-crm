@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { toast } from 'sonner'
 import {
  Target, ArrowLeft, Copy, Check, Building2, Users, Globe,
  Lightbulb, TrendingUp, Shield, ListChecks, MessageSquare,
@@ -56,11 +57,7 @@ const INDUSTRIES = [
  'Other',
 ]
 
-const RECENT_LEADS = [
- { company: 'Acme Corp', contact: 'John Smith', industry: 'Technology' },
- { company: 'TechStart Inc', contact: 'Sarah Johnson', industry: 'SaaS' },
- { company: 'Nexus Digital', contact: 'Mike Chen', industry: 'Marketing' },
-]
+
 
 /* ════════════════════════════════════════════════════════════════
   Animation Variants
@@ -179,7 +176,23 @@ function InputForm({
  onSubmit: () => void
  isLoading: boolean
 }) {
- const handleQuickFill = (lead: (typeof RECENT_LEADS)[number]) => {
+ const [recentLeads, setRecentLeads] = useState<{company: string; contact: string; industry: string}[]>([])
+
+ useEffect(() => {
+  fetch('/api/leads?limit=5')
+    .then(res => res.json())
+    .then(data => {
+      if (data.success && Array.isArray(data.leads)) {
+        setRecentLeads(data.leads.map((l: any) => ({
+          company: l.business?.name || l.company || 'Unknown',
+          contact: l.contactName || l.name || 'Unknown',
+          industry: l.business?.industry || l.industry || 'General',
+        })))
+      }
+    })
+    .catch(() => {})
+ }, [])
+ const handleQuickFill = (lead: { company: string; contact: string; industry: string }) => {
   setFormData({
    company: lead.company,
    contactName: lead.contact,
@@ -276,7 +289,7 @@ function InputForm({
       ── Or use recent leads ──
      </p>
      <div className="flex flex-wrap gap-2 justify-center">
-      {RECENT_LEADS.map((lead) => (
+      {recentLeads.map((lead) => (
        <button
         key={lead.company}
         onClick={() => handleQuickFill(lead)}
@@ -599,21 +612,10 @@ export function MeetingPrepView() {
     talkingPoints: data.talkingPoints || 'Talking points will appear here.',
     closingStrategy: data.closingStrategy || 'Closing strategy will appear here.',
    })
-  } catch (err) {
-   console.error('Meeting prep error:', err)
-   // Show a fallback mock brief for demo purposes
-   setBrief({
-    companyOverview: `${formData.company} is a company operating in the ${formData.industry} sector. Founded with a mission to deliver innovative solutions, they have established themselves as a notable player in their market segment. Their primary focus revolves around delivering value to their customers through modern approaches and technology adoption.`,
-    decisionMakers: `Primary Contact: ${formData.contactName}\n\nBased on company size and industry, key stakeholders likely include:\n• C-Suite executives (CEO, CTO, COO)\n• VP of Operations / VP of Sales\n• IT Director or Digital Transformation Lead\n• Marketing Director\n\nRecommendation: Focus initial conversation on ${formData.contactName}'s specific pain points and decision-making authority within the organization.`,
-    websiteAudit: `Key Findings for ${formData.company}:\n\n• Website speed: Moderate — opportunities for optimization\n• Mobile responsiveness: Partial — some pages need attention\n• CTA clarity: Could be improved for better conversion\n• Content quality: Good foundation, could benefit from case studies\n• Lead capture: Limited — significant opportunity for improvement\n\nOverall Score: 6.5/10 — There is clear room for digital optimization that our services can address.`,
-    businessProblems: `Based on industry analysis (${formData.industry}):\n\n1. Lead Generation — Difficulty maintaining a consistent pipeline of qualified leads\n2. Follow-up Automation — Manual processes causing delayed responses and lost opportunities\n3. Data Organization — Customer data scattered across multiple tools and spreadsheets\n4. Scalability — Current processes cannot support growth without proportional headcount increase\n5. Conversion Rate — Website traffic not converting at optimal rates`,
-    recommendedSolutions: `Tailored Solutions for ${formData.company}:\n\n1. AI-Powered Lead Qualification — Automate initial screening and scoring to focus your team on high-value prospects\n2. Automated Follow-up Sequences — Multi-channel nurture campaigns that respond within minutes, not days\n3. Unified CRM Integration — Centralize all customer interactions, notes, and history in one intelligent platform\n4. Workflow Automation — Eliminate repetitive tasks and free up 15+ hours per week per team member\n5. Conversion Rate Optimization — Data-driven improvements to website and sales funnel performance`,
-    estimatedROI: `Projected ROI for ${formData.company}:\n\nTime Savings: 120+ hours/month across sales team\nLead Response Time: From 4+ hours to under 5 minutes\nPipeline Growth: 35-50% increase in qualified leads within 90 days\nClose Rate Improvement: 15-25% increase through better preparation and follow-up\nRevenue Impact: Estimated 2-3x return on investment within 12 months\n\nBreak-even Point: Approximately 3-4 months after full implementation`,
-    potentialObjections: `1. "We already have a CRM" → "That's great — our solution integrates with existing CRMs to add AI capabilities your current system lacks. We enhance rather than replace."\n\n2. "Budget is tight right now" → "I understand. Many of our clients started with a pilot program. The typical client sees ROI within 3-4 months, making it cash-flow positive quickly."\n\n3. "We need to think about it" → "Absolutely. Would it help if I sent over a customized ROI projection based on your specific numbers? That way you have concrete data for your decision."\n\n4. "We tried automation before and it didn't work" → "That's a common concern. The key difference with our approach is AI-powered personalization — not generic automation. Every interaction feels human and relevant."\n\n5. "Our team is resistant to new tools" → "We include comprehensive onboarding and training. Our adoption rate is 94% within the first 30 days because the tool saves time rather than adding complexity.`,
-    suggestedAgenda: `Suggested 30-Minute Meeting Agenda:\n\n1. Opening & Rapport Building (2 min)\n  — Acknowledge their industry expertise\n  — Reference a recent company milestone or news\n\n2. Discovery Questions (8 min)\n  — Current lead generation process\n  — Biggest sales challenges right now\n  — Tools currently in use\n  — What success looks like in 6 months\n\n3. Solution Overview (10 min)\n  — Tailored demo based on discovery\n  — Relevant case studies from ${formData.industry}\n  — Live demonstration of key features\n\n4. ROI Discussion (5 min)\n  — Custom ROI projection\n  — Implementation timeline\n  — Quick wins they can expect\n\n5. Next Steps & Close (5 min)\n  — Address remaining questions\n  — Propose concrete next action\n  — Schedule follow-up if needed`,
-    talkingPoints: `Key Talking Points for ${formData.company}:\n\n• "Companies in ${formData.industry} are seeing 40% faster response times with AI-assisted workflows"\n• "Your current team could handle 3x more leads without hiring — using the same hours more effectively"\n• "The average ${formData.industry} company loses 23% of leads due to slow follow-up — we eliminate that gap"\n• "Our clients typically see a full return on investment within the first quarter"\n• "We work with your existing tech stack — no disruptive migration required"\n• "Imagine every lead getting a personalized, timely response within 5 minutes, 24/7"`,
-    closingStrategy: `Closing Strategy for ${formData.contactName}:\n\nPrimary Close: "Based on what you've shared, I'd recommend we start with a focused pilot targeting your biggest pain point — [specific problem]. Would next Tuesday work for a 15-minute technical walkthrough?"\n\nSecondary Close: "Would it be helpful if I prepared a customized proposal with specific numbers for your team to review? I can have it ready by [specific date]."\n\nUrgency Driver: "We're currently onboarding ${formData.industry} companies and have limited capacity this quarter. I'd hate for you to miss the window."\n\nFollow-up: If no close today — send a personalized recap within 2 hours with relevant case study attached. Schedule a touchpoint for 3 business days later.\n\nObjection Recovery: If concerns arise, pivot to: "Let me address that specifically — can I show you how [similar client] handled the same concern?"`,
-   })
+  } catch {
+   toast.error('Failed to generate meeting brief. Please try again.')
+   setIsLoading(false)
+   return
   } finally {
    setIsLoading(false)
   }

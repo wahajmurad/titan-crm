@@ -45,6 +45,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useAppStore } from '@/lib/store'
+import { toast } from 'sonner'
 
 // ─── Custom Node Components ──────────────────────────────────
 
@@ -272,10 +273,29 @@ export function WorkflowBuilderView() {
   }, [nodeCount, setNodes])
 
   const handleSave = async () => {
+    if (!workflowName.trim()) {
+      toast.error('Please enter a workflow name')
+      return
+    }
     setIsSaving(true)
     try {
-      await new Promise(r => setTimeout(r, 1000)) // Simulate save
-      // In production: await fetch('/api/workflows', { method: 'POST', body: JSON.stringify({ name: workflowName, nodes, edges }) })
+      const res = await fetch('/api/workflows', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: workflowName,
+          nodes: nodes.map(n => ({ id: n.id, type: n.type, position: n.position, data: n.data })),
+          edges: edges.map(e => ({ id: e.id, source: e.source, target: e.target })),
+          status: 'draft',
+        }),
+      })
+      if (res.ok) {
+        toast.success('Workflow saved successfully')
+      } else {
+        toast.error('Failed to save workflow')
+      }
+    } catch {
+      toast.error('Failed to save workflow')
     } finally {
       setIsSaving(false)
     }

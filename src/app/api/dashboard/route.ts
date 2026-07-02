@@ -89,7 +89,7 @@ export async function GET() {
       name: c.name,
       status: c.status,
       sent: c.sentCount,
-      opened: Math.round(c.sentCount * 0.65), // derived from sent (open tracking not stored separately)
+      opened: 0,
       replied: c.replyCount,
       meetings: c.meetingCount,
     }))

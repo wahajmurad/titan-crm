@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Sparkles, ArrowLeft, Copy, Download, Check, FileText } from 'lucide-react'
+import { toast } from 'sonner'
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -153,77 +154,8 @@ export function AIProposalsView() {
    setProposal(data.proposal)
    setPhase('result')
   } catch {
-   // Fallback mock proposal if API fails
-   await new Promise((resolve) => setTimeout(resolve, 1500))
-
-   const now = new Date()
-   const monthYear = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-   const challengesList = formData.challenges
-    .split('\n')
-    .filter((c) => c.trim())
-   const servicesList = formData.services
-    .split(',')
-    .map((s) => s.trim())
-    .filter((s) => s)
-
-   const mockProposal: Proposal = {
-    title: 'AI GROWTH STRATEGY',
-    companyName: formData.companyName,
-    industry: formData.industry || 'General Business',
-    date: monthYear,
-    sections: [
-     {
-      title: 'Executive Summary',
-      content: `**${formData.companyName}** is a **${formData.industry || 'forward-thinking'}** company poised for significant growth in today's competitive landscape. This proposal outlines a comprehensive strategy to address current business challenges and unlock new revenue streams through AI-powered solutions.\n\nOur analysis indicates that with the right combination of ${servicesList.length > 0 ? servicesList.join(', ').toLowerCase() : 'strategic services'} and targeted execution, **${formData.companyName}** can expect to see measurable improvements in lead generation, client engagement, and overall revenue within the first 90 days.`,
-     },
-     {
-      title: 'Business Challenges',
-      content:
-       challengesList.length > 0
-        ? challengesList
-          .map(
-           (c, i) =>
-            `${i + 1}. **${c.trim()}** — Our preliminary assessment indicates this challenge is impacting your growth potential and market positioning. Addressing this will be a key focus of our engagement.`,
-          )
-          .join('\n\n')
-        : `Based on industry analysis of the **${formData.industry || 'General'}** sector, we've identified several common challenges that **${formData.companyName}** is likely facing:\n\n1. **Lead Generation** — Difficulty maintaining a consistent pipeline of qualified leads\n2. **Competitive Positioning** — Standing out in an increasingly crowded market\n3. **Conversion Optimization** — Converting prospects into paying clients efficiently`,
-     },
-     {
-      title: 'Proposed Solution',
-      content: `We recommend a multi-faceted approach combining ${servicesList.length > 0 ? `**${servicesList.join('**, **')}**` : '**AI-driven marketing and sales optimization**'} tailored specifically to the **${formData.industry || 'General'}** industry.\n\nOur methodology is built on three core pillars:\n\n**Discovery & Analysis** — Deep-dive into your current operations, market position, and competitive landscape to identify the highest-impact opportunities.\n\n**Strategic Implementation** — Deploy targeted solutions with measurable KPIs, ensuring every action drives toward your business objectives.\n\n**Optimization & Scale** — Continuous refinement based on real-time data, scaling what works and pivoting what doesn't.`,
-     },
-     {
-      title: 'Service Breakdown',
-      content:
-       servicesList.length > 0
-        ? servicesList
-          .map(
-           (service) =>
-            `**${service}**\nOur team will deliver a comprehensive ${service.toLowerCase()} package designed for maximum ROI. This includes strategy development, implementation, ongoing optimization, and detailed reporting.`,
-          )
-          .join('\n\n')
-        : `**AI Lead Generation** — Automated prospecting and qualification using advanced AI models\n**Website Audit & Optimization** — Full technical and conversion analysis with actionable recommendations\n**Email Outreach Campaigns** — Personalized, AI-crafted email sequences for your target market\n**CRM Integration** — Seamless connection to your existing sales infrastructure`,
-     },
-     {
-      title: 'Expected Outcomes',
-      content: `Based on our experience with similar **${formData.industry || ''}** companies, we project the following outcomes:\n\n• **3-5x increase** in qualified lead volume within 60 days\n• **40-60% improvement** in email response rates\n• **25-35% reduction** in customer acquisition cost\n• **2-3x faster** sales cycle through AI-powered qualification\n• **Measurable ROI** within the first quarter of engagement\n\nThese projections are based on ${formData.budget !== 'Not specified' ? `a **${formData.budget}** budget framework` : 'standard engagement parameters'} and may be adjusted based on scope.`,
-     },
-     {
-      title: 'Implementation Timeline',
-      content: `**Week 1-2: Discovery & Planning**\nComprehensive audit, stakeholder interviews, and strategy development.\n\n**Week 3-4: Foundation Setup**\nInfrastructure deployment, tool configuration, and team onboarding.\n\n**Week 5-8: Active Execution**\nCampaign launch, lead generation activation, and initial optimization cycles.\n\n**Week 9-12: Scale & Optimize**\nPerformance analysis, strategy refinement, and scaling successful initiatives.\n\n**Ongoing: Monthly Review & Iteration**\nRegular reporting, strategy sessions, and continuous improvement.`,
-     },
-     {
-      title: 'Investment Summary',
-      content:
-       formData.budget !== 'Not specified'
-        ? `Based on your indicated budget of **${formData.budget}**, we have structured a phased engagement that maximizes value at each stage.\n\n**Total Estimated Investment: ${formData.budget}**\n\nThis includes all services, tools, dedicated account management, and weekly reporting. Additional scope can be discussed as results demonstrate clear ROI.\n\n**Payment Terms:** 50% upon project kickoff, 50% upon 30-day milestone completion.`
-        : `Investment is structured based on the selected services and scope of engagement. We offer flexible pricing models:\n\n• **Project-Based** — Fixed scope with clear deliverables and timeline\n• **Monthly Retainer** — Ongoing support with adjustable scope\n• **Performance-Based** — Tied to measurable KPIs and outcomes\n\nWe will provide a detailed quote after our discovery phase, typically within 3-5 business days of engagement.`,
-     },
-    ],
-   }
-
-   setProposal(mockProposal)
-   setPhase('result')
+   toast.error('Failed to generate proposal. Please try again.')
+   setPhase('form')
   } finally {
    setGenerating(false)
   }

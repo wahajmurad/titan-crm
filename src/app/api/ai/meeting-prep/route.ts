@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
-
-function generateId(): string {
-  return crypto.randomUUID()
-}
+import { db } from '@/lib/db'
+import { aiChat } from '@/lib/ai'
 
 // POST /api/ai/meeting-prep — generate an AI meeting brief
 export async function POST(req: NextRequest) {
@@ -13,27 +11,116 @@ export async function POST(req: NextRequest) {
 
     const { company, contactName, industry } = await req.json()
 
-    const mockBrief = {
-      id: generateId(),
-      company: company || 'Prospect Company',
-      contactName: contactName || 'Contact Name',
-      industry: industry || 'Technology',
-      createdAt: new Date().toISOString(),
-      sections: {
-        companyOverview: `${company || 'This company'} operates in the ${industry || 'technology'} sector. Our AI analysis indicates they have significant growth potential and are actively seeking solutions to improve their operational efficiency and market reach.`,
-        keyDecisionMakers: `• **${contactName || 'Primary Contact'}** — Likely decision maker based on role and engagement pattern\n• Additional stakeholders may include CTO/CMO for technical decisions`,
-        websiteAuditSummary: `• Website speed: Moderate (opportunity for improvement)\n• Mobile experience: Needs optimization\n• Lead capture: Basic form, no AI chatbot detected\n• Content quality: Good foundation, needs AI enhancement\n• Trust signals: Could be strengthened with testimonials and case studies`,
-        businessProblems: `1. Inefficient lead generation processes\n2. Limited AI adoption in sales/marketing\n3. Manual follow-up workflows\n4. Underperforming website conversion rates\n5. No data-driven decision making`,
-        recommendedSolutions: `1. AI-powered lead discovery targeting their ideal customer profile\n2. Automated personalized outreach campaigns\n3. Intelligent website chatbot for 24/7 lead capture\n4. Real-time analytics and performance dashboard\n5. Smart follow-up sequences based on prospect behavior`,
-        estimatedROI: `Based on similar companies in the ${industry || 'technology'} sector:\n• Expected lead increase: 300-500%\n• Revenue impact: +$50K-200K annually\n• Time saved: 20+ hours/week on manual tasks\n• Payback period: 30-60 days`,
-        potentialObjections: `1. "We already have a CRM" → Emphasize AI automation layer, not replacement\n2. "Budget concerns" → ROI-focused conversation, flexible pricing\n3. "We need to think about it" → Offer a 14-day pilot program\n4. "We tried AI before" → Show specific TITAN differentiators and case studies`,
-        suggestedAgenda: `1. **Opening** (2 min) — Rapport building, confirm objectives\n2. **Discovery** (8 min) — Understand current challenges and goals\n3. **Demo** (15 min) — Show TITAN AI capabilities relevant to their needs\n4. **ROI Discussion** (5 min) — Present expected outcomes and timeline\n5. **Next Steps** (5 min) — Agree on pilot program or proposal`,
-        talkingPoints: `• "Our AI has already analyzed your website and identified 3 key growth opportunities"\n• "Companies in your industry see 15-25% reply rates with our approach"\n• "You could start seeing results within the first 30 days"\n• "We offer a risk-free pilot — no long-term commitment required"`,
-        closingStrategy: `Offer a **14-day pilot program** at reduced investment. This removes risk and lets them experience the value firsthand. If they see results (which they will), the decision to continue becomes obvious. Always end with a clear next step and specific date/time.`,
-      },
+    const companyName = company || 'Prospect Company'
+    const contact = contactName || 'Contact Name'
+    const industryName = industry || 'Technology'
+
+    // 1. Gather real data about the company from the DB
+    let dbContext = ''
+
+    const [businesses, companyIntels] = await Promise.all([
+      db.business.findMany({
+        where: { name: { contains: companyName, mode: 'insensitive' } },
+        include: {
+          lead: true,
+          audit: true,
+        },
+        take: 3,
+      }),
+      db.companyIntel.findMany({
+        where: { business: { name: { contains: companyName, mode: 'insensitive' } } },
+        include: { business: true },
+        take: 3,
+      }),
+    ])
+
+    if (businesses.length > 0) {
+      const biz = businesses[0]
+      dbContext += `## Known Business Data\n`
+      dbContext += `- Name: ${biz.name}\n`
+      if (biz.website) dbContext += `- Website: ${biz.website}\n`
+      if (biz.industry) dbContext += `- Industry: ${biz.industry}\n`
+      if (biz.city || biz.country) dbContext += `- Location: ${[biz.city, biz.country].filter(Boolean).join(', ')}\n`
+      if (biz.companySize) dbContext += `- Size: ${biz.companySize}\n`
+
+      const lead = biz.lead
+      if (lead) {
+        if (lead.decisionMaker) dbContext += `- Decision Maker: ${lead.decisionMaker} (${lead.decisionMakerRole || 'Unknown role'})\n`
+        if (lead.temperature) dbContext += `- Lead Temperature: ${lead.temperature}\n`
+        if (lead.score) dbContext += `- Lead Score: ${lead.score}/100\n`
+        if (lead.problems) dbContext += `- Known Problems: ${lead.problems}\n`
+        if (lead.recommendedSolution) dbContext += `- Recommended Solution: ${lead.recommendedSolution}\n`
+        if (lead.aiAnalysis) dbContext += `- AI Analysis: ${lead.aiAnalysis}\n`
+      }
+
+      const audit = biz.audit
+      if (audit) {
+        dbContext += `\n## Website Audit (Score: ${audit.overallScore}/100)\n`
+        if (audit.executiveSummary) dbContext += `- Summary: ${audit.executiveSummary}\n`
+        if (audit.problemsFound) dbContext += `- Problems Found: ${audit.problemsFound}\n`
+        if (audit.opportunities) dbContext += `- Opportunities: ${audit.opportunities}\n`
+        if (audit.recommendations) dbContext += `- Recommendations: ${audit.recommendations}\n`
+        if (audit.talkingPoints) dbContext += `- Talking Points: ${audit.talkingPoints}\n`
+      }
     }
 
-    return NextResponse.json({ success: true, brief: mockBrief })
+    if (companyIntels.length > 0) {
+      const intel = companyIntels[0]
+      dbContext += `\n## Company Intelligence\n`
+      if (intel.businessOverview) dbContext += `- Overview: ${intel.businessOverview}\n`
+      if (intel.coreServices) dbContext += `- Core Services: ${intel.coreServices}\n`
+      if (intel.painPoints) dbContext += `- Pain Points: ${intel.painPoints}\n`
+      if (intel.growthOpportunities) dbContext += `- Growth Opportunities: ${intel.growthOpportunities}\n`
+      if (intel.strengths) dbContext += `- Strengths: ${intel.strengths}\n`
+      if (intel.weaknesses) dbContext += `- Weaknesses: ${intel.weaknesses}\n`
+      if (intel.estimatedRevenue) dbContext += `- Estimated Revenue: ${intel.estimatedRevenue}\n`
+    }
+
+    // 2. Build the prompt
+    const systemPrompt = `You are an expert sales meeting preparation assistant for TITAN CRM, a B2B AI-powered client acquisition platform. You prepare detailed, actionable meeting briefs that help sales representatives close deals. Always be specific, data-driven, and provide real value. Format responses in valid JSON. Return JSON with exactly these keys: {"companyOverview": "...", "keyDecisionMakers": "...", "websiteAuditSummary": "...", "businessProblems": "...", "recommendedSolutions": "...", "estimatedROI": "...", "potentialObjections": "...", "suggestedAgenda": "...", "talkingPoints": "...", "closingStrategy": "..."}. Each value should be a detailed string with line breaks. Use markdown formatting for emphasis. Return ONLY valid JSON, no markdown code blocks.`
+
+    const userPrompt = `Prepare a meeting brief for the following:\n\nCompany: ${companyName}\nContact: ${contact}\nIndustry: ${industryName}\n${dbContext ? `\nHere is what we already know about this company from our database:\n${dbContext}` : '\nNo existing data found in our database. Use general industry knowledge.'}\n\nGenerate a comprehensive, specific meeting brief that the sales rep can use immediately.`
+
+    const aiResponse = await aiChat([
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ])
+
+    // 3. Parse the AI response into sections
+    let sections: Record<string, string>
+    try {
+      // Strip markdown code block wrappers if present
+      let cleaned = aiResponse.trim()
+      if (cleaned.startsWith('```')) {
+        cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '')
+      }
+      sections = JSON.parse(cleaned)
+    } catch {
+      // If parsing fails, put the entire response in companyOverview
+      sections = {
+        companyOverview: aiResponse,
+        keyDecisionMakers: `• **${contact}** — Primary contact for this meeting`,
+        websiteAuditSummary: 'No audit data available for this company.',
+        businessProblems: 'Not yet identified. Use the meeting to discover pain points.',
+        recommendedSolutions: 'To be determined based on discovery in the meeting.',
+        estimatedROI: 'To be discussed based on scope identified in the meeting.',
+        potentialObjections: 'Common objections to address: budget, timing, existing tools.',
+        suggestedAgenda: '1. Opening (2 min)\n2. Discovery (10 min)\n3. Demo (15 min)\n4. Next Steps (5 min)',
+        talkingPoints: aiResponse.substring(0, 500),
+        closingStrategy: 'Propose a pilot program to reduce risk and demonstrate value.',
+      }
+    }
+
+    const brief = {
+      id: crypto.randomUUID(),
+      company: companyName,
+      contactName: contact,
+      industry: industryName,
+      createdAt: new Date().toISOString(),
+      sections,
+    }
+
+    return NextResponse.json({ success: true, brief })
   } catch (err) {
     console.error('[AI Meeting Prep]', err)
     return NextResponse.json(

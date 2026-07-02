@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Target, Users, Mail, Calendar, Workflow, Sparkles, Settings, Bell, Check, X } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -55,18 +55,18 @@ const TYPE_ICONS: Record<string, React.ElementType> = {
   system: Settings,
 }
 
-// ─── Mock Data ───────────────────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const MOCK_NOTIFICATIONS: Notification[] = [
-  { id: '1', type: 'ai', title: 'AI Analysis Complete', description: 'Website audit for Acme Corp is ready', time: '2m ago', read: false, action: { label: 'View', view: 'audit' } },
-  { id: '2', type: 'reply', title: 'New Reply Received', description: 'John Smith replied to your outreach email', time: '15m ago', read: false, action: { label: 'Read', view: 'inbox' } },
-  { id: '3', type: 'campaign', title: 'Campaign Paused', description: '"Q4 Law Firms" paused due to sending limit', time: '1h ago', read: true },
-  { id: '4', type: 'meeting', title: 'Meeting Reminder', description: 'Demo call with Sarah Johnson in 30 minutes', time: '2h ago', read: false, action: { label: 'Join', view: 'meetings' } },
-  { id: '5', type: 'lead', title: 'New Lead Qualified', description: 'TechStart Inc. scored 92/100 on AI qualification', time: '3h ago', read: true },
-  { id: '6', type: 'workflow', title: 'Workflow Completed', description: 'Cold Email sequence finished for 50 leads', time: '5h ago', read: true },
-  { id: '7', type: 'ai', title: 'Smart Follow-up Ready', description: 'AI generated 12 unique follow-up emails', time: '6h ago', read: false, action: { label: 'Review', view: 'email-center' } },
-  { id: '8', type: 'system', title: 'System Update', description: 'TITAN v2.5 — New workflow templates added', time: '1d ago', read: true },
-]
+function timeAgo(date: Date): string {
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
+  if (seconds < 60) return 'Just now'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
+}
 
 // ─── Tabs ────────────────────────────────────────────────────────────────────
 
@@ -167,7 +167,27 @@ function EmptyState() {
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 export function NotificationCenter({ open, onOpenChange }: NotificationCenterProps) {
-  const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS)
+  const [notifications, setNotifications] = useState<Notification[]>([])
+
+  useEffect(() => {
+    fetch('/api/notifications')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.notifications)) {
+          const mapped = data.notifications.map((n: any) => ({
+            id: n.id,
+            type: n.type || 'system',
+            title: n.title,
+            description: n.message || n.description || '',
+            time: n.createdAt ? timeAgo(new Date(n.createdAt)) : 'Just now',
+            read: n.read !== false,
+            action: n.action || undefined,
+          }))
+          setNotifications(mapped)
+        }
+      })
+      .catch(() => {})
+  }, [])
   const [activeTab, setActiveTab] = useState<Tab>('all')
 
   const unreadCount = notifications.filter(n => !n.read).length

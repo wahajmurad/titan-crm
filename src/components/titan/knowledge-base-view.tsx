@@ -161,6 +161,7 @@ export function KnowledgeBaseView() {
  const [loading, setLoading] = useState(true)
  const [search, setSearch] = useState('')
  const [activeTab, setActiveTab] = useState('all')
+ const [lastUpdated, setLastUpdated] = useState<string>('')
 
  /* ── Fetch on mount ── */
  useEffect(() => {
@@ -169,7 +170,10 @@ export function KnowledgeBaseView() {
     const res = await fetch('/api/ai/knowledge')
     if (!res.ok) throw new Error('Failed to fetch')
     const data = await res.json()
-    if (data.success) setItems(data.items)
+    if (data.success) {
+      setItems(data.items)
+      setLastUpdated(new Date().toLocaleTimeString())
+    }
    } catch {
     // Silently fail — show empty state
    } finally {
@@ -245,7 +249,7 @@ export function KnowledgeBaseView() {
      <span className="text-muted-foreground/30">·</span>
      <span className="flex items-center gap-1.5">
       <Clock className="w-3.5 h-3.5" />
-      Last updated 2 hours ago
+      {lastUpdated ? `Last updated ${lastUpdated}` : ''}
      </span>
     </div>
    )}

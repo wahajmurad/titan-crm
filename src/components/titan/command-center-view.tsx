@@ -26,13 +26,16 @@ interface SystemMetric {
   status: 'healthy' | 'warning' | 'critical'
 }
 
-const SYSTEM_METRICS: SystemMetric[] = [
-  { label: 'AI Model', value: 'Online', status: 'healthy' },
-  { label: 'Lead Database', value: '2,847 records', status: 'healthy' },
-  { label: 'Pipeline Queue', value: '0 pending', status: 'healthy' },
-  { label: 'Email Service', value: 'Connected', status: 'healthy' },
-  { label: 'API Latency', value: '142ms', status: 'warning' },
-]
+function timeAgo(date: Date): string {
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
+  if (seconds < 60) return 'Just now'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
+}
 
 const QUICK_ACTIONS = [
   { icon: Search, label: 'Find Leads', color: 'text-blue-600', bg: 'bg-blue-50', command: 'Find 10 businesses in my target market' },
@@ -41,14 +44,6 @@ const QUICK_ACTIONS = [
   { icon: Target, label: 'Create Campaign', color: 'text-amber-600', bg: 'bg-amber-50', command: 'Create an AI-powered outreach campaign' },
   { icon: BarChart3, label: 'Industry Analysis', color: 'text-rose-600', bg: 'bg-rose-50', command: 'Run a full industry analysis for my target market' },
   { icon: Workflow, label: 'Full Pipeline', color: 'text-blue-600', bg: 'bg-blue-50', command: 'Run the full pipeline: discover, research, audit, qualify, and prepare outreach' },
-]
-
-const OPERATIONS = [
-  { id: 'op-1', name: 'Lead Discovery Sweep', status: 'completed', agent: 'Lead Discovery', duration: '3.2s', time: '2 min ago' },
-  { id: 'op-2', name: 'Website Audit Batch', status: 'completed', agent: 'Website Intel', duration: '12.4s', time: '5 min ago' },
-  { id: 'op-3', name: 'Email Personalization', status: 'completed', agent: 'Personalization', duration: '8.1s', time: '8 min ago' },
-  { id: 'op-4', name: 'Campaign Generation', status: 'completed', agent: 'Campaign Strategy', duration: '5.1s', time: '12 min ago' },
-  { id: 'op-5', name: 'ROI Calculation', status: 'completed', agent: 'Solution Architect', duration: '3.5s', time: '15 min ago' },
 ]
 
 const messageVariants = {
@@ -69,8 +64,38 @@ export function CommandCenterView() {
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [streamingSteps, setStreamingSteps] = useState<{ label: string; status: 'pending' | 'running' | 'done' | 'error' }[]>([])
+  const [systemMetrics, setSystemMetrics] = useState<SystemMetric[]>([])
+  const [operations, setOperations] = useState<any[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    // Fetch real system metrics
+    fetch('/api/dashboard').then(r => r.json()).then(data => {
+      if (data.success) {
+        setSystemMetrics([
+          { label: 'AI Model', value: 'Online', status: 'healthy' },
+          { label: 'Leads', value: `${data.stats?.totalLeads || 0} records`, status: 'healthy' },
+          { label: 'Campaigns', value: `${data.stats?.activeCampaigns || 0} active`, status: 'healthy' },
+          { label: 'Meetings', value: `${data.upcomingMeetings?.length || 0} upcoming`, status: 'healthy' },
+        ])
+      }
+    }).catch(() => {})
+
+    // Fetch recent operations/activities from API
+    fetch('/api/workflows?limit=5').then(r => r.json()).then(data => {
+      if (data.success && Array.isArray(data.workflows)) {
+        setOperations(data.workflows.slice(0, 5).map((w: any) => ({
+          id: w.id,
+          name: w.name,
+          status: w.status || 'completed',
+          agent: 'Workflow',
+          duration: '-',
+          time: w.updatedAt ? timeAgo(new Date(w.updatedAt)) : 'Unknown',
+        })))
+      }
+    }).catch(() => {})
+  }, [])
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -170,7 +195,10 @@ export function CommandCenterView() {
             <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider">System Health</h3>
           </div>
           <div className="space-y-2">
-            {SYSTEM_METRICS.map(metric => (
+            {systemMetrics.length === 0 ? (
+              <p className="text-xs text-gray-400 py-3 text-center">No data yet</p>
+            ) : (
+            systemMetrics.map(metric => (
               <div key={metric.label} className="flex items-center justify-between">
                 <span className="text-xs text-gray-500">{metric.label}</span>
                 <div className="flex items-center gap-1.5">
@@ -183,7 +211,8 @@ export function CommandCenterView() {
                   )} />
                 </div>
               </div>
-            ))}
+            ))
+            )}
           </div>
         </div>
 
@@ -194,7 +223,10 @@ export function CommandCenterView() {
             <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider">Recent Operations</h3>
           </div>
           <div className="space-y-2 max-h-[130px] overflow-y-auto">
-            {OPERATIONS.map(op => (
+            {operations.length === 0 ? (
+              <p className="text-xs text-gray-400 py-3 text-center">No operations yet</p>
+            ) : (
+            operations.map(op => (
               <div key={op.id} className="flex items-center justify-between py-1">
                 <div className="flex items-center gap-2 min-w-0">
                   <CheckCircle2 className="w-3 h-3 text-emerald-500 flex-shrink-0" />
@@ -202,7 +234,8 @@ export function CommandCenterView() {
                 </div>
                 <span className="text-[10px] text-gray-400 flex-shrink-0 ml-2">{op.time}</span>
               </div>
-            ))}
+            ))
+            )}
           </div>
         </div>
 

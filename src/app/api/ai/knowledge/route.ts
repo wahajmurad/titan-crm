@@ -1,96 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
+import { db } from '@/lib/db'
 
-const mockKnowledge = [
-  {
-    id: '1',
-    type: 'audit',
-    title: 'Acme Corp — Website Audit',
-    company: 'Acme Corp',
-    industry: 'Technology',
-    score: 72,
-    createdAt: '2 days ago',
-    summary:
-      'Identified 8 optimization opportunities including missing AI chatbot, slow load times, and weak lead capture.',
-  },
-  {
-    id: '2',
-    type: 'email',
-    title: 'Cold Email — Law Firms NYC',
-    company: 'Multiple',
-    industry: 'Legal',
-    score: 85,
-    createdAt: '3 days ago',
-    summary:
-      'ROI-focused email sequence achieved 23% reply rate for Manhattan law firms.',
-  },
-  {
-    id: '3',
-    type: 'campaign',
-    title: 'Q4 Healthcare Outreach',
-    company: 'Multiple',
-    industry: 'Healthcare',
-    score: 91,
-    createdAt: '1 week ago',
-    summary:
-      'Multi-channel campaign generated 47 meetings from 500 leads. Best performing campaign this quarter.',
-  },
-  {
-    id: '4',
-    type: 'proposal',
-    title: 'AI Strategy — TechStart Inc',
-    company: 'TechStart Inc',
-    industry: 'SaaS',
-    score: 78,
-    createdAt: '1 week ago',
-    summary:
-      'Comprehensive AI growth proposal with 12-month roadmap. Client interested in Phase 2.',
-  },
-  {
-    id: '5',
-    type: 'research',
-    title: 'Dental Industry Analysis',
-    company: 'Multiple',
-    industry: 'Dental',
-    score: 88,
-    createdAt: '2 weeks ago',
-    summary:
-      'Deep analysis of 200+ dental practices. Key insight: practices with 5+ reviews respond 3x better.',
-  },
-  {
-    id: '6',
-    type: 'workflow',
-    title: 'Automated Qualification Pipeline',
-    company: 'Internal',
-    industry: 'All',
-    score: 95,
-    createdAt: '2 weeks ago',
-    summary:
-      'Custom workflow that discovers → audits → qualifies → scores leads automatically. Processes 100 leads/hour.',
-  },
-  {
-    id: '7',
-    type: 'email',
-    title: 'Follow-up Sequence — Real Estate',
-    company: 'Multiple',
-    industry: 'Real Estate',
-    score: 82,
-    createdAt: '3 weeks ago',
-    summary:
-      '5-step follow-up sequence with case study attachments. 18% conversion to meetings.',
-  },
-  {
-    id: '8',
-    type: 'audit',
-    title: 'Growth Blueprint — Nexus Digital',
-    company: 'Nexus Digital',
-    industry: 'Marketing',
-    score: 76,
-    createdAt: '3 weeks ago',
-    summary:
-      'Complete growth blueprint identifying $150K+ in untapped revenue opportunities.',
-  },
-]
+function timeAgo(date: Date): string {
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffSec = Math.floor(diffMs / 1000)
+  const diffMin = Math.floor(diffSec / 60)
+  const diffHr = Math.floor(diffMin / 60)
+  const diffDay = Math.floor(diffHr / 24)
+  const diffWeek = Math.floor(diffDay / 7)
+  const diffMonth = Math.floor(diffDay / 30)
+
+  if (diffSec < 60) return 'just now'
+  if (diffMin < 60) return `${diffMin} minute${diffMin === 1 ? '' : 's'} ago`
+  if (diffHr < 24) return `${diffHr} hour${diffHr === 1 ? '' : 's'} ago`
+  if (diffDay < 7) return `${diffDay} day${diffDay === 1 ? '' : 's'} ago`
+  if (diffWeek < 4) return `${diffWeek} week${diffWeek === 1 ? '' : 's'} ago`
+  return `${diffMonth} month${diffMonth === 1 ? '' : 's'} ago`
+}
 
 // GET /api/ai/knowledge — return AI knowledge base entries
 export async function GET(req: NextRequest) {
@@ -102,8 +30,81 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('search')?.toLowerCase().trim() || ''
     const type = searchParams.get('type')?.trim() || ''
 
-    let filtered = mockKnowledge
+    // Query real data from the database
+    const [audits, campaigns, assets] = await Promise.all([
+      db.websiteAudit.findMany({
+        take: 50,
+        orderBy: { createdAt: 'desc' },
+        include: { business: true },
+      }),
+      db.campaign.findMany({
+        take: 50,
+        orderBy: { createdAt: 'desc' },
+      }),
+      db.generatedAsset.findMany({
+        take: 50,
+        orderBy: { createdAt: 'desc' },
+        include: { business: true },
+      }),
+    ])
 
+    // Map WebsiteAudit → audit knowledge items
+    const auditItems = audits.map((a) => ({
+      id: a.id,
+      type: 'audit' as const,
+      title: `${a.business?.name || 'Unknown'} — Website Audit`,
+      company: a.business?.name || 'Unknown',
+      industry: a.business?.industry || 'General',
+      score: a.overallScore || null,
+      createdAt: timeAgo(a.createdAt),
+      summary: a.executiveSummary || `Overall score: ${a.overallScore}/100 across 10 categories.`,
+    }))
+
+    // Map Campaign → campaign knowledge items
+    const campaignItems = campaigns.map((c) => ({
+      id: c.id,
+      type: 'campaign' as const,
+      title: c.name,
+      company: 'Multiple',
+      industry: c.industry || 'General',
+      score: c.leadCount > 0 ? Math.round((c.meetingCount / c.leadCount) * 100) : null,
+      createdAt: timeAgo(c.createdAt),
+      summary: `${c.leadCount} leads, ${c.sentCount} sent, ${c.replyCount} replies, ${c.meetingCount} meetings.`,
+    }))
+
+    // Map GeneratedAsset → appropriate type knowledge items
+    const assetItems = assets.map((a) => {
+      let assetType: 'audit' | 'campaign' | 'email' | 'proposal' | 'research' | 'workflow' = 'research'
+      if (a.type.includes('email')) assetType = 'email'
+      else if (a.type.includes('proposal')) assetType = 'proposal'
+      else if (a.type.includes('audit')) assetType = 'audit'
+      else if (a.type.includes('campaign')) assetType = 'campaign'
+      else if (a.type.includes('workflow')) assetType = 'workflow'
+
+      return {
+        id: a.id,
+        type: assetType,
+        title: a.title,
+        company: a.business?.name || 'Multiple',
+        industry: a.business?.industry || 'General',
+        score: null as number | null,
+        createdAt: timeAgo(a.createdAt),
+        summary: a.content?.substring(0, 200) || 'Generated asset',
+      }
+    })
+
+    // Combine and sort by createdAt descending (use the original Date objects for sorting)
+    const allItems = [
+      ...audits.map((a, i) => ({ ...auditItems[i], _sortDate: a.createdAt })),
+      ...campaigns.map((c, i) => ({ ...campaignItems[i], _sortDate: c.createdAt })),
+      ...assets.map((a, i) => ({ ...assetItems[i], _sortDate: a.createdAt })),
+    ].sort((a, b) => b._sortDate.getTime() - a._sortDate.getTime())
+
+    // Remove the internal sort key
+    const items = allItems.map(({ _sortDate, ...item }) => item)
+
+    // Apply search filtering
+    let filtered = items
     if (search) {
       filtered = filtered.filter(
         (item) =>
@@ -113,6 +114,7 @@ export async function GET(req: NextRequest) {
       )
     }
 
+    // Apply type filtering
     if (type) {
       filtered = filtered.filter((item) => item.type === type)
     }

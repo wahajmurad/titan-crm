@@ -129,79 +129,6 @@ const WIZARD_STEPS: WizardStep[] = [
   },
 ]
 
-// ─── Mock Data ───────────────────────────────────────────────────
-
-const MOCK_AUTOMATIONS: ActiveAutomation[] = [
-  {
-    id: 'auto-1',
-    name: 'Manhattan Law Firms — AI Audit Campaign',
-    status: 'running',
-    progress: 67,
-    leadsFound: 142,
-    emailsSent: 89,
-    repliesReceived: 23,
-    meetingsBooked: 7,
-    startedAt: '2 hours ago',
-    currentStep: 'Personalization',
-  },
-  {
-    id: 'auto-2',
-    name: 'Dental Practices — NYC Outreach',
-    status: 'paused',
-    progress: 34,
-    leadsFound: 68,
-    emailsSent: 45,
-    repliesReceived: 8,
-    meetingsBooked: 2,
-    startedAt: '1 day ago',
-    currentStep: 'Qualification',
-  },
-  {
-    id: 'auto-3',
-    name: 'Real Estate Brokerages — Full Pipeline',
-    status: 'completed',
-    progress: 100,
-    leadsFound: 210,
-    emailsSent: 198,
-    repliesReceived: 52,
-    meetingsBooked: 18,
-    startedAt: '3 days ago',
-    currentStep: 'Completed',
-  },
-  {
-    id: 'auto-4',
-    name: 'SaaS Startups — LinkedIn Warm-up',
-    status: 'running',
-    progress: 22,
-    leadsFound: 37,
-    emailsSent: 15,
-    repliesReceived: 3,
-    meetingsBooked: 0,
-    startedAt: '45 minutes ago',
-    currentStep: 'Discovery',
-  },
-]
-
-const MOCK_PIPELINE_STEPS: PipelineStep[] = [
-  { label: 'Discovery', icon: Search, status: 'completed', detail: '142 leads found across Manhattan law firms' },
-  { label: 'Research', icon: BookOpen, status: 'completed', detail: 'Company profiles, tech stack, and social presence analyzed' },
-  { label: 'Website Audit', icon: FileSearch, status: 'completed', detail: '89 websites audited — 67 flagged for AI opportunities' },
-  { label: 'Qualification', icon: Shield, status: 'completed', detail: '67 qualified based on audit score > 60 and revenue signals' },
-  { label: 'Personalization', icon: Brain, status: 'running', detail: 'Generating deep-personalized messaging for 67 leads...' },
-  { label: 'Outreach', icon: Send, status: 'pending', detail: 'Waiting for personalization to complete' },
-  { label: 'Follow-up', icon: MessageSquare, status: 'pending', detail: '3-touch follow-up sequence configured' },
-  { label: 'Meeting Booking', icon: Calendar, status: 'pending', detail: 'Calendly integration ready' },
-]
-
-const MOCK_DECISION_LOG: DecisionLogEntry[] = [
-  { id: 'd1', timestamp: '2:14 PM', action: 'Lead Scored', detail: 'Morrison & Foerster LLP — scored 92/100. Strong AI adoption signals.', type: 'qualification' },
-  { id: 'd2', timestamp: '2:12 PM', action: 'Audit Completed', detail: 'Website uses legacy CMS, no chatbot, no automation. High priority.', type: 'discovery' },
-  { id: 'd3', timestamp: '2:10 PM', action: 'Personalization', detail: 'Crafted audit-based hook referencing their 2024 digital transformation initiative.', type: 'personalization' },
-  { id: 'd4', timestamp: '2:08 PM', action: 'Lead Skipped', detail: 'Baker & Associates — already uses AI scheduling. Score: 31/100.', type: 'qualification' },
-  { id: 'd5', timestamp: '2:05 PM', action: 'Channel Selected', detail: 'Partners at Davis Wright prefer LinkedIn. Routed to LinkedIn sequence.', type: 'outreach' },
-  { id: 'd6', timestamp: '2:01 PM', action: 'Batch Queued', detail: '15 high-priority leads queued for immediate outreach.', type: 'system' },
-]
-
 const TEMPLATES = [
   {
     id: 't1',
@@ -289,6 +216,9 @@ export function AutomationCenterView() {
   const [wizardAnswers, setWizardAnswers] = useState<Record<string, string>>({})
   const [selectedAutomation, setSelectedAutomation] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [automations, setAutomations] = useState<ActiveAutomation[]>([])
+  const [pipelineSteps, setPipelineSteps] = useState<PipelineStep[]>([])
+  const [decisionLog, setDecisionLog] = useState<DecisionLogEntry[]>([])
 
   const wizardRef = useRef<HTMLDivElement>(null)
   const objectiveInputRef = useRef<HTMLTextAreaElement>(null)
@@ -362,6 +292,46 @@ export function AutomationCenterView() {
     }
   }, [])
 
+  // ─── Fetch real data ───────────────────────────────────
+
+  useEffect(() => {
+    fetch('/api/campaigns').then(r => r.json()).then(data => {
+      if (data.success && Array.isArray(data.campaigns)) {
+        setAutomations(data.campaigns.map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          status: (c.status === 'active' ? 'running' : c.status === 'paused' ? 'paused' : c.status === 'completed' ? 'completed' : 'failed') as AutomationStatus,
+          progress: c.progress || 0,
+          leadsFound: c.sentCount || 0,
+          emailsSent: c.sentCount || 0,
+          repliesReceived: c.replyCount || 0,
+          meetingsBooked: c.meetingCount || 0,
+          startedAt: c.createdAt ? new Date(c.createdAt).toLocaleDateString() : 'Unknown',
+          currentStep: c.status || 'N/A',
+        })))
+      }
+    }).catch(() => {})
+
+    fetch('/api/workflows').then(r => r.json()).then(data => {
+      if (data.success && Array.isArray(data.workflows)) {
+        setPipelineSteps(data.workflows.map((w: any) => ({
+          label: w.name || 'Step',
+          icon: Workflow,
+          status: w.status === 'completed' ? 'completed' : w.status === 'running' ? 'running' : w.status === 'failed' ? 'failed' : 'pending',
+          detail: w.description || '',
+        })))
+
+        setDecisionLog(data.workflows.slice(0, 6).map((w: any) => ({
+          id: w.id,
+          timestamp: w.updatedAt ? new Date(w.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+          action: w.name || 'Workflow',
+          detail: w.description || '',
+          type: 'system' as const,
+        })))
+      }
+    }).catch(() => {})
+  }, [])
+
   // ─── Scroll wizard into view ───────────────────────────────
 
   useEffect(() => {
@@ -375,7 +345,7 @@ export function AutomationCenterView() {
   const currentWizardStep = WIZARD_STEPS[wizardStep]
   const isLastStep = wizardStep === WIZARD_STEPS.length - 1
   const allAnswered = WIZARD_STEPS.every(s => wizardAnswers[s.id])
-  const selectedAuto = MOCK_AUTOMATIONS.find(a => a.id === selectedAutomation)
+  const selectedAuto = automations.find(a => a.id === selectedAutomation)
 
   // ─── Render ────────────────────────────────────────────────
 
@@ -587,7 +557,7 @@ export function AutomationCenterView() {
               <Layers className="h-3.5 w-3.5" />
               Active Automations
               <Badge variant="secondary" className="ml-1 bg-blue-50 text-blue-700 hover:bg-blue-50">
-                {MOCK_AUTOMATIONS.filter(a => a.status === 'running').length} active
+                {automations.filter(a => a.status === 'running').length} active
               </Badge>
             </TabsTrigger>
             <TabsTrigger value="templates" className="gap-2 text-sm">
@@ -608,74 +578,84 @@ export function AutomationCenterView() {
               animate="visible"
               className="grid gap-4 sm:grid-cols-2"
             >
-              {MOCK_AUTOMATIONS.map((automation) => {
-                const cfg = getStatusConfig(automation.status)
-                const StepIcon = automation.status === 'running' ? Pause : Play
-                return (
-                  <motion.div key={automation.id} variants={itemVariants}>
-                    <Card
-                      className={cn(
-                        'cursor-pointer border transition-all hover:shadow-md',
-                        selectedAutomation === automation.id ? 'ring-2 ring-blue-500 border-blue-300' : 'border-gray-200'
-                      )}
-                      onClick={() => setSelectedAutomation(selectedAutomation === automation.id ? null : automation.id)}
-                    >
-                      <CardContent className="p-5 space-y-4">
-                        {/* Header */}
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className={cn('h-2 w-2 rounded-full', cfg.dot, automation.status === 'running' && 'animate-pulse')} />
-                              <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full border', cfg.bg, cfg.color, cfg.border)}>
-                                {cfg.label}
-                              </span>
-                              <span className="text-xs text-gray-400">{automation.startedAt}</span>
+              {automations.length === 0 ? (
+                <div className="col-span-2 flex flex-col items-center justify-center py-16 text-center">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 mb-4">
+                    <Rocket className="h-6 w-6 text-gray-400" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-gray-700">No Automations Yet</h3>
+                  <p className="text-xs text-gray-400 mt-1 max-w-sm">Create your first automation using the form above to get started.</p>
+                </div>
+              ) : (
+                automations.map((automation) => {
+                  const cfg = getStatusConfig(automation.status)
+                  const StepIcon = automation.status === 'running' ? Pause : Play
+                  return (
+                    <motion.div key={automation.id} variants={itemVariants}>
+                      <Card
+                        className={cn(
+                          'cursor-pointer border transition-all hover:shadow-md',
+                          selectedAutomation === automation.id ? 'ring-2 ring-blue-500 border-blue-300' : 'border-gray-200'
+                        )}
+                        onClick={() => setSelectedAutomation(selectedAutomation === automation.id ? null : automation.id)}
+                      >
+                        <CardContent className="p-5 space-y-4">
+                          {/* Header */}
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className={cn('h-2 w-2 rounded-full', cfg.dot, automation.status === 'running' && 'animate-pulse')} />
+                                <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full border', cfg.bg, cfg.color, cfg.border)}>
+                                  {cfg.label}
+                                </span>
+                                <span className="text-xs text-gray-400">{automation.startedAt}</span>
+                              </div>
+                              <h3 className="text-sm font-semibold text-gray-900 truncate">{automation.name}</h3>
+                              <p className="text-xs text-gray-500 mt-0.5">Current step: {automation.currentStep}</p>
                             </div>
-                            <h3 className="text-sm font-semibold text-gray-900 truncate">{automation.name}</h3>
-                            <p className="text-xs text-gray-500 mt-0.5">Current step: {automation.currentStep}</p>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className={cn('h-8 w-8 shrink-0', automation.status === 'running' ? 'text-blue-600 border-blue-200 hover:bg-blue-50' : 'text-gray-500')}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleToggleAutomation(automation.id, automation.status)
+                              }}
+                            >
+                              <StepIcon className="h-3.5 w-3.5" />
+                            </Button>
                           </div>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className={cn('h-8 w-8 shrink-0', automation.status === 'running' ? 'text-blue-600 border-blue-200 hover:bg-blue-50' : 'text-gray-500')}
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleToggleAutomation(automation.id, automation.status)
-                            }}
-                          >
-                            <StepIcon className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
 
-                        {/* Progress */}
-                        <div className="space-y-1.5">
-                          <div className="flex justify-between text-xs">
-                            <span className="text-gray-500">Progress</span>
-                            <span className="font-medium text-gray-700">{automation.progress}%</span>
-                          </div>
-                          <Progress value={automation.progress} className={cn('h-1.5', cfg.progressColor)} />
-                        </div>
-
-                        {/* Metrics */}
-                        <div className="grid grid-cols-4 gap-2">
-                          {[
-                            { label: 'Leads', value: automation.leadsFound, icon: Users },
-                            { label: 'Sent', value: automation.emailsSent, icon: Send },
-                            { label: 'Replies', value: automation.repliesReceived, icon: MessageSquare },
-                            { label: 'Meetings', value: automation.meetingsBooked, icon: Calendar },
-                          ].map((metric) => (
-                            <div key={metric.label} className="text-center">
-                              <metric.icon className="h-3.5 w-3.5 text-gray-400 mx-auto mb-0.5" />
-                              <p className="text-sm font-semibold text-gray-800">{metric.value}</p>
-                              <p className="text-[10px] text-gray-400 uppercase tracking-wide">{metric.label}</p>
+                          {/* Progress */}
+                          <div className="space-y-1.5">
+                            <div className="flex justify-between text-xs">
+                              <span className="text-gray-500">Progress</span>
+                              <span className="font-medium text-gray-700">{automation.progress}%</span>
                             </div>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                )
-              })}
+                            <Progress value={automation.progress} className={cn('h-1.5', cfg.progressColor)} />
+                          </div>
+
+                          {/* Metrics */}
+                          <div className="grid grid-cols-4 gap-2">
+                            {[
+                              { label: 'Leads', value: automation.leadsFound, icon: Users },
+                              { label: 'Sent', value: automation.emailsSent, icon: Send },
+                              { label: 'Replies', value: automation.repliesReceived, icon: MessageSquare },
+                              { label: 'Meetings', value: automation.meetingsBooked, icon: Calendar },
+                            ].map((metric) => (
+                              <div key={metric.label} className="text-center">
+                                <metric.icon className="h-3.5 w-3.5 text-gray-400 mx-auto mb-0.5" />
+                                <p className="text-sm font-semibold text-gray-800">{metric.value}</p>
+                                <p className="text-[10px] text-gray-400 uppercase tracking-wide">{metric.label}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  )
+                })
+              )}
             </motion.div>
           </TabsContent>
 
@@ -790,7 +770,10 @@ export function AutomationCenterView() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-0">
-                      {MOCK_PIPELINE_STEPS.map((step, idx) => (
+                      {pipelineSteps.length === 0 ? (
+                        <p className="text-xs text-gray-400 py-6 text-center">No pipeline steps available yet.</p>
+                      ) : (
+                        pipelineSteps.map((step, idx) => (
                         <motion.div
                           key={step.label}
                           initial={{ opacity: 0, x: -10 }}
@@ -809,7 +792,7 @@ export function AutomationCenterView() {
                             )}>
                               {getStepStatusIcon(step.status)}
                             </div>
-                            {idx < MOCK_PIPELINE_STEPS.length - 1 && (
+                            {idx < pipelineSteps.length - 1 && (
                               <div className={cn(
                                 'w-0.5 h-10 my-1',
                                 step.status === 'completed' ? 'bg-emerald-200' :
@@ -853,7 +836,8 @@ export function AutomationCenterView() {
                             </p>
                           </div>
                         </motion.div>
-                      ))}
+                        ))
+                      )}
                     </CardContent>
                   </Card>
 
@@ -872,7 +856,10 @@ export function AutomationCenterView() {
                     </CardHeader>
                     <CardContent>
                       <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
-                        {MOCK_DECISION_LOG.map((entry, idx) => (
+                        {decisionLog.length === 0 ? (
+                          <p className="text-xs text-gray-400 py-6 text-center">No decision log entries yet.</p>
+                        ) : (
+                          decisionLog.map((entry, idx) => (
                           <motion.div
                             key={entry.id}
                             initial={{ opacity: 0, y: 6 }}
@@ -893,7 +880,8 @@ export function AutomationCenterView() {
                               <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{entry.detail}</p>
                             </div>
                           </motion.div>
-                        ))}
+                          ))
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -912,18 +900,6 @@ export function AutomationCenterView() {
                   <p className="text-xs text-gray-400 mt-1 max-w-sm">
                     Select a running automation from the Active Automations tab to view its live execution pipeline and AI decision log.
                   </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-4 text-blue-600 border-blue-200 hover:bg-blue-50"
-                    onClick={() => {
-                      setSelectedAutomation('auto-1')
-                      setActiveTab('executing')
-                    }}
-                  >
-                    <Zap className="h-3.5 w-3.5 mr-1.5" />
-                    View Sample Execution
-                  </Button>
                 </motion.div>
               )}
             </AnimatePresence>
