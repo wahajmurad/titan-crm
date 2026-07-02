@@ -410,8 +410,8 @@ export async function POST(req: NextRequest) {
       leadId: leadRecord.id,
       ...result,
     })
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+  } catch (e) {
+    console.error('[AI QUALIFY POST ERROR]', e)
+    return NextResponse.json({ error: 'Operation failed.' }, { status: 500 })
   }
 }

@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth'
+import { sanitizeString } from '@/lib/types'
+import { OUTREACH_STATUS, OUTREACH_TYPE } from '@/lib/types'
+
+// Only allow these fields from the client
+const ALLOWED_OUTREACH_FIELDS = ['leadId', 'type', 'subject', 'body', 'status', 'channel', 'scheduledAt'] as const
+const VALID_STATUSES = new Set(OUTREACH_STATUS)
+const VALID_TYPES = new Set(OUTREACH_TYPE)
 
 export async function GET(req: NextRequest) {
   try {
@@ -33,8 +40,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ outreaches, total, page, limit })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('[OUTREACH GET ERROR]', e)
+    return NextResponse.json({ error: 'Failed to load outreaches.' }, { status: 500 })
   }
 }
 
@@ -46,11 +53,32 @@ export async function POST(req: NextRequest) {
 
     const data = await req.json()
 
+    // Validate required fields
+    if (!data.leadId || typeof data.leadId !== 'string') {
+      return NextResponse.json({ error: 'leadId is required.' }, { status: 400 })
+    }
+    if (data.type && !VALID_TYPES.has(data.type)) {
+      return NextResponse.json({ error: 'Invalid outreach type.' }, { status: 400 })
+    }
+    if (data.status && !VALID_STATUSES.has(data.status)) {
+      return NextResponse.json({ error: 'Invalid outreach status.' }, { status: 400 })
+    }
+
+    // Whitelist fields — prevent mass assignment
+    const cleanData: Record<string, unknown> = { userId: session.id }
+    for (const field of ALLOWED_OUTREACH_FIELDS) {
+      if (data[field] !== undefined) {
+        cleanData[field] = field === 'body' || field === 'subject'
+          ? sanitizeString(String(data[field]))
+          : data[field]
+      }
+    }
+
     const outreach = await db.outreach.create({
       data: {
-        ...data,
-        sentAt: data.status === 'SENT' ? new Date() : null,
-      },
+        ...cleanData,
+        sentAt: cleanData.status === 'SENT' ? new Date() : null,
+      } as Parameters<typeof db.outreach.create>[0]['data'],
       include: {
         lead: { include: { business: { select: { name: true } } } },
       },
@@ -74,7 +102,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ outreach }, { status: 201 })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('[OUTREACH POST ERROR]', e)
+    return NextResponse.json({ error: 'Failed to create outreach.' }, { status: 500 })
   }
 }

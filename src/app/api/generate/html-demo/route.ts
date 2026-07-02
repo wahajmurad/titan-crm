@@ -63,9 +63,9 @@ export async function POST(req: NextRequest) {
       slug: business.name.replace(/[^a-z0-9]+/gi, '-').toLowerCase().replace(/^-|-$/g, ''),
       fileName: `titan-demo-${business.name.replace(/\s+/g, '-').toLowerCase()}.html`,
     })
-  } catch (err) {
-    console.error('[HTML Demo]', err)
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Failed to generate demo' }, { status: 500 })
+  } catch (e) {
+    console.error('[GENERATE HTML DEMO POST ERROR]', e)
+    return NextResponse.json({ error: 'Operation failed.' }, { status: 500 })
   }
 }
 

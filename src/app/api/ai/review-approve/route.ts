@@ -158,8 +158,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ error: 'Invalid action. Use: approve, reject, edit, save_linkedin' }, { status: 400 })
-  } catch (err) {
-    console.error('[Review & Approve]', err)
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Failed' }, { status: 500 })
+  } catch (e) {
+    console.error('[AI REVIEW APPROVE POST ERROR]', e)
+    return NextResponse.json({ error: 'Operation failed.' }, { status: 500 })
   }
 }

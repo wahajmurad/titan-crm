@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth'
+import { sanitizeString } from '@/lib/types'
 
 // GET /api/lead-providers — list all providers ordered by priority desc then createdAt desc
 export async function GET() {
@@ -14,8 +15,8 @@ export async function GET() {
 
     return NextResponse.json({ providers })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('[LeadProviders GET ERROR]', e)
+    return NextResponse.json({ error: 'Failed to fetch lead providers' }, { status: 500 })
   }
 }
 
@@ -56,7 +57,7 @@ export async function POST(req: NextRequest) {
 
     const provider = await db.leadProvider.create({
       data: {
-        name: name.trim(),
+        name: sanitizeString(name),
         type: type || 'custom',
         apiUrl: apiUrl || null,
         apiKey: apiKey || null,
@@ -68,14 +69,14 @@ export async function POST(req: NextRequest) {
         isActive: isActive ?? true,
         isDefault: isDefault ?? false,
         priority: priority ?? 0,
-        notes: notes || null,
+        notes: notes ? sanitizeString(notes) : null,
       },
     })
 
     return NextResponse.json({ success: true, provider }, { status: 201 })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('[LeadProviders POST ERROR]', e)
+    return NextResponse.json({ error: 'Failed to create lead provider' }, { status: 500 })
   }
 }
 
@@ -122,7 +123,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const updateData: Record<string, unknown> = {}
-    if (name !== undefined) updateData.name = name.trim()
+    if (name !== undefined) updateData.name = sanitizeString(name)
     if (type !== undefined) updateData.type = type
     if (apiUrl !== undefined) updateData.apiUrl = apiUrl || null
     if (apiKey !== undefined) updateData.apiKey = apiKey || null
@@ -138,7 +139,7 @@ export async function PUT(req: NextRequest) {
     if (isActive !== undefined) updateData.isActive = isActive
     if (isDefault !== undefined) updateData.isDefault = isDefault
     if (priority !== undefined) updateData.priority = priority
-    if (notes !== undefined) updateData.notes = notes || null
+    if (notes !== undefined) updateData.notes = notes ? sanitizeString(notes) : null
 
     const provider = await db.leadProvider.update({
       where: { id },
@@ -147,8 +148,8 @@ export async function PUT(req: NextRequest) {
 
     return NextResponse.json({ success: true, provider })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('[LeadProviders PUT ERROR]', e)
+    return NextResponse.json({ error: 'Failed to update lead provider' }, { status: 500 })
   }
 }
 
@@ -174,7 +175,7 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('[LeadProviders DELETE ERROR]', e)
+    return NextResponse.json({ error: 'Failed to delete lead provider' }, { status: 500 })
   }
 }

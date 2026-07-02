@@ -25,8 +25,8 @@ export async function POST(req: NextRequest) {
       raw: rawOutput,
       parsed,
     })
-  } catch (err) {
-    console.error('[Agent Run]', err)
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Agent execution failed' }, { status: 500 })
+  } catch (e) {
+    console.error('[AI AGENT RUN POST ERROR]', e)
+    return NextResponse.json({ error: 'Operation failed.' }, { status: 500 })
   }
 }

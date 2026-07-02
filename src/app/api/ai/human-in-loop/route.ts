@@ -63,9 +63,9 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ error: 'Invalid action. Use check_replies or stop_automation' }, { status: 400 })
-  } catch (err) {
-    console.error('[Human-in-Loop]', err)
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Failed' }, { status: 500 })
+  } catch (e) {
+    console.error('[AI HUMAN-IN-LOOP POST ERROR]', e)
+    return NextResponse.json({ error: 'Operation failed.' }, { status: 500 })
   }
 }
 

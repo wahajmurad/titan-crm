@@ -370,9 +370,9 @@ export async function POST(req: NextRequest) {
         revisionCount: context.revisionCount || 0,
       },
     })
-  } catch (err) {
-    console.error('[Personalization Engine]', err)
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Pipeline failed' }, { status: 500 })
+  } catch (e) {
+    console.error('[AI PERSONALIZATION ENGINE POST ERROR]', e)
+    return NextResponse.json({ error: 'Operation failed.' }, { status: 500 })
   }
 }
 

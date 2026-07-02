@@ -96,8 +96,8 @@ export async function POST(req: NextRequest) {
     })
 
     return NextResponse.json({ intel: data, saved: !!intel })
-  } catch (err) {
-    console.error('[Intel Report]', err)
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Failed to generate intel report' }, { status: 500 })
+  } catch (e) {
+    console.error('[AI INTEL REPORT POST ERROR]', e)
+    return NextResponse.json({ error: 'Operation failed.' }, { status: 500 })
   }
 }

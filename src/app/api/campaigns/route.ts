@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth'
+import { sanitizeString } from '@/lib/types'
 
 // GET /api/campaigns — list campaigns with counts, filter by status
 export async function GET(req: NextRequest) {
@@ -11,8 +12,8 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url)
     const status = searchParams.get('status')
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '50')
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1') || 1)
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '50') || 50))
 
     const where: Record<string, unknown> = {}
     if (status) where.status = status
@@ -34,8 +35,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ campaigns, total, page, limit })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('[CAMPAIGNS GET ERROR]', e)
+    return NextResponse.json({ error: 'Failed to load campaigns.' }, { status: 500 })
   }
 }
 
@@ -55,15 +56,15 @@ export async function POST(req: NextRequest) {
 
     const campaign = await db.campaign.create({
       data: {
-        name: name.trim(),
-        industry: industry || null,
-        targetLocation: targetLocation || null,
-        targetCity: targetCity || null,
-        targetSize: targetSize || null,
-        serviceOffering: serviceOffering || null,
-        dailyLimit: dailyLimit ?? 20,
-        aiModel: aiModel || 'default',
-        notes: notes || null,
+        name: sanitizeString(name).trim(),
+        industry: industry ? sanitizeString(industry) : null,
+        targetLocation: targetLocation ? sanitizeString(targetLocation) : null,
+        targetCity: targetCity ? sanitizeString(targetCity) : null,
+        targetSize: targetSize ? sanitizeString(targetSize) : null,
+        serviceOffering: serviceOffering ? sanitizeString(serviceOffering) : null,
+        dailyLimit: typeof dailyLimit === 'number' ? Math.min(1000, Math.max(1, dailyLimit)) : 20,
+        aiModel: aiModel ? sanitizeString(aiModel).slice(0, 100) : 'default',
+        notes: notes ? sanitizeString(notes) : null,
         status: status || 'ACTIVE',
         ownerId: session.id,
       },
@@ -83,8 +84,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ campaign }, { status: 201 })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('[CAMPAIGNS POST ERROR]', e)
+    return NextResponse.json({ error: 'Failed to create campaign.' }, { status: 500 })
   }
 }
 
@@ -107,21 +108,21 @@ export async function PATCH(req: NextRequest) {
 
     const updateData: Record<string, unknown> = {}
 
-    if (name !== undefined) updateData.name = name.trim()
-    if (industry !== undefined) updateData.industry = industry || null
-    if (targetLocation !== undefined) updateData.targetLocation = targetLocation || null
-    if (targetCity !== undefined) updateData.targetCity = targetCity || null
-    if (targetSize !== undefined) updateData.targetSize = targetSize || null
-    if (serviceOffering !== undefined) updateData.serviceOffering = serviceOffering || null
-    if (dailyLimit !== undefined) updateData.dailyLimit = dailyLimit
-    if (aiModel !== undefined) updateData.aiModel = aiModel
-    if (notes !== undefined) updateData.notes = notes || null
+    if (name !== undefined) updateData.name = sanitizeString(name).trim()
+    if (industry !== undefined) updateData.industry = industry ? sanitizeString(industry) : null
+    if (targetLocation !== undefined) updateData.targetLocation = targetLocation ? sanitizeString(targetLocation) : null
+    if (targetCity !== undefined) updateData.targetCity = targetCity ? sanitizeString(targetCity) : null
+    if (targetSize !== undefined) updateData.targetSize = targetSize ? sanitizeString(targetSize) : null
+    if (serviceOffering !== undefined) updateData.serviceOffering = serviceOffering ? sanitizeString(serviceOffering) : null
+    if (dailyLimit !== undefined) updateData.dailyLimit = typeof dailyLimit === 'number' ? Math.min(1000, Math.max(1, dailyLimit)) : undefined
+    if (aiModel !== undefined) updateData.aiModel = aiModel ? sanitizeString(aiModel).slice(0, 100) : undefined
+    if (notes !== undefined) updateData.notes = notes ? sanitizeString(notes) : null
     if (status !== undefined) updateData.status = status
 
-    // Handle counter increments: { field: 'leadCount' | 'sentCount' | 'replyCount' | 'meetingCount' | 'wonCount', amount?: number }
+    // Handle counter increments
     if (increment) {
       const counterField = increment.field
-      const amount = increment.amount ?? 1
+      const amount = typeof increment.amount === 'number' ? Math.min(10000, Math.max(1, increment.amount)) : 1
       if (['leadCount', 'sentCount', 'replyCount', 'meetingCount', 'wonCount'].includes(counterField)) {
         updateData[counterField] = { increment: amount }
       }
@@ -146,7 +147,7 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ campaign })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('[CAMPAIGNS PATCH ERROR]', e)
+    return NextResponse.json({ error: 'Failed to update campaign.' }, { status: 500 })
   }
 }

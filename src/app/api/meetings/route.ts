@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth'
+import { sanitizeString } from '@/lib/types'
+import { MEETING_STATUS } from '@/lib/types'
+
+const VALID_STATUSES = new Set(MEETING_STATUS)
 
 export async function GET(req: NextRequest) {
   try {
@@ -13,12 +17,19 @@ export async function GET(req: NextRequest) {
     const from = searchParams.get('from')
     const to = searchParams.get('to')
 
-    const where: Record<string, unknown> = {}
-    if (status) where.status = status
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: any = {}
+    if (status && VALID_STATUSES.has(status as "SCHEDULED")) where.status = status
     if (from || to) {
-      where.date = {}
-      if (from) (where.date as Record<string, unknown>).gte = new Date(from)
-      if (to) (where.date as Record<string, unknown>).lte = new Date(to)
+      where.date = {} as Record<string, unknown>
+      if (from) {
+        const fromDate = new Date(from)
+        if (!isNaN(fromDate.getTime())) (where.date as Record<string, unknown>).gte = fromDate
+      }
+      if (to) {
+        const toDate = new Date(to)
+        if (!isNaN(toDate.getTime())) (where.date as Record<string, unknown>).lte = toDate
+      }
     }
 
     const meetings = await db.meeting.findMany({
@@ -27,12 +38,13 @@ export async function GET(req: NextRequest) {
         lead: { include: { business: { select: { name: true, website: true, email: true, phone: true } } } },
       },
       orderBy: { date: 'asc' },
+      take: 200,
     })
 
     return NextResponse.json({ meetings })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('[MEETINGS GET ERROR]', e)
+    return NextResponse.json({ error: 'Failed to load meetings.' }, { status: 500 })
   }
 }
 
@@ -44,8 +56,31 @@ export async function POST(req: NextRequest) {
 
     const data = await req.json()
 
+    // Validate required fields
+    if (!data.leadId || typeof data.leadId !== 'string') {
+      return NextResponse.json({ error: 'leadId is required.' }, { status: 400 })
+    }
+    if (!data.date) {
+      return NextResponse.json({ error: 'Meeting date is required.' }, { status: 400 })
+    }
+    if (!data.title) {
+      return NextResponse.json({ error: 'Meeting title is required.' }, { status: 400 })
+    }
+
+    const meetingStatus = VALID_STATUSES.has(data.status) ? data.status : 'SCHEDULED'
+
+    // Whitelist fields to prevent mass assignment
     const meeting = await db.meeting.create({
-      data,
+      data: {
+        leadId: data.leadId,
+        title: sanitizeString(data.title),
+        description: data.description ? sanitizeString(data.description) : null,
+        date: new Date(data.date),
+        duration: typeof data.duration === 'number' ? Math.min(480, Math.max(5, data.duration)) : 30,
+        status: meetingStatus,
+        meetingLink: data.meetingLink ? String(data.meetingLink).slice(0, 500) : null,
+        notes: data.notes ? sanitizeString(data.notes) : null,
+      },
       include: {
         lead: { include: { business: { select: { name: true } } } },
       },
@@ -61,13 +96,46 @@ export async function POST(req: NextRequest) {
         userId: session.id,
         leadId: data.leadId,
         action: 'MEETING_BOOKED',
-        details: `Meeting booked: ${data.title} on ${new Date(data.date).toLocaleDateString()}`,
+        details: `Meeting booked: ${meeting.title} on ${new Date(meeting.date).toLocaleDateString()}`,
       },
     })
 
     return NextResponse.json({ meeting }, { status: 201 })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('[MEETINGS POST ERROR]', e)
+    return NextResponse.json({ error: 'Failed to create meeting.' }, { status: 500 })
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!session.permissions.meetings?.canEdit) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+    const data = await req.json()
+    if (!data.id) return NextResponse.json({ error: 'Meeting ID is required.' }, { status: 400 })
+
+    const updateData: Record<string, unknown> = {}
+    if (data.title !== undefined) updateData.title = sanitizeString(data.title)
+    if (data.description !== undefined) updateData.description = data.description ? sanitizeString(data.description) : null
+    if (data.date !== undefined) updateData.date = new Date(data.date)
+    if (data.duration !== undefined) updateData.duration = Math.min(480, Math.max(5, data.duration))
+    if (data.status !== undefined && VALID_STATUSES.has(data.status)) updateData.status = data.status
+    if (data.meetingLink !== undefined) updateData.meetingLink = data.meetingLink ? String(data.meetingLink).slice(0, 500) : null
+    if (data.notes !== undefined) updateData.notes = data.notes ? sanitizeString(data.notes) : null
+
+    const meeting = await db.meeting.update({
+      where: { id: data.id },
+      data: updateData,
+      include: {
+        lead: { include: { business: { select: { name: true } } } },
+      },
+    })
+
+    return NextResponse.json({ meeting })
+  } catch (e: unknown) {
+    console.error('[MEETINGS PATCH ERROR]', e)
+    return NextResponse.json({ error: 'Failed to update meeting.' }, { status: 500 })
   }
 }

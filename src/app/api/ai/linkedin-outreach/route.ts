@@ -132,8 +132,8 @@ Return valid JSON only. No markdown.`
       companyName: resolvedCompany,
       ...parsed,
     })
-  } catch (err) {
-    console.error('[LinkedIn Outreach]', err)
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Failed to generate LinkedIn outreach' }, { status: 500 })
+  } catch (e) {
+    console.error('[AI LINKEDIN OUTREACH POST ERROR]', e)
+    return NextResponse.json({ error: 'Operation failed.' }, { status: 500 })
   }
 }

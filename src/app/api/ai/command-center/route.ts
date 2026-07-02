@@ -10,8 +10,8 @@ export async function POST(req: NextRequest) {
 
     const result = commandCenter(command)
     return NextResponse.json(result)
-  } catch (err) {
-    console.error('[Command Center]', err)
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Command failed' }, { status: 500 })
+  } catch (e) {
+    console.error('[AI COMMAND CENTER POST ERROR]', e)
+    return NextResponse.json({ error: 'Operation failed.' }, { status: 500 })
   }
 }

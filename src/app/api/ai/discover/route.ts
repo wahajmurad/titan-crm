@@ -160,8 +160,8 @@ export async function POST(req: NextRequest) {
       discoveredCount: resultCompanies.length,
       newLeadsAdded: createdLeads.length,
     }, { status: 201 })
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+  } catch (e) {
+    console.error('[AI DISCOVER POST ERROR]', e)
+    return NextResponse.json({ error: 'Operation failed.' }, { status: 500 })
   }
 }

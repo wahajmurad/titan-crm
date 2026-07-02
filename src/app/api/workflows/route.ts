@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db as prisma } from '@/lib/db'
 import { getSession } from '@/lib/auth'
+import { sanitizeString } from '@/lib/types'
 
 export async function GET() {
   try {
@@ -31,8 +32,8 @@ export async function POST(req: NextRequest) {
 
     const workflow = await prisma.workflow.create({
       data: {
-        name,
-        description: description || null,
+        name: sanitizeString(name),
+        description: description ? sanitizeString(description) : null,
         nodesJson: nodesJson || null,
         edgesJson: edgesJson || null,
         triggerType: triggerType || 'manual',

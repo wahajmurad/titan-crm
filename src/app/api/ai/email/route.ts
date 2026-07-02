@@ -99,8 +99,8 @@ export async function POST(req: NextRequest) {
       subject: parsed.subject || 'No Subject',
       body: parsed.body || rawResult,
     })
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+  } catch (e) {
+    console.error('[AI EMAIL POST ERROR]', e)
+    return NextResponse.json({ error: 'Operation failed.' }, { status: 500 })
   }
 }

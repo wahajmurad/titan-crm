@@ -105,8 +105,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(parsed)
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+  } catch (e) {
+    console.error('[AI INTELLIGENCE POST ERROR]', e)
+    return NextResponse.json({ error: 'Operation failed.' }, { status: 500 })
   }
 }

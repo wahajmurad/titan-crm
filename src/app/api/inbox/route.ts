@@ -136,13 +136,15 @@ export async function GET(req: NextRequest) {
       : items
 
     const total = filtered.length
-    const paginated = filtered.slice((page - 1) * limit, page * limit)
+    const safePage = Math.max(1, page || 1)
+    const safeLimit = Math.min(100, Math.max(1, limit || 50))
+    const paginated = filtered.slice((safePage - 1) * safeLimit, safePage * safeLimit)
 
     return NextResponse.json({
       items: paginated,
       total,
-      page,
-      limit,
+      page: safePage,
+      limit: safeLimit,
       counts: {
         total: items.length,
         replies: grouped.replies.length,
@@ -153,7 +155,7 @@ export async function GET(req: NextRequest) {
       groups: grouped,
     })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('[INBOX GET ERROR]', e)
+    return NextResponse.json({ error: 'Failed to load inbox.' }, { status: 500 })
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth'
+import { sanitizeString } from '@/lib/types'
 
 // GET /api/prompts — list prompt templates, filter by category
 export async function GET(req: NextRequest) {
@@ -13,7 +14,7 @@ export async function GET(req: NextRequest) {
     const category = searchParams.get('category')
 
     const where: Record<string, unknown> = {}
-    if (category) where.category = category
+    if (category) where.category = sanitizeString(category)
 
     const prompts = await db.promptTemplate.findMany({
       where,
@@ -22,8 +23,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ prompts })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('[Prompts GET ERROR]', e)
+    return NextResponse.json({ error: 'Failed to fetch prompts' }, { status: 500 })
   }
 }
 
@@ -56,17 +57,17 @@ export async function POST(req: NextRequest) {
 
     const created = await db.promptTemplate.create({
       data: {
-        name: name.trim(),
-        category: category.trim(),
-        prompt: prompt.trim(),
+        name: sanitizeString(name),
+        category: sanitizeString(category),
+        prompt: sanitizeString(prompt),
         isDefault: !!isDefault,
       },
     })
 
     return NextResponse.json({ prompt: created }, { status: 201 })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('[Prompts POST ERROR]', e)
+    return NextResponse.json({ error: 'Failed to create prompt' }, { status: 500 })
   }
 }
 
@@ -96,9 +97,9 @@ export async function PATCH(req: NextRequest) {
     }
 
     const updateData: Record<string, unknown> = { updatedAt: new Date() }
-    if (name !== undefined) updateData.name = name.trim()
-    if (category !== undefined) updateData.category = category.trim()
-    if (prompt !== undefined) updateData.prompt = prompt.trim()
+    if (name !== undefined) updateData.name = sanitizeString(name)
+    if (category !== undefined) updateData.category = sanitizeString(category)
+    if (prompt !== undefined) updateData.prompt = sanitizeString(prompt)
     if (isDefault !== undefined) updateData.isDefault = !!isDefault
 
     const updated = await db.promptTemplate.update({
@@ -108,8 +109,8 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ prompt: updated })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('[Prompts PATCH ERROR]', e)
+    return NextResponse.json({ error: 'Failed to update prompt' }, { status: 500 })
   }
 }
 
@@ -134,7 +135,7 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('[Prompts DELETE ERROR]', e)
+    return NextResponse.json({ error: 'Failed to delete prompt' }, { status: 500 })
   }
 }

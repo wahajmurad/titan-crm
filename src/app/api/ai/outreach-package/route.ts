@@ -174,9 +174,9 @@ Return valid JSON only. No markdown.`
       totalAssetsToGenerate: parsed.totalAssetsToGenerate || 5,
       estimatedPrepTime: parsed.estimatedPrepTime || '3-5 minutes',
     })
-  } catch (err) {
-    console.error('[Outreach Package]', err)
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Failed to generate outreach package' }, { status: 500 })
+  } catch (e) {
+    console.error('[AI OUTREACH PACKAGE POST ERROR]', e)
+    return NextResponse.json({ error: 'Operation failed.' }, { status: 500 })
   }
 }
 

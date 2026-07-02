@@ -59,8 +59,8 @@ Calculate the ROI for implementing these AI solutions.`,
     }
 
     return NextResponse.json(parsed)
-  } catch (err) {
-    console.error('[ROI Calculator]', err)
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'ROI calculation failed' }, { status: 500 })
+  } catch (e) {
+    console.error('[AI ROI CALCULATOR POST ERROR]', e)
+    return NextResponse.json({ error: 'Operation failed.' }, { status: 500 })
   }
 }

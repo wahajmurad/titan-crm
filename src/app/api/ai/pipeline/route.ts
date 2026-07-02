@@ -51,8 +51,8 @@ export async function POST(req: NextRequest) {
       })),
       error: result.error,
     })
-  } catch (err) {
-    console.error('[Pipeline]', err)
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Pipeline execution failed' }, { status: 500 })
+  } catch (e) {
+    console.error('[AI PIPELINE POST ERROR]', e)
+    return NextResponse.json({ error: 'Operation failed.' }, { status: 500 })
   }
 }

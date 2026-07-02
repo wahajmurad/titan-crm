@@ -114,8 +114,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ error: 'Invalid type. Use analyze_performance or store_memory' }, { status: 400 })
-  } catch (err) {
-    console.error('[Learning POST]', err)
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Learning analysis failed' }, { status: 500 })
+  } catch (e) {
+    console.error('[AI LEARNING POST ERROR]', e)
+    return NextResponse.json({ error: 'Operation failed.' }, { status: 500 })
   }
 }

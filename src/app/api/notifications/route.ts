@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth'
+import { sanitizeString } from '@/lib/types'
 
 export async function GET(req: NextRequest) {
   try {
@@ -9,7 +10,7 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url)
     const unreadOnly = searchParams.get('unread') === 'true'
-    const limit = parseInt(searchParams.get('limit') || '50')
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '50') || 50))
 
     const where: Record<string, unknown> = { userId: session.id }
     if (unreadOnly) where.read = false
@@ -27,8 +28,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ notifications, unreadCount })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('[Notifications GET ERROR]', e)
+    return NextResponse.json({ error: 'Failed to fetch notifications' }, { status: 500 })
   }
 }
 
@@ -47,18 +48,18 @@ export async function POST(req: NextRequest) {
     const notification = await db.notification.create({
       data: {
         userId: userId || session.id,
-        title: title || 'Notification',
-        message: message || '',
+        title: title ? sanitizeString(title) : 'Notification',
+        message: message ? sanitizeString(message) : '',
         type: type || 'info',
-        link: link || null,
+        link: link ? sanitizeString(link) : null,
         linkId: linkId || null,
       },
     })
 
     return NextResponse.json({ notification }, { status: 201 })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('[Notifications POST ERROR]', e)
+    return NextResponse.json({ error: 'Failed to create notification' }, { status: 500 })
   }
 }
 
@@ -88,7 +89,7 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ error: 'id or markAllRead required' }, { status: 400 })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('[Notifications PATCH ERROR]', e)
+    return NextResponse.json({ error: 'Failed to update notification' }, { status: 500 })
   }
 }

@@ -53,8 +53,8 @@ Key Differentiator: ${competitorDifferentiator || 'AI-powered, personalized solu
     }
 
     return NextResponse.json({ angles: parsed })
-  } catch (err) {
-    console.error('[Sales Angles]', err)
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Failed to generate sales angles' }, { status: 500 })
+  } catch (e) {
+    console.error('[AI SALES ANGLES POST ERROR]', e)
+    return NextResponse.json({ error: 'Operation failed.' }, { status: 500 })
   }
 }

@@ -96,7 +96,7 @@ export async function GET() {
       activeCampaigns: activeCampaignsCount,
     })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('[DASHBOARD GET ERROR]', e)
+    return NextResponse.json({ error: 'Failed to load dashboard data.' }, { status: 500 })
   }
 }

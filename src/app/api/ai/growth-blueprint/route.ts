@@ -166,8 +166,8 @@ Return valid JSON only. No markdown.`
       companyName: resolvedCompany,
       ...parsed,
     })
-  } catch (err) {
-    console.error('[Growth Blueprint]', err)
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Failed to generate growth blueprint' }, { status: 500 })
+  } catch (e) {
+    console.error('[AI GROWTH BLUEPRINT POST ERROR]', e)
+    return NextResponse.json({ error: 'Operation failed.' }, { status: 500 })
   }
 }

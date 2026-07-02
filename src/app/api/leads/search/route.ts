@@ -220,10 +220,9 @@ export async function POST(req: NextRequest) {
 
     const { enrichedLeads, newCount, existingCount } = await checkExisting(allLeads)
     return NextResponse.json({ leads: enrichedLeads, total: enrichedLeads.length, newCount, existingCount, source: 'SERPER' })
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Unknown error'
-    console.error('Lead search error:', msg)
-    return NextResponse.json({ error: msg }, { status: 500 })
+  } catch (e) {
+    console.error('[LEADS SEARCH POST ERROR]', e)
+    return NextResponse.json({ error: 'Operation failed.' }, { status: 500 })
   }
 }
 

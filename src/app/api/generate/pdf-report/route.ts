@@ -63,9 +63,9 @@ export async function POST(req: NextRequest) {
       assetId: asset.id,
       fileName: `titan-audit-${business.name.replace(/\s+/g, '-').toLowerCase()}.html`,
     })
-  } catch (err) {
-    console.error('[PDF Report]', err)
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Failed to generate report' }, { status: 500 })
+  } catch (e) {
+    console.error('[GENERATE PDF REPORT POST ERROR]', e)
+    return NextResponse.json({ error: 'Operation failed.' }, { status: 500 })
   }
 }
 
