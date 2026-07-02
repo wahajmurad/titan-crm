@@ -3,9 +3,9 @@
   "version": "0.2.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3000 2>&1 | tee dev.log",
+    "dev": "bash scripts/init-db.sh && next dev -p 3000 2>&1 | tee dev.log",
     "build": "next build",
-    "start": "NODE_ENV=production bun .next/standalone/server.js 2>&1 | tee server.log",
+    "start": "bash scripts/init-db.sh && NODE_ENV=production bun .next/standalone/server.js 2>&1 | tee server.log",
     "lint": "eslint .",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
