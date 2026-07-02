@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -9,11 +9,11 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { useAppStore, type AppView } from '@/lib/store'
 import {
-  Users, Target, Mail, Sparkles, ArrowRight, ArrowUpRight,
-  ArrowDownRight, Search, Clock, PieChart as PieIcon,
+  Users, Target, Mail, Sparkles, ArrowRight,
+  Search, Clock, PieChart as PieIcon,
   BarChart3, Bot, CalendarDays, Building2, TrendingUp,
   MessageSquare, Zap, Globe, CheckCircle2, XCircle,
-  Video, Phone, MapPin,
+  Video, Phone, MapPin, RefreshCw,
 } from 'lucide-react'
 import { formatDistanceToNow, format } from 'date-fns'
 import {
@@ -22,6 +22,25 @@ import {
 } from 'recharts'
 
 // ─── Types ───────────────────────────────────────────────────────────────
+
+interface CampaignRow {
+  id: string
+  name: string
+  status: string
+  sent: number
+  opened: number
+  replied: number
+  meetings: number
+}
+
+interface MeetingRow {
+  id: string
+  company: string
+  contact: string
+  time: string
+  type: string
+  date: string
+}
 
 interface DashboardData {
   totalLeads: number
@@ -37,6 +56,8 @@ interface DashboardData {
   outreachSent: number
   qualifiedCount: number
   activeCampaigns: number
+  campaigns: CampaignRow[]
+  upcomingMeetings: MeetingRow[]
 }
 
 interface ActivityItem {
@@ -96,75 +117,6 @@ const PIPELINE_COLORS = ['#BFDBFE', '#93C5FD', '#60A5FA', '#3B82F6', '#2563EB', 
 
 const INDUSTRY_COLORS = ['#2563EB', '#3B82F6', '#60A5FA', '#93C5FD', '#BFDBFE', '#DBEAFE']
 
-const SPARKLINE_DATA = [
-  { v: 42 }, { v: 58 }, { v: 45 }, { v: 62 }, { v: 55 },
-  { v: 71 }, { v: 64 }, { v: 78 }, { v: 72 }, { v: 85 },
-]
-
-// ─── Mock Fallback Data ──────────────────────────────────────────────────
-
-const MOCK_DATA: DashboardData = {
-  totalLeads: 1847,
-  stages: {
-    DISCOVERED: 423,
-    AUDITED: 312,
-    QUALIFIED: 267,
-    OUTREACH_SENT: 198,
-    REPLIED: 134,
-    MEETING_BOOKED: 89,
-    WON: 52,
-  },
-  outreach: { sent: 342, opened: 231, replied: 87, bounced: 12 },
-  meetings: { booked: 14, completed: 9, upcoming: 5 },
-  replyRate: 24.7,
-  recentActivities: [
-    { id: '1', action: 'discovered', details: 'Found 15 new leads in Healthcare industry', createdAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(), user: { name: 'AI Agent' }, lead: null },
-    { id: '2', action: 'audit', details: 'Website audit completed for Acme Corp — Score: 72/100', createdAt: new Date(Date.now() - 1000 * 60 * 35).toISOString(), user: { name: 'AI Agent' }, lead: { business: { name: 'Acme Corp' } } },
-    { id: '3', action: 'email', details: 'Personalized email generated for John Smith at XYZ Law', createdAt: new Date(Date.now() - 1000 * 60 * 58).toISOString(), user: { name: 'AI Agent' }, lead: { business: { name: 'XYZ Law' } } },
-    { id: '4', action: 'meeting', details: 'Follow-up scheduled for 3 leads in Financial Services', createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(), user: { name: 'System' }, lead: null },
-    { id: '5', action: 'outreach', details: 'Email sequence started for 12 leads in SaaS vertical', createdAt: new Date(Date.now() - 1000 * 60 * 150).toISOString(), user: { name: 'AI Agent' }, lead: null },
-  ],
-  leadsByIndustry: [
-    { industry: 'Healthcare', _count: { industry: 324 } },
-    { industry: 'SaaS', _count: { industry: 287 } },
-    { industry: 'Financial Services', _count: { industry: 213 } },
-    { industry: 'Legal', _count: { industry: 178 } },
-    { industry: 'Real Estate', _count: { industry: 156 } },
-    { industry: 'E-commerce', _count: { industry: 134 } },
-  ],
-  temperature: { HOT: 187, WARM: 423, COLD: 1237 },
-  wonCount: 52,
-  meetingBooked: 14,
-  outreachSent: 342,
-  qualifiedCount: 267,
-  activeCampaigns: 8,
-}
-
-const MOCK_CAMPAIGNS = [
-  { name: 'Q1 Healthcare Outreach', status: 'Active', sent: 124, opened: 89, replied: 34, meetings: 8 },
-  { name: 'SaaS Decision Makers', status: 'Active', sent: 98, opened: 67, replied: 28, meetings: 5 },
-  { name: 'Legal Firm Expansion', status: 'Paused', sent: 76, opened: 52, replied: 18, meetings: 3 },
-  { name: 'Real Estate Agents Q1', status: 'Active', sent: 44, opened: 23, replied: 7, meetings: 1 },
-  { name: 'Financial Services Retarget', status: 'Draft', sent: 0, opened: 0, replied: 0, meetings: 0 },
-]
-
-const MOCK_MEETINGS = [
-  { company: 'Acme Corp', contact: 'Sarah Chen', time: '10:00 AM', type: 'Video Call', date: 'Today' },
-  { company: 'TechVentures Inc', contact: 'Marcus Johnson', time: '2:30 PM', type: 'Phone', date: 'Today' },
-  { company: 'Greenleaf Legal', contact: 'Emily Davis', time: '11:00 AM', type: 'In Person', date: 'Tomorrow' },
-  { company: 'Skyline Properties', contact: 'David Park', time: '9:00 AM', type: 'Video Call', date: 'Tomorrow' },
-]
-
-const MOCK_AI_FEED = [
-  { icon: Globe, text: 'Discovered 15 new leads in Healthcare industry', time: '12 min ago', color: 'text-emerald-500' },
-  { icon: Search, text: 'Website audit completed for Acme Corp — Score: 72/100', time: '35 min ago', color: 'text-blue-500' },
-  { icon: Mail, text: 'Personalized email generated for John Smith at XYZ Law', time: '58 min ago', color: 'text-violet-500' },
-  { icon: CalendarDays, text: 'Follow-up scheduled for 3 leads in Financial Services', time: '1h ago', color: 'text-amber-500' },
-  { icon: Bot, text: 'Email sequence optimization completed — +5% open rate', time: '2h ago', color: 'text-blue-500' },
-  { icon: Target, text: 'Lead scoring updated — 12 leads moved to Hot', time: '3h ago', color: 'text-rose-500' },
-  { icon: Sparkles, text: 'New market segment identified: Cybersecurity startups', time: '4h ago', color: 'text-emerald-500' },
-]
-
 // ─── Tooltips ────────────────────────────────────────────────────────────
 
 function BarTooltipContent({
@@ -199,36 +151,6 @@ function PieTooltipContent({
       <p className="text-[11px] font-medium text-gray-400">{d.name}</p>
       <p className="text-[13px] font-bold text-gray-900">{d.value} leads</p>
     </div>
-  )
-}
-
-// ─── Mini Sparkline Component ────────────────────────────────────────────
-
-function MiniSparkline({ data, color = '#2563EB' }: { data: number[]; color?: string }) {
-  const max = Math.max(...data)
-  const min = Math.min(...data)
-  const range = max - min || 1
-  const w = 64
-  const h = 24
-  const points = data
-    .map((v, i) => {
-      const x = (i / (data.length - 1)) * w
-      const y = h - ((v - min) / range) * h
-      return `${x},${y}`
-    })
-    .join(' ')
-
-  return (
-    <svg width={w} height={h} className="inline-block ml-1 align-middle" viewBox={`0 0 ${w} ${h}`}>
-      <polyline
-        fill="none"
-        stroke={color}
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        points={points}
-      />
-    </svg>
   )
 }
 
@@ -270,12 +192,17 @@ function DashboardSkeleton() {
 function CampaignStatusBadge({ status }: { status: string }) {
   const config: Record<string, { variant: 'default' | 'secondary' | 'outline' | 'destructive'; className: string }> = {
     Active: { variant: 'default', className: 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' },
+    ACTIVE: { variant: 'default', className: 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' },
     Paused: { variant: 'default', className: 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100' },
+    PAUSED: { variant: 'default', className: 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100' },
     Draft: { variant: 'default', className: 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200' },
+    DRAFT: { variant: 'default', className: 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200' },
     Completed: { variant: 'default', className: 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100' },
+    COMPLETED: { variant: 'default', className: 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100' },
   }
   const c = config[status] || config.Draft
-  return <Badge variant={c.variant} className={cn('text-[11px] font-medium px-2 py-0.5 rounded-md', c.className)}>{status}</Badge>
+  const displayStatus = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()
+  return <Badge variant={c.variant} className={cn('text-[11px] font-medium px-2 py-0.5 rounded-md', c.className)}>{displayStatus}</Badge>
 }
 
 function MeetingTypeBadge({ type }: { type: string }) {
@@ -294,6 +221,24 @@ function MeetingTypeBadge({ type }: { type: string }) {
   )
 }
 
+// ─── Activity Icon Helper ────────────────────────────────────────────────
+
+function ActivityIcon({ action }: { action: string }) {
+  const iconMap: Record<string, typeof Sparkles> = {
+    discovered: Globe,
+    discovery: Globe,
+    audit: Search,
+    email: Mail,
+    meeting: CalendarDays,
+    outreach: Target,
+    created: Sparkles,
+    qualified: CheckCircle2,
+    updated: RefreshCw,
+  }
+  const Icon = iconMap[action.toLowerCase()] || Sparkles
+  return <Icon className="w-3.5 h-3.5 text-blue-500" />
+}
+
 // ─── Main Component ──────────────────────────────────────────────────────
 
 export function DashboardView({ userName }: { userName: string }) {
@@ -307,11 +252,9 @@ export function DashboardView({ userName }: { userName: string }) {
       if (res.ok) {
         const json = await res.json()
         setData(json)
-      } else {
-        setData(MOCK_DATA)
       }
     } catch {
-      setData(MOCK_DATA)
+      // silent — skeleton already showing
     } finally {
       setLoading(false)
     }
@@ -330,8 +273,24 @@ export function DashboardView({ userName }: { userName: string }) {
     )
   }
 
-  // Use API data or fallback to mock
-  const d = data || MOCK_DATA
+  // ─── Empty State ─────────────────────────────────────────────────
+  if (!data) {
+    return (
+      <div className="space-y-6 p-1">
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <BarChart3 className="w-12 h-12 text-gray-200 mb-4" />
+          <h3 className="text-lg font-semibold text-gray-400 mb-1">Unable to load dashboard</h3>
+          <p className="text-sm text-gray-300 mb-4">Check your connection and try again.</p>
+          <Button variant="outline" size="sm" onClick={fetchDashboard}>
+            <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+            Retry
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  const d = data
 
   // ─── Derived Data ────────────────────────────────────────────────
   const pipelineData = STAGE_ORDER.map((stage, i) => ({
@@ -351,12 +310,7 @@ export function DashboardView({ userName }: { userName: string }) {
 
   const industryTotal = industryData.reduce((sum, item) => sum + item.value, 0)
 
-  const activities = d.recentActivities || []
-
-  // Use real activities if we have enough, otherwise supplement with mock
-  const displayActivities = activities.length >= 3
-    ? activities
-    : [...activities, ...MOCK_DATA.recentActivities.slice(activities.length)]
+  const displayActivities = d.recentActivities || []
 
   // KPI cards data
   const kpis = [
@@ -366,8 +320,6 @@ export function DashboardView({ userName }: { userName: string }) {
       icon: Target,
       iconBg: 'bg-blue-50',
       iconColor: 'text-blue-600',
-      change: '+12%',
-      positive: true,
     },
     {
       label: 'New Qualified Leads',
@@ -376,8 +328,6 @@ export function DashboardView({ userName }: { userName: string }) {
       icon: Users,
       iconBg: 'bg-emerald-50',
       iconColor: 'text-emerald-600',
-      change: '+23%',
-      positive: true,
     },
     {
       label: 'Emails Sent',
@@ -386,8 +336,6 @@ export function DashboardView({ userName }: { userName: string }) {
       icon: Mail,
       iconBg: 'bg-violet-50',
       iconColor: 'text-violet-600',
-      change: '-3%',
-      positive: false,
     },
     {
       label: 'Reply Rate',
@@ -395,9 +343,6 @@ export function DashboardView({ userName }: { userName: string }) {
       icon: TrendingUp,
       iconBg: 'bg-amber-50',
       iconColor: 'text-amber-600',
-      change: '+8%',
-      positive: true,
-      sparkline: true,
     },
   ]
 
@@ -425,15 +370,6 @@ export function DashboardView({ userName }: { userName: string }) {
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
-          {/* AI Status Indicator */}
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-100">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
-            </span>
-            <span className="text-xs font-medium text-blue-700">3 AI agents active</span>
-          </div>
-
           {/* Quick Action Buttons */}
           <Button
             variant="outline"
@@ -486,27 +422,11 @@ export function DashboardView({ userName }: { userName: string }) {
               <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center', kpi.iconBg)}>
                 <kpi.icon className={cn('w-4 h-4', kpi.iconColor)} />
               </div>
-              {kpi.change && (
-                <span className={cn(
-                  'inline-flex items-center gap-0.5 text-xs font-medium',
-                  kpi.positive ? 'text-emerald-600' : 'text-red-500'
-                )}>
-                  {kpi.positive ? (
-                    <ArrowUpRight className="w-3 h-3" />
-                  ) : (
-                    <ArrowDownRight className="w-3 h-3" />
-                  )}
-                  {kpi.change}
-                </span>
-              )}
             </div>
             <div className="flex items-end gap-1.5">
               <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
                 {typeof kpi.value === 'number' ? kpi.value.toLocaleString() : kpi.value}
               </p>
-              {kpi.sparkline && (
-                <MiniSparkline data={SPARKLINE_DATA.map(s => s.v)} color="#2563EB" />
-              )}
             </div>
             <p className="text-xs text-gray-400 mt-1 font-medium">
               {kpi.label}
@@ -580,23 +500,25 @@ export function DashboardView({ userName }: { userName: string }) {
               <span className="text-[11px] text-gray-400 font-medium">Live</span>
             </div>
             <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
-              {MOCK_AI_FEED.map((item, i) => (
+              {displayActivities.length > 0 ? displayActivities.map((item, i) => (
                 <motion.div
-                  key={i}
+                  key={item.id || i}
                   initial={{ opacity: 0, x: -6 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.15 + i * 0.05, duration: 0.25, ease: 'easeOut' as const }}
                   className="flex items-start gap-3 group"
                 >
                   <div className="w-7 h-7 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-blue-50 group-hover:border-blue-100 transition-colors">
-                    <item.icon className={cn('w-3.5 h-3.5', item.color)} />
+                    <ActivityIcon action={item.action} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] text-gray-700 dark:text-gray-300 leading-snug">{item.text}</p>
-                    <p className="text-[11px] text-gray-400 mt-0.5">{item.time}</p>
+                    <p className="text-[13px] text-gray-700 dark:text-gray-300 leading-snug">{item.details || item.action}</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">{formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}</p>
                   </div>
                 </motion.div>
-              ))}
+              )) : (
+                <div className="text-center py-8 text-sm text-gray-400">No recent activity</div>
+              )}
             </div>
           </motion.div>
 
@@ -623,9 +545,9 @@ export function DashboardView({ userName }: { userName: string }) {
               </Button>
             </div>
             <div className="space-y-2.5">
-              {MOCK_MEETINGS.map((meeting, i) => (
+              {d.upcomingMeetings && d.upcomingMeetings.length > 0 ? d.upcomingMeetings.map((meeting) => (
                 <div
-                  key={i}
+                  key={meeting.id}
                   className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors cursor-default group"
                 >
                   <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center shrink-0">
@@ -643,7 +565,9 @@ export function DashboardView({ userName }: { userName: string }) {
                     </p>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <div className="text-center py-8 text-sm text-gray-400">No upcoming meetings</div>
+              )}
             </div>
           </motion.div>
         </div>
@@ -691,9 +615,9 @@ export function DashboardView({ userName }: { userName: string }) {
               </tr>
             </thead>
             <tbody>
-              {MOCK_CAMPAIGNS.map((campaign, i) => (
+              {d.campaigns && d.campaigns.length > 0 ? d.campaigns.map((campaign) => (
                 <tr
-                  key={i}
+                  key={campaign.id}
                   className="border-b border-gray-50 last:border-0 hover:bg-gray-50/80 transition-colors cursor-default group"
                 >
                   <td className="py-3 pr-4">
@@ -738,7 +662,11 @@ export function DashboardView({ userName }: { userName: string }) {
                     </span>
                   </td>
                 </tr>
-              ))}
+              )) : (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-sm text-gray-400">No campaigns yet. Create your first campaign to see performance data.</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -848,48 +776,55 @@ export function DashboardView({ userName }: { userName: string }) {
               <ArrowRight className="w-3 h-3 ml-1" />
             </Button>
           </div>
-          <div className="space-y-0">
-            {displayActivities.slice(0, 5).map((activity, i) => {
-              const actionIcon = getActivityIcon(activity.action)
-              const actionColor = getActivityColor(activity.action)
-              return (
-                <motion.div
-                  key={activity.id || i}
-                  initial={{ opacity: 0, x: -4 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 + i * 0.04, duration: 0.2, ease: 'easeOut' as const }}
-                  className="flex items-start gap-3 py-3 border-b border-gray-50 last:border-0 group"
-                >
-                  <div className={cn(
-                    'w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5',
-                    actionColor
-                  )}>
-                    {actionIcon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13px] text-gray-700 dark:text-gray-300 leading-snug">
-                      <span className="font-medium text-gray-900 dark:text-gray-100">
-                        {activity.user?.name || 'System'}
-                      </span>
-                      {' '}
-                      {activity.action}
-                      {activity.lead?.business?.name && (
+          {displayActivities.length > 0 ? (
+            <div className="space-y-0">
+              {displayActivities.slice(0, 5).map((activity, i) => {
+                const actionIcon = getActivityIcon(activity.action)
+                const actionColor = getActivityColor(activity.action)
+                return (
+                  <motion.div
+                    key={activity.id || i}
+                    initial={{ opacity: 0, x: -4 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 + i * 0.04, duration: 0.2, ease: 'easeOut' as const }}
+                    className="flex items-start gap-3 py-3 border-b border-gray-50 last:border-0 group"
+                  >
+                    <div className={cn(
+                      'w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5',
+                      actionColor
+                    )}>
+                      {actionIcon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] text-gray-700 dark:text-gray-300 leading-snug">
                         <span className="font-medium text-gray-900 dark:text-gray-100">
-                          {' '}{activity.lead.business.name}
+                          {activity.user?.name || 'System'}
                         </span>
+                        {' '}
+                        {activity.action}
+                        {activity.lead?.business?.name && (
+                          <span className="font-medium text-gray-900 dark:text-gray-100">
+                            {' '}{activity.lead.business.name}
+                          </span>
+                        )}
+                      </p>
+                      {activity.details && (
+                        <p className="text-[11px] text-gray-400 mt-0.5 truncate">{activity.details}</p>
                       )}
-                    </p>
-                    {activity.details && (
-                      <p className="text-[11px] text-gray-400 mt-0.5 truncate">{activity.details}</p>
-                    )}
-                  </div>
-                  <span className="text-[11px] text-gray-400 whitespace-nowrap mt-0.5 shrink-0">
-                    {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })}
-                  </span>
-                </motion.div>
-              )
-            })}
-          </div>
+                    </div>
+                    <span className="text-[11px] text-gray-400 whitespace-nowrap mt-0.5 shrink-0">
+                      {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })}
+                    </span>
+                  </motion.div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-48 text-center">
+              <Clock className="w-8 h-8 text-gray-200 mb-2" />
+              <p className="text-sm text-gray-400">No recent activity</p>
+            </div>
+          )}
         </motion.div>
       </div>
     </motion.div>
