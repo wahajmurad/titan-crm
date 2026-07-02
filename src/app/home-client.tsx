@@ -11,6 +11,7 @@ import { SetupView } from '@/components/titan/setup-view'
 import { LoginView } from '@/components/titan/login-view'
 import { CommandPalette } from '@/components/titan/command-palette'
 import { NotificationCenter } from '@/components/titan/notification-center'
+import { BugReportButton } from '@/components/titan/bug-report-button'
 import { Toaster } from 'sonner'
 import { cn } from '@/lib/utils'
 import { Search, Sun, Moon, Zap, Menu, Brain, Target, Settings, Plus, Mail } from 'lucide-react'
@@ -374,6 +375,7 @@ export default function HomeClient() {
 
       <Toaster position="top-right" />
       <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
+      {state === 'app' && <BugReportButton />}
     </div>
   )
 }
