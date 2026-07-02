@@ -36,6 +36,9 @@ const CommandCenterView = dynamic(() => import('@/components/titan/command-cente
 const WorkflowBuilderView = dynamic(() => import('@/components/titan/workflow-builder-view').then(m => ({ default: m.WorkflowBuilderView })), { loading: () => <PageSkeleton /> })
 const AIAgentsView = dynamic(() => import('@/components/titan/ai-agents-view').then(m => ({ default: m.AIAgentsView })), { loading: () => <PageSkeleton /> })
 const PersonalizationView = dynamic(() => import('@/components/titan/personalization-view').then(m => ({ default: m.PersonalizationView })), { loading: () => <PageSkeleton /> })
+const KnowledgeBaseView = dynamic(() => import('@/components/titan/knowledge-base-view').then(m => ({ default: m.KnowledgeBaseView })), { loading: () => <PageSkeleton /> })
+const AIProposalsView = dynamic(() => import('@/components/titan/ai-proposals-view').then(m => ({ default: m.AIProposalsView })), { loading: () => <PageSkeleton /> })
+const MeetingPrepView = dynamic(() => import('@/components/titan/meeting-prep-view').then(m => ({ default: m.MeetingPrepView })), { loading: () => <PageSkeleton /> })
 
 function PageSkeleton() {
   return (
@@ -188,6 +191,9 @@ export default function HomeClient() {
       case 'workflows': return <WorkflowBuilderView />
       case 'ai-agents': return <AIAgentsView />
       case 'personalization': return <PersonalizationView />
+      case 'knowledge-base': return <KnowledgeBaseView />
+      case 'ai-proposals': return <AIProposalsView />
+      case 'meeting-prep': return <MeetingPrepView />
       case 'prompts': return <PromptsView />
       case 'team': return <TeamView />
       case 'settings': return <SettingsView />

@@ -17,10 +17,13 @@ export type AppView =
   | 'prompts'
   | 'team'
   | 'settings'
-  | 'workflows'        // NEW
-  | 'command-center'   // NEW
-  | 'ai-agents'        // NEW
-  | 'personalization'  // NEW — Part 3 USP
+| 'workflows'
+  | 'command-center'
+  | 'ai-agents'
+  | 'personalization'
+  | 'knowledge-base'
+  | 'ai-proposals'
+  | 'meeting-prep'
 
 interface AppState {
   currentView: AppView

@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Search, Globe2, Users, Target, Mail, Inbox,
   Calendar, Brain, BookOpen, UserCog, Settings, LogOut,
   ChevronLeft, ChevronRight, Zap, GraduationCap, Plug, Lightbulb,
-  Sparkles, Package, Workflow
+  Sparkles, Package, Workflow, BookMarked, FileText, CalendarCheck
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
@@ -47,6 +47,14 @@ const NAV_SECTIONS = [
       { view: 'industry-expert' as AppView, label: 'Industry Expert', icon: GraduationCap },
       { view: 'strategy-assistant' as AppView, label: 'Strategy AI', icon: Lightbulb },
       { view: 'prompts' as AppView, label: 'Prompt Library', icon: BookOpen },
+    ],
+  },
+  {
+    label: 'Growth AI',
+    items: [
+      { view: 'knowledge-base' as AppView, label: 'Knowledge Base', icon: BookMarked },
+      { view: 'ai-proposals' as AppView, label: 'AI Proposals', icon: FileText },
+      { view: 'meeting-prep' as AppView, label: 'Meeting Prep', icon: CalendarCheck },
     ],
   },
   {
