@@ -202,7 +202,7 @@ export function CampaignsView() {
               placeholder="Search campaigns..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-8 w-52 h-8 text-sm bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus-visible:ring-blue-500/30"
+              className="pl-8 w-full sm:w-52 h-8 text-sm bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus-visible:ring-blue-500/30"
             />
           </div>
           <CreateCampaignDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={refresh} />
@@ -229,8 +229,9 @@ export function CampaignsView() {
       )}
 
       {/* Status Tabs */}
+      <div className="overflow-x-auto -mx-1 px-1">
       <Tabs value={statusTab} onValueChange={setStatusTab}>
-        <TabsList className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+        <TabsList className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 w-max min-w-full">
           <TabsTrigger value="ALL" className="data-[state=active]:bg-gray-100 dark:data-[state=active]:bg-gray-800 data-[state=active]:text-gray-900 dark:data-[state=active]:text-gray-100 text-gray-500 dark:text-gray-400 text-xs">
             All
             <Badge variant="secondary" className="ml-1.5 h-4 min-w-4 px-1 text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400">
@@ -257,6 +258,7 @@ export function CampaignsView() {
           </TabsTrigger>
         </TabsList>
       </Tabs>
+      </div>
 
       {/* Campaign List */}
       {loading ? (
@@ -271,7 +273,7 @@ export function CampaignsView() {
                   </div>
                   <Skeleton className="h-8 w-24 bg-gray-100 dark:bg-gray-800" />
                 </div>
-                <div className="flex gap-4 mt-4">
+                <div className="flex flex-wrap gap-3 mt-4">
                   {Array.from({ length: 5 }).map((_, j) => (
                     <Skeleton key={j} className="h-10 flex-1 bg-gray-100 dark:bg-gray-800" />
                   ))}
@@ -341,7 +343,7 @@ export function CampaignsView() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 w-7 p-0 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
+                          className="h-9 w-9 p-0 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
                           onClick={(e) => { e.stopPropagation(); handleToggleStatus(campaign) }}
                           title={campaign.status === 'ACTIVE' ? 'Pause campaign' : 'Resume campaign'}
                         >
@@ -352,7 +354,7 @@ export function CampaignsView() {
                       {/* Dropdown actions */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="sm" className="h-9 w-9 p-0 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                             <MoreHorizontal className="w-3.5 h-3.5" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -395,21 +397,21 @@ export function CampaignsView() {
                   </div>
 
                   {/* Row 2: Stats */}
-                  <div className="flex items-center gap-4 mt-4 pt-3 border-t border-gray-200">
+                  <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-4 pt-3 border-t border-gray-200">
                     {STAT_ITEMS.map(s => (
                       <div key={s.key} className="flex items-center gap-1.5">
                         <s.icon className={cn('w-3 h-3', s.color)} />
                         <span className="text-xs text-gray-500">{campaign[s.key]}</span>
                       </div>
                     ))}
-                    <div className="ml-auto flex items-center gap-1.5">
+                    <div className="ml-auto flex items-center gap-1.5 shrink-0">
                       <TrendingUp className="w-3 h-3 text-emerald-400" />
                       <span className="text-xs text-emerald-400 font-medium">{replyRate}% reply rate</span>
                     </div>
                   </div>
 
                   {/* Row 3: Footer */}
-                  <div className="flex items-center justify-between mt-2.5 text-[11px] text-gray-300">
+                  <div className="flex flex-wrap items-center justify-between gap-1 mt-2.5 text-[11px] text-gray-300">
                     <span>Created {format(new Date(campaign.createdAt), 'MMM d, yyyy')}</span>
                     <span>Daily limit: {campaign.dailyLimit}</span>
                   </div>
@@ -495,7 +497,7 @@ function CreateCampaignDialog({ open, onOpenChange, onCreated }: {
           <Plus className="w-3.5 h-3.5 mr-1.5" />New Campaign
         </Button>
       </DialogTrigger>
-      <DialogContent className="bg-white border-gray-200 max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-white border-gray-200 max-w-lg w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-gray-900">Create New Campaign</DialogTitle>
         </DialogHeader>
@@ -512,7 +514,7 @@ function CreateCampaignDialog({ open, onOpenChange, onCreated }: {
           </div>
 
           {/* Industry + Service Offering */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label className="text-gray-600 text-xs font-medium">Target Industry</Label>
               <Input
@@ -534,7 +536,7 @@ function CreateCampaignDialog({ open, onOpenChange, onCreated }: {
           </div>
 
           {/* Location + City */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label className="text-gray-600 text-xs font-medium">Target Location</Label>
               <Input
@@ -556,7 +558,7 @@ function CreateCampaignDialog({ open, onOpenChange, onCreated }: {
           </div>
 
           {/* Target Size + Daily Limit */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label className="text-gray-600 text-xs font-medium">Target Company Size</Label>
               <Select value={form.targetSize} onValueChange={v => update('targetSize', v)}>
@@ -678,7 +680,7 @@ function EditCampaignDialog({ open, onOpenChange, campaign, onUpdated }: {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white border-gray-200 max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-white border-gray-200 max-w-lg w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-gray-900">Edit Campaign</DialogTitle>
         </DialogHeader>
@@ -691,7 +693,7 @@ function EditCampaignDialog({ open, onOpenChange, campaign, onUpdated }: {
               onChange={e => update('name', e.target.value)}
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label className="text-gray-600 text-xs font-medium">Target Industry</Label>
               <Input className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30" value={form.industry} onChange={e => update('industry', e.target.value)} />
@@ -701,7 +703,7 @@ function EditCampaignDialog({ open, onOpenChange, campaign, onUpdated }: {
               <Input className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30" value={form.serviceOffering} onChange={e => update('serviceOffering', e.target.value)} />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label className="text-gray-600 text-xs font-medium">Target Location</Label>
               <Input className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30" value={form.targetLocation} onChange={e => update('targetLocation', e.target.value)} />
@@ -711,7 +713,7 @@ function EditCampaignDialog({ open, onOpenChange, campaign, onUpdated }: {
               <Input className="mt-1.5 bg-gray-100 border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30" value={form.targetCity} onChange={e => update('targetCity', e.target.value)} />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label className="text-gray-600 text-xs font-medium">Company Size</Label>
               <Select value={form.targetSize} onValueChange={v => update('targetSize', v)}>
@@ -771,7 +773,7 @@ function CampaignDetailDialog({ open, onOpenChange, campaign, leads, leadsLoadin
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white border-gray-200 max-w-2xl max-h-[85vh] flex flex-col">
+      <DialogContent className="bg-white border-gray-200 max-w-2xl w-[95vw] sm:w-full max-h-[85vh] flex flex-col">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-gray-900 text-lg">{campaign.name}</DialogTitle>
@@ -827,7 +829,7 @@ function CampaignDetailDialog({ open, onOpenChange, campaign, leads, leadsLoadin
           {/* Outreach Stats */}
           <div className="mb-5">
             <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Outreach Performance</h4>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
               {STAT_ITEMS.map(s => (
                 <div key={s.key} className="bg-gray-50 rounded-lg p-3 text-center">
                   <s.icon className={cn('w-4 h-4 mx-auto mb-1.5', s.color)} />

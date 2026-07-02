@@ -202,7 +202,7 @@ export default function HomeClient() {
   }
 
   const viewLabel = currentView.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-  const isWorkflow = currentView === 'workflows' || currentView === 'workflow-builder'
+  const isWorkflow = currentView === 'workflows'
 
   return (
     <div className="min-h-screen bg-[var(--background)] text-foreground font-sans antialiased">
@@ -267,12 +267,35 @@ export default function HomeClient() {
 
       {/* Mobile Layout */}
       <div className="lg:hidden" role="main">
-        <Sidebar userName={user.name} userRole={user.role} onLogout={handleLogout} />
+        {/* Mobile Sidebar Overlay */}
+        <AnimatePresence>
+          {sidebarOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+              aria-hidden="true"
+            />
+          )}
+        </AnimatePresence>
+        {/* Mobile Sidebar Drawer */}
+        <div
+          className={cn(
+            'fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] lg:hidden',
+            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          )}
+        >
+          <Sidebar userName={user.name} userRole={user.role} onLogout={handleLogout} />
+        </div>
+
         <header className="h-14 glass-header flex items-center justify-between px-4 sticky top-0 z-30">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="p-2 rounded-[10px] hover:bg-muted/50 transition-colors"
+              className="p-2 rounded-[10px] hover:bg-muted/50 transition-colors -ml-2"
               aria-label="Open navigation menu"
             >
               <Menu className="w-5 h-5" />
@@ -294,7 +317,7 @@ export default function HomeClient() {
             <NotificationCenter open={notifOpen} onOpenChange={setNotifOpen} />
           </div>
         </header>
-        <div className="p-4 pb-24">
+        <div className="p-4 pb-20">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentView}
@@ -307,7 +330,7 @@ export default function HomeClient() {
             </motion.div>
           </AnimatePresence>
         </div>
-        <nav className="fixed bottom-0 left-0 right-0 h-16 glass-header border-t border-border/50 z-30 flex items-center justify-around px-2" aria-label="Mobile navigation">
+        <nav className="fixed bottom-0 left-0 right-0 h-16 glass-header border-t border-border/50 z-30 flex items-center justify-around px-2 safe-area-bottom" aria-label="Mobile navigation">
           {[
             { view: 'dashboard' as const, icon: Zap, label: 'Home' },
             { view: 'discovery' as const, icon: Search, label: 'Leads' },
@@ -319,7 +342,7 @@ export default function HomeClient() {
             return (
               <button
                 key={item.view}
-                onClick={() => { useAppStore.getState().setView(item.view) }}
+                onClick={() => { useAppStore.getState().setView(item.view); setSidebarOpen(false) }}
                 className={cn(
                   'flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors min-w-[48px]',
                   active ? 'text-foreground' : 'text-muted-foreground'
@@ -327,8 +350,8 @@ export default function HomeClient() {
                 aria-label={item.label}
                 aria-current={active ? 'page' : undefined}
               >
-                <item.icon className="w-5 h-5" />
-                <span className="text-[10px] font-medium">{item.label}</span>
+                <item.icon className={cn('w-5 h-5', active && 'text-blue-600 dark:text-blue-400')} />
+                <span className={cn('text-[10px] font-medium', active && 'text-blue-600 dark:text-blue-400')}>{item.label}</span>
               </button>
             )
           })}

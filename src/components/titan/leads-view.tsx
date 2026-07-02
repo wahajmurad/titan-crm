@@ -184,7 +184,7 @@ export function LeadsView() {
               placeholder="Search leads..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-10 w-56 h-10 rounded-xl bg-slate-50 border-0 text-sm text-[#0F172A] placeholder:text-[#94A3B8] focus-visible:ring-1 focus-visible:ring-[#2563EB]/30 shadow-none"
+              className="pl-10 w-full sm:w-56 h-10 rounded-xl bg-slate-50 border-0 text-sm text-[#0F172A] placeholder:text-[#94A3B8] focus-visible:ring-1 focus-visible:ring-[#2563EB]/30 shadow-none"
             />
           </div>
 
@@ -346,7 +346,7 @@ export function LeadsView() {
                             <button
                               onClick={e => { e.stopPropagation(); handleAudit(lead) }}
                               disabled={!lead.business.website || processingLeads.has(lead.id)}
-                              className="inline-flex items-center gap-1.5 h-7 px-2.5 text-[11px] font-semibold rounded-lg bg-blue-50 text-[#2563EB] hover:bg-blue-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
+                              className="inline-flex items-center gap-1.5 h-8 min-w-[44px] justify-center px-2.5 text-[11px] font-semibold rounded-lg bg-blue-50 text-[#2563EB] hover:bg-blue-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
                               title={!lead.business.website ? 'No website' : 'Audit website'}
                             >
                               <Globe2 className="w-3 h-3" />
@@ -355,7 +355,7 @@ export function LeadsView() {
                             <button
                               onClick={e => { e.stopPropagation(); handleQualify(lead) }}
                               disabled={processingLeads.has(lead.id)}
-                              className="inline-flex items-center gap-1.5 h-7 px-2.5 text-[11px] font-semibold rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
+                              className="inline-flex items-center gap-1.5 h-8 min-w-[44px] justify-center px-2.5 text-[11px] font-semibold rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
                               title="Qualify lead with AI"
                             >
                               <Target className="w-3 h-3" />
@@ -424,7 +424,7 @@ export function LeadsView() {
                         <div className="flex items-center gap-1.5 pt-3 border-t border-slate-100">
                           <button
                             onClick={e => { e.stopPropagation(); handleAudit(lead) }}
-                            className="p-1.5 rounded-lg hover:bg-blue-50 transition-all duration-150"
+                            className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-blue-50 transition-all duration-150"
                             title="Audit"
                             disabled={!lead.business.website || processingLeads.has(lead.id)}
                           >
@@ -434,7 +434,7 @@ export function LeadsView() {
                           </button>
                           <button
                             onClick={e => { e.stopPropagation(); handleQualify(lead) }}
-                            className="p-1.5 rounded-lg hover:bg-emerald-50 transition-all duration-150"
+                            className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-emerald-50 transition-all duration-150"
                             title="Qualify"
                             disabled={processingLeads.has(lead.id)}
                           >
@@ -511,7 +511,7 @@ function AddLeadDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpe
           <Plus className="w-4 h-4 mr-1.5" />Add Lead
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg rounded-2xl border-0 shadow-xl p-0 overflow-hidden">
+      <DialogContent className="max-w-lg w-[95vw] sm:w-full rounded-2xl border-0 shadow-xl p-0 overflow-hidden">
         <div className="bg-gradient-to-r from-[#2563EB] to-blue-600 px-6 py-5">
           <DialogTitle className="text-lg font-bold text-white">Add New Lead</DialogTitle>
           <p className="text-sm text-blue-100 mt-1">Fill in the details below to add a new lead to your pipeline</p>
@@ -520,8 +520,8 @@ function AddLeadDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpe
           {/* Business Information Section */}
           <div>
             <p className="text-xs font-semibold text-[#94A3B8] uppercase tracking-wider mb-3">Business Information</p>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="col-span-1 sm:col-span-2">
                 <Label className="text-xs font-medium text-[#475569]">Company Name *</Label>
                 <Input
                   className="mt-1.5 h-10 rounded-xl bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-[#2563EB]/30"
@@ -591,7 +591,7 @@ function AddLeadDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpe
           {/* Decision Maker Section */}
           <div className="pt-4 border-t border-slate-100">
             <p className="text-xs font-semibold text-[#94A3B8] uppercase tracking-wider mb-3">Decision Maker</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs font-medium text-[#475569]">Name</Label>
                 <Input
@@ -610,7 +610,7 @@ function AddLeadDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpe
                   placeholder="CEO"
                 />
               </div>
-              <div className="col-span-2">
+              <div className="col-span-1 sm:col-span-2">
                 <Label className="text-xs font-medium text-[#475569]">Email</Label>
                 <Input
                   className="mt-1.5 h-10 rounded-xl bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-[#2563EB]/30"

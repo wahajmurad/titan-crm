@@ -136,18 +136,18 @@ export function EmailCenterView() {
             {emails.length} emails &middot; {openRate}% open rate &middot; {replyRate}% reply rate
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="relative">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+          <div className="relative w-full sm:w-auto">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
             <Input
               placeholder="Search emails..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-8 w-48 h-8 text-sm bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30"
+              className="pl-8 w-full sm:w-48 h-8 text-sm bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus-visible:ring-blue-500/30"
             />
           </div>
           <Select value={campaignFilter} onValueChange={setCampaignFilter}>
-            <SelectTrigger className="w-44 h-8 text-sm bg-white border-gray-200 text-gray-900">
+            <SelectTrigger className="w-full sm:w-44 h-8 text-sm bg-white border-gray-200 text-gray-900">
               <SelectValue placeholder="All Campaigns" />
             </SelectTrigger>
             <SelectContent className="bg-white border-gray-200">
@@ -161,7 +161,7 @@ export function EmailCenterView() {
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
         {TOP_STATS.map(s => (
           <Card key={s.key} className="bg-white border-gray-200">
             <CardContent className="p-3 flex items-center gap-3">
@@ -180,7 +180,7 @@ export function EmailCenterView() {
       {/* Status Tabs + Action Buttons */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <Tabs value={statusTab} onValueChange={setStatusTab}>
-          <TabsList className="bg-white border border-gray-200 h-8">
+          <TabsList className="bg-white border border-gray-200 h-8 overflow-x-auto flex-nowrap">
             {[
               { value: 'ALL', label: 'All' },
               { value: 'DRAFT', label: 'Draft' },
@@ -200,7 +200,7 @@ export function EmailCenterView() {
           </TabsList>
         </Tabs>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             size="sm"
             className="h-8 bg-blue-600 hover:bg-blue-700 text-white"
@@ -252,17 +252,17 @@ export function EmailCenterView() {
             <p className="text-sm text-gray-400 mt-1">
               {statusTab !== 'ALL' ? 'Try changing your filters.' : 'Generate an AI email or compose your first outreach.'}
             </p>
-            <div className="flex items-center justify-center gap-2 mt-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mt-4">
               <Button
                 variant="outline"
-                className="border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                className="border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900 w-full sm:w-auto"
                 onClick={() => setAiGenerateOpen(true)}
               >
                 <Sparkles className="w-3.5 h-3.5 mr-1.5" />Generate AI Email
               </Button>
               <Button
                 variant="outline"
-                className="border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                className="border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900 w-full sm:w-auto"
                 onClick={() => setComposeOpen(true)}
               >
                 <Plus className="w-3.5 h-3.5 mr-1.5" />Compose
@@ -325,7 +325,7 @@ export function EmailCenterView() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-7 w-7 p-0 text-gray-400 hover:text-gray-900 hover:bg-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="h-7 w-7 p-0 text-gray-400 hover:text-gray-900 hover:bg-gray-200 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                               onClick={() => {
                                 // Could open a detail view — for now show a toast
                                 toast.info(`Email: "${email.subject}" — ${email.status}`)
@@ -468,7 +468,7 @@ function AiEmailDialog({ open, onOpenChange, leads, campaigns, onSaved }: {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v) }}>
-      <DialogContent className="bg-white border-gray-200 max-w-2xl max-h-[90vh] flex flex-col">
+      <DialogContent className="bg-white border-gray-200 max-w-2xl w-[95vw] sm:w-full max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-gray-900 flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-blue-400" />
@@ -478,7 +478,7 @@ function AiEmailDialog({ open, onOpenChange, leads, campaigns, onSaved }: {
 
         <div className="space-y-4 mt-2 flex-1 overflow-y-auto">
           {/* Lead Selection */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label className="text-gray-600 text-xs font-medium">Lead *</Label>
               <Select value={leadId} onValueChange={setLeadId} disabled={generated}>
@@ -647,13 +647,13 @@ function ComposeEmailDialog({ open, onOpenChange, leads, campaigns, onSent }: {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v) }}>
-      <DialogContent className="bg-white border-gray-200 max-w-lg max-h-[90vh] flex flex-col">
+      <DialogContent className="bg-white border-gray-200 max-w-lg w-[95vw] sm:w-full max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-gray-900">Compose Email</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 mt-2 flex-1 overflow-y-auto">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label className="text-gray-600 text-xs font-medium">Lead *</Label>
               <Select value={leadId} onValueChange={setLeadId}>
@@ -683,7 +683,7 @@ function ComposeEmailDialog({ open, onOpenChange, leads, campaigns, onSent }: {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label className="text-gray-600 text-xs font-medium">Type</Label>
               <Select value={type} onValueChange={setType}>

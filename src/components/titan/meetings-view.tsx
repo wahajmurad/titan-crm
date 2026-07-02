@@ -250,7 +250,7 @@ function BookMeetingDialog({ open, onOpenChange, leads, onCreated }: {
           Book Meeting
         </motion.button>
       </DialogTrigger>
-      <DialogContent className="max-w-md rounded-2xl border-0 shadow-xl p-0 overflow-hidden">
+      <DialogContent className="max-w-md w-[95vw] sm:w-full rounded-2xl border-0 shadow-xl p-0 overflow-hidden">
         <div className="bg-gradient-to-r from-[#2563EB] to-blue-600 px-6 py-5">
           <DialogTitle className="text-lg font-bold text-white">Book Meeting</DialogTitle>
           <p className="text-sm text-blue-100 mt-1">Schedule a meeting with a lead</p>
@@ -274,7 +274,7 @@ function BookMeetingDialog({ open, onOpenChange, leads, onCreated }: {
               placeholder="Discovery Call"
             />
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <Label className="text-xs font-medium text-gray-500">Date *</Label>
               <Input type="date" className="mt-1.5 h-10 rounded-xl bg-gray-50 border-0 focus-visible:ring-1 focus-visible:ring-[#2563EB]/30" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />

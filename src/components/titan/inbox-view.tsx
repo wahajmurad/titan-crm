@@ -243,7 +243,7 @@ export function InboxView() {
 
       {/* Filter Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="bg-white border border-gray-200 h-8">
+        <TabsList className="bg-white border border-gray-200 h-8 overflow-x-auto flex-nowrap">
           {FILTER_TABS.map(tab => (
             <TabsTrigger
               key={tab.value}
@@ -305,9 +305,9 @@ export function InboxView() {
                 )}
                 onClick={() => toggleExpand(item.id)}
               >
-                <CardContent className="p-4">
+                <CardContent className="p-3 sm:p-4">
                   {/* Collapsed View */}
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-start gap-2.5 sm:gap-3 min-h-12">
                     {/* Type icon */}
                     <div className={cn('p-2 rounded-lg mt-0.5 shrink-0', cfg.bg)}>
                       <cfg.icon className={cn('w-4 h-4', cfg.color)} />
@@ -376,7 +376,7 @@ export function InboxView() {
                         {/* Lead Details */}
                         <div>
                           <p className="text-[10px] uppercase tracking-wider text-gray-400 font-medium mb-2">Lead Details</p>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                             <div className="bg-gray-50 rounded-lg p-3">
                               <p className="text-[10px] text-gray-400 uppercase">Company</p>
                               <p className="text-sm text-gray-900 mt-0.5 font-medium">{item.lead.business.name}</p>
@@ -529,7 +529,7 @@ function ReplyDialog({ open, onOpenChange, item, onSent }: {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white border-gray-200 max-w-lg">
+      <DialogContent className="bg-white border-gray-200 max-w-lg w-[95vw] sm:w-full">
         <DialogHeader>
           <DialogTitle className="text-gray-900">Reply to {item.lead.business.name}</DialogTitle>
         </DialogHeader>
@@ -617,7 +617,7 @@ function ScheduleMeetingDialog({ open, onOpenChange, item, onScheduled }: {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white border-gray-200 max-w-lg">
+      <DialogContent className="bg-white border-gray-200 max-w-lg w-[95vw] sm:w-full">
         <DialogHeader>
           <DialogTitle className="text-gray-900 flex items-center gap-2">
             <CalendarClock className="w-4 h-4 text-blue-400" />
@@ -633,7 +633,7 @@ function ScheduleMeetingDialog({ open, onOpenChange, item, onScheduled }: {
               onChange={e => setTitle(e.target.value)}
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label className="text-gray-600 text-xs font-medium">Date & Time *</Label>
               <Input

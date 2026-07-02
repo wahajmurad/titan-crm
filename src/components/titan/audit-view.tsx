@@ -847,12 +847,12 @@ export function AuditView() {
                   <div className="pt-4 space-y-3 border-t border-gray-100">
                     <Skeleton className="h-4 w-3/4 rounded-lg" />
                     <Skeleton className="h-4 w-1/2 rounded-lg" />
-                    <div className="grid grid-cols-5 gap-3 pt-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
                       {Array.from({ length: 5 }).map((_, i) => (
                         <Skeleton key={i} className="h-24 rounded-xl" />
                       ))}
                     </div>
-                    <div className="grid grid-cols-5 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                       {Array.from({ length: 5 }).map((_, i) => (
                         <Skeleton key={i} className="h-24 rounded-xl" />
                       ))}

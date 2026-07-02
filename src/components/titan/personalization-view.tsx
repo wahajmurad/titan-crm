@@ -1300,7 +1300,7 @@ export function PersonalizationView() {
                 </Card>
 
                 {/* Stats */}
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {outreachPackage.estimatedResponseRate && (
                     <Card className="bg-white dark:bg-gray-900 rounded-2xl border-0 shadow-sm p-4 text-center">
                       <div className="text-xl font-black text-blue-600">{outreachPackage.estimatedResponseRate}</div>

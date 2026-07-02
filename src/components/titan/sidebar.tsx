@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Search, Globe2, Users, Target, Mail, Inbox,
   Calendar, Brain, BookOpen, UserCog, Settings, LogOut,
   ChevronLeft, ChevronRight, Zap, GraduationCap, Plug, Lightbulb,
-  Sparkles, Package, Workflow, BookMarked, FileText, CalendarCheck
+  Sparkles, Workflow, BookMarked, FileText, CalendarCheck
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
@@ -37,7 +37,6 @@ const NAV_SECTIONS = [
     label: 'Personalization',
     items: [
       { view: 'personalization' as AppView, label: 'AI Pipeline', icon: Sparkles },
-      { view: 'outreach-packages' as AppView, label: 'Outreach Packages', icon: Package },
     ],
   },
   {
@@ -179,7 +178,11 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
                   const button = (
                     <button
                       key={item.view}
-                      onClick={() => setView(item.view)}
+                      onClick={() => {
+                        setView(item.view)
+                        // Close sidebar on mobile after navigation
+                        if (window.innerWidth < 1024) setSidebarOpen(false)
+                      }}
                       className={cn(
                         'w-full flex items-center gap-2.5 rounded-[12px] text-[13px] font-medium',
                         'transition-all duration-200 relative',

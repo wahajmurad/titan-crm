@@ -238,7 +238,7 @@ function AddMemberDialog({ open, onOpenChange, onAdded }: { open: boolean; onOpe
           Add Member
         </motion.button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl border-0 shadow-xl p-0">
+      <DialogContent className="max-w-lg w-[95vw] sm:w-full max-h-[85vh] overflow-y-auto rounded-2xl border-0 shadow-xl p-0">
         <div className="bg-gradient-to-r from-[#2563EB] to-blue-600 px-6 py-5">
           <DialogTitle className="text-lg font-bold text-white">Add Team Member</DialogTitle>
           <p className="text-sm text-blue-100 mt-1">Create an account and set permissions</p>

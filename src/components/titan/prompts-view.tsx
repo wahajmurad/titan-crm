@@ -240,7 +240,7 @@ function PromptFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white border-gray-200 sm:max-w-xl">
+      <DialogContent className="bg-white border-gray-200 w-[95vw] sm:w-full sm:max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-gray-900">{isEditing ? 'Edit Prompt' : 'New Prompt'}</DialogTitle>
           <DialogDescription className="text-gray-500">

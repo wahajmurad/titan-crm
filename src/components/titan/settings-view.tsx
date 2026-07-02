@@ -410,7 +410,7 @@ export function SettingsView() {
         setDialogOpen(open)
         if (!open) resetForm()
       }}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="w-[95vw] sm:w-full sm:max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingProvider ? 'Edit Provider' : 'Add Lead Provider'}</DialogTitle>
             <DialogDescription>
@@ -597,7 +597,7 @@ export function SettingsView() {
           <p className="text-xs text-gray-500">Configure your outgoing email server</p>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label>Host</Label><Input className="mt-1" value={settings.smtp_host || ''} onChange={e => updateSetting('smtp_host', e.target.value)} placeholder="smtp.gmail.com" /></div>
             <div><Label>Port</Label><Input className="mt-1" value={settings.smtp_port || ''} onChange={e => updateSetting('smtp_port', e.target.value)} placeholder="587" /></div>
           </div>
@@ -632,7 +632,7 @@ export function SettingsView() {
           <p className="text-xs text-gray-500">Configure automated follow-up timing (days)</p>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div><Label>Follow-up 1</Label><Input type="number" className="mt-1" value={settings.followup_1 || '4'} onChange={e => updateSetting('followup_1', e.target.value)} /></div>
             <div><Label>Follow-up 2</Label><Input type="number" className="mt-1" value={settings.followup_2 || '8'} onChange={e => updateSetting('followup_2', e.target.value)} /></div>
             <div><Label>Follow-up 3</Label><Input type="number" className="mt-1" value={settings.followup_3 || '14'} onChange={e => updateSetting('followup_3', e.target.value)} /></div>

@@ -162,6 +162,7 @@ export function WorkflowBuilderView() {
   const [workflowName, setWorkflowName] = useState('New Workflow')
   const [isSaving, setIsSaving] = useState(false)
   const [sidebarTab, setSidebarTab] = useState<'nodes' | 'settings'>('nodes')
+  const [paletteOpen, setPaletteOpen] = useState(false)
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
   const [nodeCount, setNodeCount] = useState(4)
 
@@ -218,11 +219,30 @@ export function WorkflowBuilderView() {
 
   return (
     <div className="flex h-[calc(100vh-8rem)] gap-0">
+      {/* Mobile palette toggle */}
+      <button
+        onClick={() => setPaletteOpen(!paletteOpen)}
+        className="md:hidden fixed bottom-20 left-3 z-20 w-10 h-10 rounded-full gradient-blue text-white shadow-lg flex items-center justify-center"
+        aria-label="Toggle node palette"
+      >
+        <Workflow className="w-4 h-4" />
+      </button>
+
+      {/* Mobile palette overlay */}
+      {paletteOpen && (
+        <div className="md:hidden fixed inset-0 z-10 bg-black/30" onClick={() => setPaletteOpen(false)} />
+      )}
+
       {/* Left Sidebar — Node Palette */}
       <motion.div
         initial={{ x: -20, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
-        className="w-64 flex-shrink-0 border-r border-gray-200/60 bg-white/80 backdrop-blur-sm flex flex-col"
+        className={cn(
+          "flex-shrink-0 border-r border-gray-200/60 bg-white/80 backdrop-blur-sm flex flex-col z-10",
+          "fixed md:relative inset-y-0 left-0 h-full md:h-auto",
+          "w-64 transform transition-transform duration-200 ease-in-out",
+          paletteOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        )}
       >
         {/* Tabs */}
         <div className="flex border-b border-gray-200/60">
@@ -406,7 +426,7 @@ export function WorkflowBuilderView() {
               if (nt === 'delay') return '#94A3B8'
               return '#8B5CF6'
             }}
-            className="!rounded-xl !border-gray-200 !shadow-lg"
+            className="!rounded-xl !border-gray-200 !shadow-lg hidden md:block"
             maskColor="rgba(0,0,0,0.05)"
           />
         </ReactFlow>

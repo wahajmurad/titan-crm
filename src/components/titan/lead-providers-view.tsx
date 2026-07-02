@@ -536,7 +536,7 @@ export function LeadProvidersView() {
 
       {/* ── Add/Edit Dialog ── */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] sm:w-full sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-lg text-gray-900">
               {editingId ? 'Edit Provider' : 'Add Provider'}
@@ -556,7 +556,7 @@ export function LeadProvidersView() {
             </div>
 
             {/* Type & Priority row */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Type</Label>
                 <Select value={form.type} onValueChange={(v) => updateField('type', v)}>
@@ -627,7 +627,7 @@ export function LeadProvidersView() {
             )}
 
             {form.authType === 'header' && (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Header Name</Label>
                   <Input
@@ -651,7 +651,7 @@ export function LeadProvidersView() {
             )}
 
             {form.authType === 'basic' && (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Username</Label>
                   <Input
@@ -675,7 +675,7 @@ export function LeadProvidersView() {
             )}
 
             {form.authType === 'query' && (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Param Name</Label>
                   <Input

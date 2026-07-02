@@ -212,7 +212,7 @@ function ComposeDialog({ open, onOpenChange, leads, onSent }: {
           Compose
         </motion.button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg rounded-2xl border-0 shadow-xl p-0 overflow-hidden">
+      <DialogContent className="max-w-lg w-[95vw] sm:w-full rounded-2xl border-0 shadow-xl p-0 overflow-hidden">
         <div className="bg-gradient-to-r from-[#2563EB] to-blue-600 px-6 py-5">
           <DialogTitle className="text-lg font-bold text-white">Compose Email</DialogTitle>
           <p className="text-sm text-blue-100 mt-1">Write an outreach email to a lead</p>

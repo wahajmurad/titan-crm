@@ -226,7 +226,7 @@ export function LeadDetailView() {
       className="space-y-5"
     >
       {/* ─── Header ────────────────────────────────────────────────────── */}
-      <motion.div variants={fadeUp} className="flex items-center justify-between gap-4">
+      <motion.div variants={fadeUp} className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-4 min-w-0">
           <Button
             variant="ghost"
@@ -450,7 +450,7 @@ export function LeadDetailView() {
                     <motion.div
                       key={m.id}
                       variants={stagger}
-                      className="flex items-center justify-between bg-slate-50/80 rounded-xl px-4 py-3.5 hover:bg-slate-100/80 transition-colors"
+                      className="flex items-center justify-between gap-3 bg-slate-50/80 rounded-xl px-4 py-3.5 hover:bg-slate-100/80 transition-colors flex-wrap sm:flex-nowrap"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shrink-0 shadow-sm">
