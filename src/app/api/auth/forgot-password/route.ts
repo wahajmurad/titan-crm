@@ -23,8 +23,8 @@ export async function POST(req: NextRequest) {
 
     const user = await db.user.findUnique({ where: { email } })
 
-    // Always return success to prevent email enumeration
-    // Only actually create reset token if user exists
+    // Always return the same success shape to prevent email enumeration
+    // But only include resetToken if user actually exists
     if (user && user.isActive) {
       const resetToken = generateToken()
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
@@ -38,14 +38,18 @@ export async function POST(req: NextRequest) {
         },
       })
 
-      // In production, send email with reset link
-      // For now, the token is stored and can be verified
-      console.log(`[PASSWORD RESET] Token for ${email}: ${resetToken}`)
+      // Return token directly — this is an owner-only app, no email service needed
+      return NextResponse.json({
+        success: true,
+        resetToken,
+        message: 'Use the reset token to set a new password.',
+      })
     }
 
+    // User not found — return generic success to prevent enumeration
     return NextResponse.json({
       success: true,
-      message: 'If an account with this email exists, a password reset link has been generated.',
+      message: 'If an account with this email exists, a reset token has been generated.',
     })
   } catch (e: unknown) {
     console.error('[FORGOT PASSWORD ERROR]', e)
