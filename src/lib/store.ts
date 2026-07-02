@@ -2,6 +2,7 @@ import { create } from 'zustand'
 
 export type AppView =
   | 'dashboard'
+  | 'automation'
   | 'discovery'
   | 'audit'
   | 'leads'

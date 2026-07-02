@@ -21,6 +21,7 @@ interface CommandCenterProps {
 
 const VIEW_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, shortcut: 'D' },
+  { id: 'automation', label: 'Automation Center', icon: Zap, shortcut: 'N' },
   { id: 'discovery', label: 'Lead Discovery', icon: Search, shortcut: 'L' },
   { id: 'audit', label: 'Website Audit', icon: Globe, shortcut: 'A' },
   { id: 'leads', label: 'Leads', icon: Users, shortcut: '' },

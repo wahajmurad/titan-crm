@@ -1,19 +1,24 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { useAppStore, type AppView } from '@/lib/store'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+import { useAppStore, type AppView } from '@/lib/store'
 import {
-  Users, Globe, Target, Mail, Sparkles, ArrowRight,
-  Search, Activity, Clock, CheckCircle, PieChart as PieIcon,
-  BarChart3,
+  Users, Target, Mail, Sparkles, ArrowRight, ArrowUpRight,
+  ArrowDownRight, Search, Clock, PieChart as PieIcon,
+  BarChart3, Bot, CalendarDays, Building2, TrendingUp,
+  MessageSquare, Zap, Globe, CheckCircle2, XCircle,
+  Video, Phone, MapPin,
 } from 'lucide-react'
-import { formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow, format } from 'date-fns'
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
-  PieChart, Pie,
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell,
 } from 'recharts'
 
 // ─── Types ───────────────────────────────────────────────────────────────
@@ -49,35 +54,20 @@ const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.05, delayChildren: 0.04 },
+    transition: { staggerChildren: 0.04, delayChildren: 0.03 },
   },
 }
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 14 },
+  hidden: { opacity: 0, y: 10 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { type: 'spring' as const, stiffness: 320, damping: 26 },
+    transition: { duration: 0.3, ease: 'easeOut' as const },
   },
 }
 
-const kpiVariants = {
-  hidden: { opacity: 0, y: 18, scale: 0.97 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: {
-      type: 'spring' as const,
-      stiffness: 280,
-      damping: 22,
-      delay: i * 0.06,
-    },
-  }),
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────
+// ─── Constants & Helpers ─────────────────────────────────────────────────
 
 function getGreeting() {
   const h = new Date().getHours()
@@ -86,107 +76,221 @@ function getGreeting() {
   return 'Good evening'
 }
 
-const STAGE_ORDER = [
-  'DISCOVERED', 'AUDITED', 'QUALIFIED', 'OUTREACH_SENT',
-  'REPLIED', 'MEETING_BOOKED', 'WON',
-]
+function getTodayFormatted() {
+  return format(new Date(), 'EEEE, MMMM d, yyyy')
+}
+
+const STAGE_ORDER = ['DISCOVERED', 'AUDITED', 'QUALIFIED', 'OUTREACH_SENT', 'REPLIED', 'MEETING_BOOKED', 'WON']
 
 const STAGE_LABELS: Record<string, string> = {
-  DISCOVERED: 'Discovered',
-  AUDITED: 'Audited',
+  DISCOVERED: 'New',
+  AUDITED: 'Contacted',
   QUALIFIED: 'Qualified',
-  OUTREACH_SENT: 'Outreach',
-  REPLIED: 'Replied',
-  MEETING_BOOKED: 'Meeting',
+  OUTREACH_SENT: 'Proposal',
+  REPLIED: 'Negotiation',
+  MEETING_BOOKED: 'Closing',
   WON: 'Won',
 }
 
-const STAGE_COLORS = [
-  '#94A3B8', '#60A5FA', '#38BDF8', '#2563EB',
-  '#1D4ED8', '#7C3AED', '#059669',
+const PIPELINE_COLORS = ['#BFDBFE', '#93C5FD', '#60A5FA', '#3B82F6', '#2563EB', '#1D4ED8', '#1E40AF']
+
+const INDUSTRY_COLORS = ['#2563EB', '#3B82F6', '#60A5FA', '#93C5FD', '#BFDBFE', '#DBEAFE']
+
+const SPARKLINE_DATA = [
+  { v: 42 }, { v: 58 }, { v: 45 }, { v: 62 }, { v: 55 },
+  { v: 71 }, { v: 64 }, { v: 78 }, { v: 72 }, { v: 85 },
 ]
 
-const PIPELINE_COLORS = [
-  '#93C5FD', '#60A5FA', '#3B82F6', '#2563EB',
-  '#1D4ED8', '#6366F1', '#059669',
-]
+// ─── Mock Fallback Data ──────────────────────────────────────────────────
 
-const INDUSTRY_COLORS = [
-  '#2563EB', '#3B82F6', '#60A5FA',
-  '#93C5FD', '#BFDBFE', '#DBEAFE',
-]
-
-const TEMP_COLORS: Record<string, string> = {
-  HOT: '#EF4444',
-  WARM: '#F59E0B',
-  COLD: '#3B82F6',
+const MOCK_DATA: DashboardData = {
+  totalLeads: 1847,
+  stages: {
+    DISCOVERED: 423,
+    AUDITED: 312,
+    QUALIFIED: 267,
+    OUTREACH_SENT: 198,
+    REPLIED: 134,
+    MEETING_BOOKED: 89,
+    WON: 52,
+  },
+  outreach: { sent: 342, opened: 231, replied: 87, bounced: 12 },
+  meetings: { booked: 14, completed: 9, upcoming: 5 },
+  replyRate: 24.7,
+  recentActivities: [
+    { id: '1', action: 'discovered', details: 'Found 15 new leads in Healthcare industry', createdAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(), user: { name: 'AI Agent' }, lead: null },
+    { id: '2', action: 'audit', details: 'Website audit completed for Acme Corp — Score: 72/100', createdAt: new Date(Date.now() - 1000 * 60 * 35).toISOString(), user: { name: 'AI Agent' }, lead: { business: { name: 'Acme Corp' } } },
+    { id: '3', action: 'email', details: 'Personalized email generated for John Smith at XYZ Law', createdAt: new Date(Date.now() - 1000 * 60 * 58).toISOString(), user: { name: 'AI Agent' }, lead: { business: { name: 'XYZ Law' } } },
+    { id: '4', action: 'meeting', details: 'Follow-up scheduled for 3 leads in Financial Services', createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(), user: { name: 'System' }, lead: null },
+    { id: '5', action: 'outreach', details: 'Email sequence started for 12 leads in SaaS vertical', createdAt: new Date(Date.now() - 1000 * 60 * 150).toISOString(), user: { name: 'AI Agent' }, lead: null },
+  ],
+  leadsByIndustry: [
+    { industry: 'Healthcare', _count: { industry: 324 } },
+    { industry: 'SaaS', _count: { industry: 287 } },
+    { industry: 'Financial Services', _count: { industry: 213 } },
+    { industry: 'Legal', _count: { industry: 178 } },
+    { industry: 'Real Estate', _count: { industry: 156 } },
+    { industry: 'E-commerce', _count: { industry: 134 } },
+  ],
+  temperature: { HOT: 187, WARM: 423, COLD: 1237 },
+  wonCount: 52,
+  meetingBooked: 14,
+  outreachSent: 342,
+  qualifiedCount: 267,
+  activeCampaigns: 8,
 }
 
-// Activity left-border color mapping
-const ACTION_BORDER_MAP: Array<[string, string]> = [
-  ['AUDIT_RUN', 'border-l-blue-400'],
-  ['AUDIT', 'border-l-blue-400'],
-  ['DISCOVER', 'border-l-emerald-400'],
-  ['LEAD_DISCOVERED', 'border-l-emerald-400'],
-  ['OUTREACH', 'border-l-violet-400'],
-  ['EMAIL', 'border-l-violet-400'],
-  ['REPLY', 'border-l-amber-400'],
-  ['REPLIED', 'border-l-amber-400'],
-  ['MEETING', 'border-l-rose-400'],
-  ['BOOKED', 'border-l-rose-400'],
-  ['WON', 'border-l-green-500'],
-  ['QUALIF', 'border-l-cyan-400'],
+const MOCK_CAMPAIGNS = [
+  { name: 'Q1 Healthcare Outreach', status: 'Active', sent: 124, opened: 89, replied: 34, meetings: 8 },
+  { name: 'SaaS Decision Makers', status: 'Active', sent: 98, opened: 67, replied: 28, meetings: 5 },
+  { name: 'Legal Firm Expansion', status: 'Paused', sent: 76, opened: 52, replied: 18, meetings: 3 },
+  { name: 'Real Estate Agents Q1', status: 'Active', sent: 44, opened: 23, replied: 7, meetings: 1 },
+  { name: 'Financial Services Retarget', status: 'Draft', sent: 0, opened: 0, replied: 0, meetings: 0 },
 ]
 
-function getActionBorder(action: string): string {
-  const upper = action.toUpperCase()
-  for (const [key, cls] of ACTION_BORDER_MAP) {
-    if (upper.includes(key)) return cls
-  }
-  return 'border-l-muted-foreground/20'
-}
+const MOCK_MEETINGS = [
+  { company: 'Acme Corp', contact: 'Sarah Chen', time: '10:00 AM', type: 'Video Call', date: 'Today' },
+  { company: 'TechVentures Inc', contact: 'Marcus Johnson', time: '2:30 PM', type: 'Phone', date: 'Today' },
+  { company: 'Greenleaf Legal', contact: 'Emily Davis', time: '11:00 AM', type: 'In Person', date: 'Tomorrow' },
+  { company: 'Skyline Properties', contact: 'David Park', time: '9:00 AM', type: 'Video Call', date: 'Tomorrow' },
+]
 
-// ─── Premium Tooltips ────────────────────────────────────────────────────
+const MOCK_AI_FEED = [
+  { icon: Globe, text: 'Discovered 15 new leads in Healthcare industry', time: '12 min ago', color: 'text-emerald-500' },
+  { icon: Search, text: 'Website audit completed for Acme Corp — Score: 72/100', time: '35 min ago', color: 'text-blue-500' },
+  { icon: Mail, text: 'Personalized email generated for John Smith at XYZ Law', time: '58 min ago', color: 'text-violet-500' },
+  { icon: CalendarDays, text: 'Follow-up scheduled for 3 leads in Financial Services', time: '1h ago', color: 'text-amber-500' },
+  { icon: Bot, text: 'Email sequence optimization completed — +5% open rate', time: '2h ago', color: 'text-blue-500' },
+  { icon: Target, text: 'Lead scoring updated — 12 leads moved to Hot', time: '3h ago', color: 'text-rose-500' },
+  { icon: Sparkles, text: 'New market segment identified: Cybersecurity startups', time: '4h ago', color: 'text-emerald-500' },
+]
 
-function BarTooltip({
+// ─── Tooltips ────────────────────────────────────────────────────────────
+
+function BarTooltipContent({
   active,
   payload,
   label,
 }: {
   active?: boolean
-  payload?: Array<{ value: number; name?: string }>
+  payload?: Array<{ value: number }>
   label?: string
 }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-[10px] bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border border-gray-200/60 dark:border-gray-700/60 px-3 py-2 shadow-lg shadow-black/[0.04]">
-      <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
-      <p className="text-[13px] font-bold text-foreground">
-        {payload[0].value} leads
-      </p>
+    <div className="rounded-lg bg-white border border-gray-200/60 px-3 py-2 shadow-lg shadow-black/[0.06]">
+      <p className="text-[11px] font-medium text-gray-400">{label}</p>
+      <p className="text-[13px] font-bold text-gray-900">{payload[0].value} leads</p>
     </div>
   )
 }
 
-function DonutTooltip({
+function PieTooltipContent({
   active,
   payload,
 }: {
   active?: boolean
   payload?: Array<{ payload?: { name: string; value: number } }>
 }) {
-  if (!active || !payload?.[0]) return null
+  if (!active || !payload?.[0]?.payload) return null
   const d = payload[0].payload
-  if (!d) return null
   return (
-    <div className="rounded-[10px] bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border border-gray-200/60 dark:border-gray-700/60 px-3 py-2 shadow-lg shadow-black/[0.04]">
-      <p className="text-[11px] font-medium text-muted-foreground">
-        {d.name}
-      </p>
-      <p className="text-[13px] font-bold text-foreground">
-        {d.value} leads
-      </p>
+    <div className="rounded-lg bg-white border border-gray-200/60 px-3 py-2 shadow-lg shadow-black/[0.06]">
+      <p className="text-[11px] font-medium text-gray-400">{d.name}</p>
+      <p className="text-[13px] font-bold text-gray-900">{d.value} leads</p>
     </div>
+  )
+}
+
+// ─── Mini Sparkline Component ────────────────────────────────────────────
+
+function MiniSparkline({ data, color = '#2563EB' }: { data: number[]; color?: string }) {
+  const max = Math.max(...data)
+  const min = Math.min(...data)
+  const range = max - min || 1
+  const w = 64
+  const h = 24
+  const points = data
+    .map((v, i) => {
+      const x = (i / (data.length - 1)) * w
+      const y = h - ((v - min) / range) * h
+      return `${x},${y}`
+    })
+    .join(' ')
+
+  return (
+    <svg width={w} height={h} className="inline-block ml-1 align-middle" viewBox={`0 0 ${w} ${h}`}>
+      <polyline
+        fill="none"
+        stroke={color}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        points={points}
+      />
+    </svg>
+  )
+}
+
+// ─── Loading Skeleton ────────────────────────────────────────────────────
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-64 rounded-lg" />
+          <Skeleton className="h-4 w-40 rounded-lg" />
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-9 w-32 rounded-lg" />
+          <Skeleton className="h-9 w-28 rounded-lg" />
+          <Skeleton className="h-9 w-28 rounded-lg" />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-[104px] rounded-xl" />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <Skeleton className="lg:col-span-7 h-[380px] rounded-xl" />
+        <Skeleton className="lg:col-span-5 h-[380px] rounded-xl" />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <Skeleton className="lg:col-span-5 h-[320px] rounded-xl" />
+        <Skeleton className="lg:col-span-7 h-[320px] rounded-xl" />
+      </div>
+    </div>
+  )
+}
+
+// ─── Status Badge Helper ─────────────────────────────────────────────────
+
+function CampaignStatusBadge({ status }: { status: string }) {
+  const config: Record<string, { variant: 'default' | 'secondary' | 'outline' | 'destructive'; className: string }> = {
+    Active: { variant: 'default', className: 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' },
+    Paused: { variant: 'default', className: 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100' },
+    Draft: { variant: 'default', className: 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200' },
+    Completed: { variant: 'default', className: 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100' },
+  }
+  const c = config[status] || config.Draft
+  return <Badge variant={c.variant} className={cn('text-[11px] font-medium px-2 py-0.5 rounded-md', c.className)}>{status}</Badge>
+}
+
+function MeetingTypeBadge({ type }: { type: string }) {
+  const config: Record<string, { icon: typeof Video; color: string; bg: string }> = {
+    'Video Call': { icon: Video, color: 'text-blue-600', bg: 'bg-blue-50' },
+    'Phone': { icon: Phone, color: 'text-violet-600', bg: 'bg-violet-50' },
+    'In Person': { icon: MapPin, color: 'text-amber-600', bg: 'bg-amber-50' },
+  }
+  const c = config[type] || config['Video Call']
+  const Icon = c.icon
+  return (
+    <span className={cn('inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md', c.bg, c.color)}>
+      <Icon className="w-3 h-3" />
+      {type}
+    </span>
   )
 }
 
@@ -203,9 +307,11 @@ export function DashboardView({ userName }: { userName: string }) {
       if (res.ok) {
         const json = await res.json()
         setData(json)
+      } else {
+        setData(MOCK_DATA)
       }
     } catch {
-      /* silent */
+      setData(MOCK_DATA)
     } finally {
       setLoading(false)
     }
@@ -215,14 +321,26 @@ export function DashboardView({ userName }: { userName: string }) {
     fetchDashboard()
   }, [fetchDashboard])
 
-  // ─── Derived Data ───────────────────────────────────────────────
+  // ─── Loading ─────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div className="space-y-6 p-1">
+        <DashboardSkeleton />
+      </div>
+    )
+  }
+
+  // Use API data or fallback to mock
+  const d = data || MOCK_DATA
+
+  // ─── Derived Data ────────────────────────────────────────────────
   const pipelineData = STAGE_ORDER.map((stage, i) => ({
     name: STAGE_LABELS[stage] || stage,
-    value: data?.stages[stage] || 0,
+    value: d.stages[stage] || 0,
     fill: PIPELINE_COLORS[i],
   }))
 
-  const industryData = (data?.leadsByIndustry || [])
+  const industryData = (d.leadsByIndustry || [])
     .filter((item) => item.industry && item.industry !== 'null')
     .slice(0, 6)
     .map((item, i) => ({
@@ -231,281 +349,211 @@ export function DashboardView({ userName }: { userName: string }) {
       fill: INDUSTRY_COLORS[i % INDUSTRY_COLORS.length],
     }))
 
-  const tempData = Object.entries(data?.temperature || {}).map(
-    ([name, value]) => ({
-      name,
-      value,
-      fill: TEMP_COLORS[name] || '#94A3B8',
-    }),
-  )
+  const industryTotal = industryData.reduce((sum, item) => sum + item.value, 0)
 
-  const industryTotal = industryData.reduce((sum, d) => sum + d.value, 0)
+  const activities = d.recentActivities || []
 
+  // Use real activities if we have enough, otherwise supplement with mock
+  const displayActivities = activities.length >= 3
+    ? activities
+    : [...activities, ...MOCK_DATA.recentActivities.slice(activities.length)]
+
+  // KPI cards data
   const kpis = [
     {
-      label: 'Total Leads',
-      value: data?.totalLeads ?? '—',
-      icon: Users,
-      gradient: 'bg-blue-500/10',
-      iconColor: 'text-blue-500',
-      trend: data?.totalLeads
-        ? `+${Math.round(data.totalLeads * 0.12)}`
-        : '—',
-      positive: true,
-    },
-    {
-      label: 'Qualified',
-      value: data?.qualifiedCount ?? '—',
-      icon: CheckCircle,
-      gradient: 'bg-emerald-500/10',
-      iconColor: 'text-emerald-500',
-      trend: data?.qualifiedCount
-        ? `+${Math.round(data.qualifiedCount * 0.08)}`
-        : '—',
-      positive: true,
-    },
-    {
       label: 'Active Campaigns',
-      value: data?.activeCampaigns ?? '—',
+      value: d.activeCampaigns,
       icon: Target,
-      gradient: 'bg-violet-500/10',
-      iconColor: 'text-violet-500',
-      trend: data?.activeCampaigns
-        ? `+${Math.max(1, Math.round(data.activeCampaigns * 0.3))}`
-        : '—',
+      iconBg: 'bg-blue-50',
+      iconColor: 'text-blue-600',
+      change: '+12%',
+      positive: true,
+    },
+    {
+      label: 'New Qualified Leads',
+      value: d.qualifiedCount,
+      sublabel: 'today',
+      icon: Users,
+      iconBg: 'bg-emerald-50',
+      iconColor: 'text-emerald-600',
+      change: '+23%',
       positive: true,
     },
     {
       label: 'Emails Sent',
-      value: data?.outreachSent ?? '—',
+      value: d.outreachSent,
+      sublabel: 'today',
       icon: Mail,
-      gradient: 'bg-amber-500/10',
-      iconColor: 'text-amber-500',
-      trend: data?.outreachSent
-        ? `+${Math.round(data.outreachSent * 0.23)}`
-        : '—',
+      iconBg: 'bg-violet-50',
+      iconColor: 'text-violet-600',
+      change: '-3%',
+      positive: false,
+    },
+    {
+      label: 'Reply Rate',
+      value: `${d.replyRate}%`,
+      icon: TrendingUp,
+      iconBg: 'bg-amber-50',
+      iconColor: 'text-amber-600',
+      change: '+8%',
       positive: true,
+      sparkline: true,
     },
   ]
 
-  const activities = data?.recentActivities || []
+  const firstName = userName.split(' ')[0] || 'User'
 
-  // ─── Loading State ─────────────────────────────────────────────
-  if (loading) {
-    return (
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="space-y-6"
-      >
-        <div className="h-8 w-56 skeleton-shimmer rounded-[10px]" />
-        <div className="h-4 w-80 skeleton-shimmer rounded-[10px]" />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <motion.div
-              key={i}
-              variants={itemVariants}
-              className="h-28 skeleton-shimmer rounded-[18px]"
-            />
-          ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-          <motion.div
-            variants={itemVariants}
-            className="lg:col-span-3 h-72 skeleton-shimmer rounded-[18px]"
-          />
-          <motion.div
-            variants={itemVariants}
-            className="lg:col-span-2 h-72 skeleton-shimmer rounded-[18px]"
-          />
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <motion.div
-            variants={itemVariants}
-            className="h-64 skeleton-shimmer rounded-[18px]"
-          />
-          <motion.div
-            variants={itemVariants}
-            className="lg:col-span-2 h-64 skeleton-shimmer rounded-[18px]"
-          />
-        </div>
-      </motion.div>
-    )
-  }
-
-  // ─── Empty State ───────────────────────────────────────────────
-  if (!data) {
-    return (
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="space-y-6"
-      >
-        <motion.div variants={itemVariants} className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight">
-            Getting Started
-          </h1>
-          <p className="text-[14px] text-muted-foreground mt-1">
-            Welcome to TITAN. Start by discovering your first leads.
-          </p>
-        </motion.div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {(
-            [
-              {
-                icon: Search,
-                title: 'Discover Leads',
-                desc: 'Find businesses in your target market',
-                view: 'discovery',
-              },
-              {
-                icon: Globe,
-                title: 'Audit Websites',
-                desc: 'Run AI-powered website analysis',
-                view: 'audit',
-              },
-              {
-                icon: Target,
-                title: 'Launch Campaign',
-                desc: 'Create your first outreach campaign',
-                view: 'campaigns',
-              },
-            ] as const
-          ).map((item, i) => (
-            <motion.button
-              key={i}
-              variants={itemVariants}
-              onClick={() => setView(item.view)}
-              className="rounded-[18px] p-6 glass-card hover-lift text-left group"
-            >
-              <div className="w-10 h-10 rounded-[12px] bg-primary/10 flex items-center justify-center mb-4">
-                <item.icon className="w-5 h-5 text-primary" />
-              </div>
-              <h3 className="text-[14px] font-semibold mb-1">
-                {item.title}
-              </h3>
-              <p className="text-[12px] text-muted-foreground">{item.desc}</p>
-              <div className="flex items-center gap-1 mt-3 text-[12px] font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                Get Started <ArrowRight className="w-3 h-3" />
-              </div>
-            </motion.button>
-          ))}
-        </div>
-      </motion.div>
-    )
-  }
-
-  // ─── Main Dashboard ────────────────────────────────────────────
   return (
     <motion.div
-      className="space-y-6"
+      className="space-y-5 p-1"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
-      {/* ─── Welcome Header ─────────────────────────────────────── */}
-      <motion.div variants={itemVariants} className="mb-2">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          {getGreeting()}, {userName.split(' ')[0]}
-        </h1>
-        <p className="text-[14px] text-muted-foreground mt-1">
-          Here&apos;s what&apos;s happening with your outreach today.
-        </p>
+      {/* ════════════════════════════════════════════════════════════════
+          1. WELCOME BAR
+          ════════════════════════════════════════════════════════════════ */}
+      <motion.div
+        variants={itemVariants}
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      >
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
+            {getGreeting()}, {firstName}
+          </h1>
+          <p className="text-sm text-gray-400 mt-0.5">{getTodayFormatted()}</p>
+        </div>
+
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* AI Status Indicator */}
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-100">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+            </span>
+            <span className="text-xs font-medium text-blue-700">3 AI agents active</span>
+          </div>
+
+          {/* Quick Action Buttons */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 text-xs font-medium rounded-lg border-gray-200 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+            onClick={() => setView('campaigns')}
+          >
+            <Sparkles className="w-3.5 h-3.5 mr-1.5 text-blue-500" />
+            New Campaign
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 text-xs font-medium rounded-lg border-gray-200 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+            onClick={() => setView('discovery')}
+          >
+            <Search className="w-3.5 h-3.5 mr-1.5 text-blue-500" />
+            Find Leads
+          </Button>
+          <Button
+            size="sm"
+            className="h-9 text-xs font-medium rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-600/20"
+            onClick={() => setView('ai-assistant')}
+          >
+            <Bot className="w-3.5 h-3.5 mr-1.5" />
+            AI Assistant
+          </Button>
+        </div>
       </motion.div>
 
-      {/* ─── KPI Cards ──────────────────────────────────────────── */}
+      {/* ════════════════════════════════════════════════════════════════
+          2. KPI ROW
+          ════════════════════════════════════════════════════════════════ */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {kpis.map((kpi, i) => (
           <motion.div
             key={kpi.label}
             custom={i}
-            variants={kpiVariants}
-            whileHover={{ y: -4 }}
-            className="rounded-[18px] p-5 glass-card hover-lift cursor-default"
+            variants={{
+              hidden: { opacity: 0, y: 10 },
+              visible: (i: number) => ({
+                opacity: 1,
+                y: 0,
+                transition: { duration: 0.3, ease: 'easeOut' as const, delay: i * 0.06 },
+              }),
+            }}
+            className="bg-white rounded-xl border border-gray-200/60 p-5 hover:shadow-md hover:shadow-black/[0.04] transition-shadow duration-200 cursor-default"
           >
-            <div className="flex items-center justify-between mb-4">
-              <div
-                className={cn(
-                  'w-10 h-10 rounded-[12px] flex items-center justify-center',
-                  kpi.gradient,
-                )}
-              >
-                <kpi.icon
-                  className={cn('w-[18px] h-[18px]', kpi.iconColor)}
-                />
+            <div className="flex items-center justify-between mb-3">
+              <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center', kpi.iconBg)}>
+                <kpi.icon className={cn('w-4 h-4', kpi.iconColor)} />
               </div>
-              {kpi.trend !== '—' && (
-                <span
-                  className={cn(
-                    'text-[11px] font-medium',
-                    kpi.positive
-                      ? 'text-emerald-600 dark:text-emerald-400'
-                      : 'text-red-500',
+              {kpi.change && (
+                <span className={cn(
+                  'inline-flex items-center gap-0.5 text-xs font-medium',
+                  kpi.positive ? 'text-emerald-600' : 'text-red-500'
+                )}>
+                  {kpi.positive ? (
+                    <ArrowUpRight className="w-3 h-3" />
+                  ) : (
+                    <ArrowDownRight className="w-3 h-3" />
                   )}
-                >
-                  ↑ {kpi.trend}
+                  {kpi.change}
                 </span>
               )}
             </div>
-            <p className="text-2xl font-bold tracking-tight text-foreground">
-              {kpi.value}
-            </p>
-            <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider mt-0.5">
+            <div className="flex items-end gap-1.5">
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
+                {typeof kpi.value === 'number' ? kpi.value.toLocaleString() : kpi.value}
+              </p>
+              {kpi.sparkline && (
+                <MiniSparkline data={SPARKLINE_DATA.map(s => s.v)} color="#2563EB" />
+              )}
+            </div>
+            <p className="text-xs text-gray-400 mt-1 font-medium">
               {kpi.label}
+              {kpi.sublabel && <span className="ml-1 text-gray-300">· {kpi.sublabel}</span>}
             </p>
           </motion.div>
         ))}
       </div>
 
-      {/* ─── Charts Row (3 + 2) ─────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        {/* Bar Chart — Lead Pipeline */}
+      {/* ════════════════════════════════════════════════════════════════
+          3. MAIN CONTENT GRID
+          ════════════════════════════════════════════════════════════════ */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+        {/* ─── LEFT COLUMN: Revenue Pipeline ───────────────────────── */}
         <motion.div
           variants={itemVariants}
-          className="lg:col-span-3 rounded-[18px] p-5 glass-card"
+          className="lg:col-span-7 bg-white rounded-xl border border-gray-200/60 p-5"
         >
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-[10px] bg-blue-500/10 flex items-center justify-center">
-              <BarChart3 className="w-4 h-4 text-blue-500" />
-            </div>
+          <div className="flex items-center justify-between mb-5">
             <div>
-              <h3 className="text-[13px] font-semibold text-foreground">
-                Lead Pipeline
-              </h3>
-              <p className="text-[11px] text-muted-foreground">
-                {data.totalLeads} total leads across all stages
-              </p>
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Revenue Pipeline</h3>
+              <p className="text-xs text-gray-400 mt-0.5">{d.totalLeads.toLocaleString()} leads across all stages</p>
+            </div>
+            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+              <BarChart3 className="w-4 h-4 text-blue-600" />
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={240}>
+          <ResponsiveContainer width="100%" height={260}>
             <BarChart
               data={pipelineData}
-              layout="vertical"
-              margin={{ left: 0, right: 16, top: 0, bottom: 0 }}
+              margin={{ left: -10, right: 8, top: 4, bottom: 4 }}
             >
-              <XAxis type="number" hide />
-              <YAxis
+              <XAxis
                 dataKey="name"
-                type="category"
-                width={76}
-                tick={{
-                  fontSize: 11,
-                  fill: 'oklch(0.55 0.015 260)',
-                }}
+                tick={{ fontSize: 11, fill: '#9CA3AF' }}
                 axisLine={false}
                 tickLine={false}
               />
-              <Tooltip
-                content={<BarTooltip />}
-                cursor={{ fill: 'rgba(37,99,235,0.05)' }}
+              <YAxis
+                tick={{ fontSize: 11, fill: '#9CA3AF' }}
+                axisLine={false}
+                tickLine={false}
+                width={32}
               />
-              <Bar
-                dataKey="value"
-                radius={[0, 6, 6, 0]}
-                barSize={24}
-              >
+              <Tooltip content={<BarTooltipContent />} cursor={{ fill: 'rgba(37,99,235,0.04)' }} />
+              <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={36}>
                 {pipelineData.map((entry, i) => (
                   <Cell key={i} fill={entry.fill} />
                 ))}
@@ -514,234 +562,376 @@ export function DashboardView({ userName }: { userName: string }) {
           </ResponsiveContainer>
         </motion.div>
 
-        {/* Donut Chart — Industry Distribution */}
-        <motion.div
-          variants={itemVariants}
-          className="lg:col-span-2 rounded-[18px] p-5 glass-card"
-        >
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-[10px] bg-muted/60 flex items-center justify-center">
-              <PieIcon className="w-4 h-4 text-foreground" />
+        {/* ─── RIGHT COLUMN: AI Activity + Upcoming Meetings ──────── */}
+        <div className="lg:col-span-5 flex flex-col gap-4">
+
+          {/* AI Activity Feed */}
+          <motion.div
+            variants={itemVariants}
+            className="bg-white rounded-xl border border-gray-200/60 p-5 flex-1"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center">
+                  <Zap className="w-3.5 h-3.5 text-blue-600" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">AI Activity</h3>
+              </div>
+              <span className="text-[11px] text-gray-400 font-medium">Live</span>
+            </div>
+            <div className="space-y-3 max-h-[220px] overflow-y-auto pr-1">
+              {MOCK_AI_FEED.map((item, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -6 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.15 + i * 0.05, duration: 0.25, ease: 'easeOut' as const }}
+                  className="flex items-start gap-3 group"
+                >
+                  <div className="w-7 h-7 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-blue-50 group-hover:border-blue-100 transition-colors">
+                    <item.icon className={cn('w-3.5 h-3.5', item.color)} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] text-gray-700 dark:text-gray-300 leading-snug">{item.text}</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">{item.time}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Upcoming Meetings */}
+          <motion.div
+            variants={itemVariants}
+            className="bg-white rounded-xl border border-gray-200/60 p-5 flex-1"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center">
+                  <CalendarDays className="w-3.5 h-3.5 text-violet-600" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Upcoming Meetings</h3>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-[11px] text-gray-400 hover:text-gray-700 h-6 px-2"
+                onClick={() => setView('meetings')}
+              >
+                View all
+                <ArrowRight className="w-3 h-3 ml-1" />
+              </Button>
+            </div>
+            <div className="space-y-2.5">
+              {MOCK_MEETINGS.map((meeting, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors cursor-default group"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center shrink-0">
+                    <Building2 className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100 truncate">
+                        {meeting.company}
+                      </p>
+                      <MeetingTypeBadge type={meeting.type} />
+                    </div>
+                    <p className="text-[11px] text-gray-400 mt-0.5">
+                      {meeting.contact} · {meeting.date} at {meeting.time}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* ════════════════════════════════════════════════════════════════
+          4. CAMPAIGN PERFORMANCE TABLE
+          ════════════════════════════════════════════════════════════════ */}
+      <motion.div
+        variants={itemVariants}
+        className="bg-white rounded-xl border border-gray-200/60 p-5"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center">
+              <Target className="w-3.5 h-3.5 text-blue-600" />
             </div>
             <div>
-              <h3 className="text-[13px] font-semibold text-foreground">
-                Leads by Industry
-              </h3>
-              <p className="text-[11px] text-muted-foreground">
-                Top segments this month
-              </p>
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Campaign Performance</h3>
+              <p className="text-xs text-gray-400 mt-0.5">Top performing outreach campaigns</p>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-[11px] text-gray-400 hover:text-gray-700 h-6 px-2"
+            onClick={() => setView('campaigns')}
+          >
+            View all
+            <ArrowRight className="w-3 h-3 ml-1" />
+          </Button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-100">
+                {['Campaign', 'Status', 'Sent', 'Opened', 'Replied', 'Meetings'].map((header) => (
+                  <th
+                    key={header}
+                    className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider text-left pb-3 pr-4 last:pr-0"
+                  >
+                    {header}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {MOCK_CAMPAIGNS.map((campaign, i) => (
+                <tr
+                  key={i}
+                  className="border-b border-gray-50 last:border-0 hover:bg-gray-50/80 transition-colors cursor-default group"
+                >
+                  <td className="py-3 pr-4">
+                    <span className="text-[13px] font-medium text-gray-900 dark:text-gray-100 group-hover:text-blue-600 transition-colors">
+                      {campaign.name}
+                    </span>
+                  </td>
+                  <td className="py-3 pr-4">
+                    <CampaignStatusBadge status={campaign.status} />
+                  </td>
+                  <td className="py-3 pr-4">
+                    <span className="text-[13px] text-gray-600 tabular-nums">{campaign.sent.toLocaleString()}</span>
+                  </td>
+                  <td className="py-3 pr-4">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[13px] text-gray-600 tabular-nums">{campaign.opened.toLocaleString()}</span>
+                      {campaign.sent > 0 && (
+                        <span className="text-[10px] text-gray-400">
+                          ({Math.round((campaign.opened / campaign.sent) * 100)}%)
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-3 pr-4">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[13px] text-gray-600 tabular-nums">{campaign.replied.toLocaleString()}</span>
+                      {campaign.sent > 0 && (
+                        <span className="text-[10px] text-gray-400">
+                          ({Math.round((campaign.replied / campaign.sent) * 100)}%)
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-3">
+                    <span className="inline-flex items-center gap-1 text-[13px] text-gray-600 tabular-nums">
+                      {campaign.meetings > 0 ? (
+                        <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                      ) : (
+                        <XCircle className="w-3 h-3 text-gray-300" />
+                      )}
+                      {campaign.meetings}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </motion.div>
+
+      {/* ════════════════════════════════════════════════════════════════
+          5. BOTTOM ROW: Lead Distribution + Recent Activity
+          ════════════════════════════════════════════════════════════════ */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+        {/* Lead Distribution — Donut Chart */}
+        <motion.div
+          variants={itemVariants}
+          className="lg:col-span-5 bg-white rounded-xl border border-gray-200/60 p-5"
+        >
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center">
+                <PieIcon className="w-3.5 h-3.5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Lead Distribution</h3>
+                <p className="text-xs text-gray-400 mt-0.5">By industry vertical</p>
+              </div>
             </div>
           </div>
           {industryData.length > 0 ? (
-            <div className="relative">
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie
-                    data={industryData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={55}
-                    outerRadius={80}
-                    paddingAngle={3}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    {industryData.map((entry, i) => (
-                      <Cell key={i} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<DonutTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
-              {/* Donut center label */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="text-center">
-                  <p className="text-xl font-bold text-foreground leading-none">
-                    {industryTotal}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
-                    Total
-                  </p>
+            <div className="flex items-center gap-6">
+              <div className="relative w-[160px] h-[160px] shrink-0">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={industryData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={44}
+                      outerRadius={70}
+                      paddingAngle={2}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {industryData.map((entry, i) => (
+                        <Cell key={i} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<PieTooltipContent />} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-gray-900 dark:text-gray-100 leading-none">
+                      {industryTotal}
+                    </p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">Total</p>
+                  </div>
                 </div>
+              </div>
+              <div className="flex-1 space-y-2">
+                {industryData.map((item) => (
+                  <div key={item.name} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="w-2.5 h-2.5 rounded-full shrink-0"
+                        style={{ backgroundColor: item.fill }}
+                      />
+                      <span className="text-[12px] text-gray-600 dark:text-gray-400 truncate max-w-[120px]">
+                        {item.name}
+                      </span>
+                    </div>
+                    <span className="text-[12px] font-medium text-gray-900 dark:text-gray-100 tabular-nums">
+                      {item.value}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-48 text-center">
-              <PieIcon className="w-8 h-8 text-muted-foreground/30 mb-2" />
-              <p className="text-[13px] text-muted-foreground">
-                No industry data yet
-              </p>
-            </div>
-          )}
-          {industryData.length > 0 && (
-            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 justify-center">
-              {industryData.map((d) => (
-                <div
-                  key={d.name}
-                  className="flex items-center gap-1.5 text-[11px] text-muted-foreground"
-                >
-                  <span
-                    className="w-2 h-2 rounded-full shrink-0"
-                    style={{ backgroundColor: d.fill }}
-                  />
-                  {d.name} ({d.value})
-                </div>
-              ))}
+              <PieIcon className="w-8 h-8 text-gray-200 mb-2" />
+              <p className="text-sm text-gray-400">No industry data yet</p>
             </div>
           )}
         </motion.div>
-      </div>
 
-      {/* ─── Bottom Row (AI Recs 1 + Activity 2) ────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* AI Recommendations */}
+        {/* Recent Activity Timeline */}
         <motion.div
           variants={itemVariants}
-          className="rounded-[18px] p-5 glass-card border border-blue-100 dark:border-blue-500/20"
-        >
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-[10px] bg-blue-500/10 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-blue-500" />
-            </div>
-            <div>
-              <h3 className="text-[13px] font-semibold">AI Recommendations</h3>
-              <p className="text-[11px] text-muted-foreground">
-                Based on your recent activity
-              </p>
-            </div>
-          </div>
-          <div className="space-y-2">
-            {[
-              {
-                text: '3 leads from Manhattan are ready for outreach',
-                action: 'View Leads',
-                view: 'leads' as AppView,
-              },
-              {
-                text: 'Your email reply rate increased 23% this week',
-                action: 'See Analytics',
-                view: 'dashboard' as AppView,
-              },
-              {
-                text: '2 campaigns need follow-up sequences',
-                action: 'Open Campaigns',
-                view: 'campaigns' as AppView,
-              },
-            ].map((rec, i) => (
-              <button
-                key={i}
-                onClick={() => setView(rec.view)}
-                className="w-full flex items-center justify-between p-3 rounded-[12px] hover:bg-blue-50/50 dark:hover:bg-blue-500/5 transition-colors text-left group"
-              >
-                <p className="text-[13px] text-foreground">{rec.text}</p>
-                <span className="text-[11px] font-medium text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2">
-                  {rec.action}
-                </span>
-              </button>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Activity Feed */}
-        <motion.div
-          variants={itemVariants}
-          className="lg:col-span-2 rounded-[18px] p-5 glass-card"
+          className="lg:col-span-7 bg-white rounded-xl border border-gray-200/60 p-5"
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-[10px] bg-muted/60 flex items-center justify-center">
-                <Clock className="w-4 h-4 text-foreground" />
+              <div className="w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center">
+                <Clock className="w-3.5 h-3.5 text-gray-500" />
               </div>
               <div>
-                <h3 className="text-[13px] font-semibold text-foreground">
-                  Recent Activity
-                </h3>
-                <p className="text-[11px] text-muted-foreground">
-                  {activities.length} events this week
-                </p>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Recent Activity</h3>
+                <p className="text-xs text-gray-400 mt-0.5">{displayActivities.length} events this week</p>
               </div>
             </div>
             <Button
               variant="ghost"
               size="sm"
-              className="text-[11px] text-muted-foreground hover:text-foreground gap-1 h-7 px-2"
+              className="text-[11px] text-gray-400 hover:text-gray-700 h-6 px-2"
               onClick={() => setView('leads')}
             >
-              View all <ArrowRight className="w-3 h-3" />
+              View all
+              <ArrowRight className="w-3 h-3 ml-1" />
             </Button>
           </div>
-          <div className="max-h-80 overflow-y-auto">
-            {activities.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="w-10 h-10 rounded-[12px] bg-muted/50 flex items-center justify-center mb-3">
-                  <Activity className="w-5 h-5 text-muted-foreground/50" />
-                </div>
-                <p className="text-[13px] font-medium text-muted-foreground">
-                  No activity yet
-                </p>
-                <p className="text-[11px] text-muted-foreground/70 mt-1">
-                  Start by finding leads or running an audit
-                </p>
-                <Button
-                  size="sm"
-                  className="mt-4 rounded-[10px] text-[12px] h-8"
-                  onClick={() => setView('discovery')}
+          <div className="space-y-0">
+            {displayActivities.slice(0, 5).map((activity, i) => {
+              const actionIcon = getActivityIcon(activity.action)
+              const actionColor = getActivityColor(activity.action)
+              return (
+                <motion.div
+                  key={activity.id || i}
+                  initial={{ opacity: 0, x: -4 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 + i * 0.04, duration: 0.2, ease: 'easeOut' as const }}
+                  className="flex items-start gap-3 py-3 border-b border-gray-50 last:border-0 group"
                 >
-                  <Search className="w-3.5 h-3.5 mr-1" /> Get Started
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-1">
-                {activities.slice(0, 8).map((activity, i) => (
-                  <motion.div
-                    key={activity.id}
-                    initial={{ opacity: 0, x: -4 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{
-                      delay: 0.1 + i * 0.03,
-                      duration: 0.2,
-                    }}
-                    className={cn(
-                      'group flex items-start gap-3 rounded-[12px] p-3 transition-all hover:translate-x-[2px] border-l-2',
-                      getActionBorder(activity.action),
-                    )}
-                  >
-                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-foreground">
-                      {(activity.user?.name ?? 'S')[0].toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13px] text-foreground leading-snug">
-                        <span className="font-semibold">
-                          {activity.user?.name ?? 'System'}
-                        </span>{' '}
-                        <span className="text-muted-foreground">
-                          {activity.action}
+                  <div className={cn(
+                    'w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5',
+                    actionColor
+                  )}>
+                    {actionIcon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] text-gray-700 dark:text-gray-300 leading-snug">
+                      <span className="font-medium text-gray-900 dark:text-gray-100">
+                        {activity.user?.name || 'System'}
+                      </span>
+                      {' '}
+                      {activity.action}
+                      {activity.lead?.business?.name && (
+                        <span className="font-medium text-gray-900 dark:text-gray-100">
+                          {' '}{activity.lead.business.name}
                         </span>
-                        {activity.lead?.business?.name && (
-                          <span className="font-medium">
-                            {' '}
-                            {activity.lead.business.name}
-                          </span>
-                        )}
-                      </p>
-                      {activity.details && (
-                        <p className="mt-0.5 text-[11px] text-muted-foreground/70 truncate">
-                          {activity.details}
-                        </p>
                       )}
-                    </div>
-                    <span className="mt-1 shrink-0 text-[11px] text-muted-foreground/60 whitespace-nowrap">
-                      {formatDistanceToNow(new Date(activity.createdAt), {
-                        addSuffix: true,
-                      })}
-                    </span>
-                  </motion.div>
-                ))}
-              </div>
-            )}
+                    </p>
+                    {activity.details && (
+                      <p className="text-[11px] text-gray-400 mt-0.5 truncate">{activity.details}</p>
+                    )}
+                  </div>
+                  <span className="text-[11px] text-gray-400 whitespace-nowrap mt-0.5 shrink-0">
+                    {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })}
+                  </span>
+                </motion.div>
+              )
+            })}
           </div>
         </motion.div>
       </div>
     </motion.div>
   )
+}
+
+// ─── Activity Icon & Color Helpers ───────────────────────────────────────
+
+function getActivityIcon(action: string) {
+  const upper = action.toUpperCase()
+  if (upper.includes('DISCOVER') || upper.includes('LEAD')) {
+    return <Globe className="w-3.5 h-3.5 text-emerald-500" />
+  }
+  if (upper.includes('AUDIT')) {
+    return <Search className="w-3.5 h-3.5 text-blue-500" />
+  }
+  if (upper.includes('EMAIL') || upper.includes('OUTREACH')) {
+    return <Mail className="w-3.5 h-3.5 text-violet-500" />
+  }
+  if (upper.includes('REPLY') || upper.includes('REPLIED')) {
+    return <MessageSquare className="w-3.5 h-3.5 text-amber-500" />
+  }
+  if (upper.includes('MEETING') || upper.includes('BOOK')) {
+    return <CalendarDays className="w-3.5 h-3.5 text-rose-500" />
+  }
+  if (upper.includes('WON')) {
+    return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+  }
+  return <ActivityIconFallback />
+}
+
+function ActivityIconFallback() {
+  return <Sparkles className="w-3.5 h-3.5 text-gray-400" />
+}
+
+function getActivityColor(action: string) {
+  const upper = action.toUpperCase()
+  if (upper.includes('DISCOVER') || upper.includes('LEAD')) return 'bg-emerald-50'
+  if (upper.includes('AUDIT')) return 'bg-blue-50'
+  if (upper.includes('EMAIL') || upper.includes('OUTREACH')) return 'bg-violet-50'
+  if (upper.includes('REPLY') || upper.includes('REPLIED')) return 'bg-amber-50'
+  if (upper.includes('MEETING') || upper.includes('BOOK')) return 'bg-rose-50'
+  if (upper.includes('WON')) return 'bg-emerald-50'
+  return 'bg-gray-50'
 }

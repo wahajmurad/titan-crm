@@ -8,63 +8,65 @@ import {
   Calendar, Brain, BookOpen, UserCog, Settings, LogOut,
   ChevronLeft, ChevronRight, Zap, GraduationCap, Plug, Lightbulb,
   Sparkles, Workflow, BookMarked, FileText, CalendarCheck, Send,
-  Command, Bot
+  Command, Bot, Rocket, Cpu
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger
 } from '@/components/ui/tooltip'
+import { Separator } from '@/components/ui/separator'
 
 const NAV_SECTIONS = [
   {
-    label: 'Main',
+    label: 'Overview',
     items: [
       { view: 'dashboard' as AppView, label: 'Dashboard', icon: LayoutDashboard },
+      { view: 'automation' as AppView, label: 'Automation Center', icon: Rocket, badge: 'AI' },
+    ],
+  },
+  {
+    label: 'Pipeline',
+    items: [
       { view: 'discovery' as AppView, label: 'Lead Discovery', icon: Search },
       { view: 'audit' as AppView, label: 'Website Audit', icon: Globe2 },
       { view: 'leads' as AppView, label: 'Leads', icon: Users },
     ],
   },
   {
-    label: 'Campaigns',
+    label: 'Outreach',
     items: [
       { view: 'campaigns' as AppView, label: 'Campaigns', icon: Target },
       { view: 'workflows' as AppView, label: 'Workflow Builder', icon: Workflow },
-      { view: 'email-center' as AppView, label: 'Email Center', icon: Mail },
       { view: 'outreach' as AppView, label: 'Outreach', icon: Send },
+      { view: 'email-center' as AppView, label: 'Email Center', icon: Mail },
       { view: 'inbox' as AppView, label: 'Inbox', icon: Inbox },
-    ],
-  },
-  {
-    label: 'Personalization',
-    items: [
-      { view: 'personalization' as AppView, label: 'AI Pipeline', icon: Sparkles },
     ],
   },
   {
     label: 'Intelligence',
     items: [
+      { view: 'personalization' as AppView, label: 'AI Pipeline', icon: Sparkles },
       { view: 'ai-assistant' as AppView, label: 'AI Assistant', icon: Brain },
+      { view: 'ai-agents' as AppView, label: 'AI Agents', icon: Bot },
+      { view: 'command-center' as AppView, label: 'Command Center', icon: Command },
       { view: 'industry-expert' as AppView, label: 'Industry Expert', icon: GraduationCap },
       { view: 'strategy-assistant' as AppView, label: 'Strategy AI', icon: Lightbulb },
-      { view: 'prompts' as AppView, label: 'Prompt Library', icon: BookOpen },
     ],
   },
   {
-    label: 'Growth AI',
+    label: 'Growth',
     items: [
       { view: 'knowledge-base' as AppView, label: 'Knowledge Base', icon: BookMarked },
       { view: 'ai-proposals' as AppView, label: 'AI Proposals', icon: FileText },
       { view: 'meeting-prep' as AppView, label: 'Meeting Prep', icon: CalendarCheck },
-      { view: 'ai-agents' as AppView, label: 'AI Agents', icon: Bot },
-      { view: 'command-center' as AppView, label: 'Command Center', icon: Command },
+      { view: 'meetings' as AppView, label: 'Meetings', icon: Calendar },
     ],
   },
   {
-    label: 'Operations',
+    label: 'System',
     items: [
-      { view: 'meetings' as AppView, label: 'Meetings', icon: Calendar },
       { view: 'lead-providers' as AppView, label: 'Lead Providers', icon: Plug },
+      { view: 'prompts' as AppView, label: 'Prompt Library', icon: BookOpen },
       { view: 'team' as AppView, label: 'Team', icon: UserCog },
       { view: 'settings' as AppView, label: 'Settings', icon: Settings },
     ],
@@ -85,92 +87,89 @@ const textVariants = {
   },
   hide: {
     opacity: 0,
-    x: -8,
-    transition: { duration: 0.15, ease: [0.25, 0.1, 0.25, 1] as const },
+    x: -6,
+    transition: { duration: 0.12, ease: [0.25, 0.1, 0.25, 1] as const },
   },
 }
 
-const sectionLabelVariants = {
+const sectionVariants = {
   show: {
     opacity: 1,
-    transition: { duration: 0.2, delay: 0.05, ease: [0.25, 0.1, 0.25, 1] as const },
+    transition: { duration: 0.2, delay: 0.03, ease: [0.25, 0.1, 0.25, 1] as const },
   },
   hide: {
     opacity: 0,
-    transition: { duration: 0.1, ease: [0.25, 0.1, 0.25, 1] as const },
+    transition: { duration: 0.08, ease: [0.25, 0.1, 0.25, 1] as const },
   },
 }
 
 export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
   const { currentView, setView, sidebarOpen, setSidebarOpen } = useAppStore()
-
   const initials = userName.slice(0, 2).toUpperCase()
 
   return (
     <TooltipProvider delayDuration={0}>
       <motion.aside
-        animate={{ width: sidebarOpen ? 260 : 72 }}
-        transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] as const }}
+        animate={{ width: sidebarOpen ? 256 : 56 }}
+        transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] as const }}
         className={cn(
           'glass-sidebar fixed left-0 top-0 z-40 flex flex-col overflow-hidden',
-          'ml-3 mt-3 mb-3 rounded-[22px]',
-          'h-[calc(100vh-24px)]'
+          'border-r border-gray-200/60 dark:border-white/[0.06]',
+          'h-screen'
         )}
       >
-        {/* ── Logo Section ── */}
+        {/* ── Logo ── */}
         <div className="flex items-center shrink-0 h-14 px-4">
           {sidebarOpen ? (
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-[12px] bg-white/10 backdrop-blur-sm flex items-center justify-center shrink-0 border border-white/10 shadow-lg shadow-blue-500/20">
-                <Zap className="w-4 h-4 text-white" />
+            <motion.div
+              key="logo-expanded"
+              initial="hide"
+              animate="show"
+              exit="hide"
+              variants={textVariants}
+              className="flex items-center gap-2.5"
+            >
+              <div className="w-7 h-7 rounded-lg gradient-blue flex items-center justify-center shrink-0 shadow-sm">
+                <Zap className="w-3.5 h-3.5 text-white" fill="white" />
               </div>
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key="logo-text"
-                  initial="hide"
-                  animate="show"
-                  exit="hide"
-                  variants={textVariants}
-                  className="flex items-center gap-1.5 overflow-hidden"
-                >
-                  <span className="text-[15px] font-bold tracking-tight text-white">
-                    TITAN
-                  </span>
-                  <span className="text-[9px] bg-blue-500 text-white font-bold rounded-md px-1.5 py-0.5 leading-none tracking-wide">
-                    AI
-                  </span>
-                </motion.div>
-              </AnimatePresence>
-            </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-100">
+                  TITAN
+                </span>
+                <span className="text-[9px] gradient-blue text-white font-bold rounded px-1.5 py-0.5 leading-none">
+                  AI
+                </span>
+              </div>
+            </motion.div>
           ) : (
             <div className="flex items-center justify-center w-full">
-              <div className="w-8 h-8 rounded-[12px] bg-white/10 backdrop-blur-sm flex items-center justify-center shrink-0 border border-white/10">
-                <Zap className="w-4 h-4 text-white" />
+              <div className="w-7 h-7 rounded-lg gradient-blue flex items-center justify-center shrink-0 shadow-sm">
+                <Zap className="w-3.5 h-3.5 text-white" fill="white" />
               </div>
             </div>
           )}
         </div>
 
+        <Separator className="opacity-60" />
+
         {/* ── Navigation ── */}
-        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-2.5 space-y-5 scrollbar-none">
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-2 px-2.5 space-y-4 scrollbar-none">
           {NAV_SECTIONS.map((section) => (
             <div key={section.label}>
-              {/* Section Label */}
               <AnimatePresence>
                 {sidebarOpen && (
                   <motion.p
                     initial="hide"
                     animate="show"
                     exit="hide"
-                    variants={sectionLabelVariants}
-                    className="text-[10px] font-semibold uppercase tracking-[0.1em] text-white/30 px-2.5 mb-1.5 select-none"
+                    variants={sectionVariants}
+                    className="text-[10px] font-semibold uppercase tracking-[0.08em] text-gray-400 dark:text-gray-500 px-2.5 mb-1 select-none"
                   >
                     {section.label}
                   </motion.p>
                 )}
               </AnimatePresence>
 
-              {/* Nav Items */}
               <div className="space-y-0.5">
                 {section.items.map((item) => {
                   const Icon = item.icon
@@ -183,33 +182,31 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
                       key={item.view}
                       onClick={() => {
                         setView(item.view)
-                        // Close sidebar on mobile after navigation
                         if (window.innerWidth < 1024) setSidebarOpen(false)
                       }}
                       className={cn(
-                        'w-full flex items-center gap-2.5 rounded-[12px] text-[13px] font-medium',
-                        'transition-all duration-200 relative',
-                        'px-2.5 py-[9px]',
+                        'w-full flex items-center gap-2.5 rounded-lg text-[13px] font-medium',
+                        'transition-all duration-150 relative',
+                        'px-2.5 py-[7px]',
                         active
-                          ? 'bg-white/10 text-white'
-                          : 'text-white/50 hover:text-white/90 hover:bg-white/[0.06]'
+                          ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                          : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100/80 dark:hover:bg-white/[0.04]'
                       )}
                     >
-                      {/* Active indicator */}
                       {active && (
                         <motion.div
-                          layoutId="sidebar-active-indicator"
-                          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full bg-blue-400"
-                          transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                          layoutId="sidebar-active"
+                          className="absolute left-0 top-1/2 -translate-y-1/2 w-[2.5px] h-4 rounded-r-full bg-blue-500"
+                          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                         />
                       )}
 
                       <Icon
                         className={cn(
-                          'w-[18px] h-[18px] shrink-0 transition-colors duration-200',
+                          'w-4 h-4 shrink-0',
                           active
-                            ? 'text-blue-400'
-                            : 'text-white/40'
+                            ? 'text-blue-600 dark:text-blue-400'
+                            : 'text-gray-400 dark:text-gray-500'
                         )}
                       />
 
@@ -221,19 +218,23 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
                             animate="show"
                             exit="hide"
                             variants={textVariants}
-                            className="truncate"
+                            className="truncate flex-1 text-left"
                           >
                             {item.label}
                           </motion.span>
                         )}
                       </AnimatePresence>
 
-                      {active && sidebarOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0"
-                        />
+                      {sidebarOpen && item.badge && (
+                        <motion.span
+                          initial="hide"
+                          animate="show"
+                          exit="hide"
+                          variants={sectionVariants}
+                          className="text-[9px] font-bold gradient-blue text-white rounded px-1.5 py-0.5 leading-none"
+                        >
+                          {item.badge}
+                        </motion.span>
                       )}
                     </button>
                   )
@@ -245,7 +246,7 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
                         <TooltipContent
                           side="right"
                           sideOffset={8}
-                          className="rounded-[10px] shadow-lg shadow-black/30 bg-[#1a1a2e] text-white text-[13px] font-medium px-3 py-1.5 border border-white/10"
+                          className="rounded-lg shadow-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-[12px] font-medium px-3 py-1.5 border border-gray-200 dark:border-white/10"
                         >
                           {item.label}
                         </TooltipContent>
@@ -260,28 +261,24 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
           ))}
         </nav>
 
-        {/* ── Bottom Section: Collapse Toggle + User ── */}
-        <div className="shrink-0 mt-auto">
+        {/* ── Bottom Section ── */}
+        <div className="shrink-0">
+          <Separator className="opacity-60" />
+
           {/* Collapse Toggle */}
-          <div className="px-2.5 mb-1">
+          <div className="px-2.5 py-1.5">
             {sidebarOpen ? (
               <button
                 onClick={() => setSidebarOpen(false)}
                 className={cn(
-                  'w-full flex items-center gap-2.5 rounded-[12px] px-2.5 py-[9px]',
-                  'text-white/30 hover:text-white/60 hover:bg-white/[0.06]',
-                  'transition-all duration-200 text-[13px] font-medium'
+                  'w-full flex items-center gap-2.5 rounded-lg px-2.5 py-[7px]',
+                  'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-white/[0.04]',
+                  'transition-all duration-150 text-[13px] font-medium'
                 )}
               >
-                <ChevronLeft className="w-[18px] h-[18px] shrink-0" />
+                <ChevronLeft className="w-4 h-4 shrink-0" />
                 <AnimatePresence mode="wait">
-                  <motion.span
-                    key="collapse-label"
-                    initial="hide"
-                    animate="show"
-                    exit="hide"
-                    variants={textVariants}
-                  >
+                  <motion.span key="collapse" initial="hide" animate="show" exit="hide" variants={textVariants}>
                     Collapse
                   </motion.span>
                 </AnimatePresence>
@@ -291,19 +288,15 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
                 <TooltipTrigger asChild>
                   <button
                     onClick={() => setSidebarOpen(true)}
-                    className={cn(
-                      'w-full flex items-center justify-center rounded-[12px] py-[9px]',
-                      'text-white/30 hover:text-white/60 hover:bg-white/[0.06]',
-                      'transition-all duration-200'
-                    )}
+                    className="w-full flex items-center justify-center rounded-lg py-[7px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-white/[0.04] transition-all duration-150"
                   >
-                    <ChevronRight className="w-[18px] h-[18px]" />
+                    <ChevronRight className="w-4 h-4" />
                   </button>
                 </TooltipTrigger>
                 <TooltipContent
                   side="right"
                   sideOffset={8}
-                  className="rounded-[10px] shadow-lg shadow-black/30 bg-[#1a1a2e] text-white text-[13px] font-medium px-3 py-1.5 border border-white/10"
+                  className="rounded-lg shadow-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-[12px] font-medium px-3 py-1.5 border border-gray-200 dark:border-white/10"
                 >
                   Expand
                 </TooltipContent>
@@ -311,99 +304,53 @@ export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
             )}
           </div>
 
-          {/* Divider */}
-          <div className="mx-3 border-t border-white/[0.08]" />
-
           {/* User Section */}
-          <div className="p-2.5">
+          <div className="p-2.5 pt-0">
             {sidebarOpen ? (
-              <>
-                {/* Sign Out (above avatar when expanded) */}
+              <div className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-gray-100/80 dark:hover:bg-white/[0.04] transition-colors cursor-default group">
+                <Avatar className="h-7 w-7 shrink-0">
+                  <AvatarFallback className="bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] font-bold">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[12px] font-semibold text-gray-900 dark:text-gray-100 truncate leading-tight">
+                    {userName}
+                  </p>
+                  <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate leading-tight">
+                    {userRole}
+                  </p>
+                </div>
                 <button
                   onClick={onLogout}
-                  className={cn(
-                    'w-full flex items-center gap-2.5 rounded-[12px] px-2.5 py-[7px] mb-1',
-                    'text-[13px] font-medium text-white/30',
-                    'hover:text-red-400 hover:bg-white/[0.06]',
-                    'transition-all duration-200'
-                  )}
+                  className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50 dark:hover:bg-red-500/10 text-gray-300 hover:text-red-500 transition-all"
+                  aria-label="Sign out"
                 >
-                  <LogOut className="w-[16px] h-[16px] shrink-0" />
-                  <span>Sign Out</span>
+                  <LogOut className="w-3.5 h-3.5" />
                 </button>
-
-                {/* User Info */}
-                <div className="flex items-center gap-2.5 px-2 py-2">
-                  <Avatar className="h-8 w-8 shrink-0 ring-2 ring-white/10">
-                    <AvatarFallback className="bg-white/10 text-white text-xs font-bold">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key="user-info"
-                      initial="hide"
-                      animate="show"
-                      exit="hide"
-                      variants={textVariants}
-                      className="flex-1 min-w-0"
-                    >
-                      <p className="text-[13px] font-medium text-white truncate leading-tight">
-                        {userName}
-                      </p>
-                      <p className="text-[11px] text-white/40 truncate leading-tight">
-                        {userRole}
-                      </p>
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-              </>
+              </div>
             ) : (
-              <div className="flex flex-col items-center gap-2">
-                {/* Avatar */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Avatar className="h-8 w-8 ring-2 ring-white/10 cursor-default">
-                      <AvatarFallback className="bg-white/10 text-white text-xs font-bold">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex flex-col items-center gap-2 py-1">
+                    <Avatar className="h-7 w-7">
+                      <AvatarFallback className="bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] font-bold">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="right"
-                    sideOffset={8}
-                    className="rounded-[10px] shadow-lg shadow-black/30 bg-[#1a1a2e] text-white text-[13px] font-medium px-3 py-1.5 border border-white/10"
-                  >
-                    <div>
-                      <p className="font-semibold">{userName}</p>
-                      <p className="text-[11px] text-white/40 font-normal">{userRole}</p>
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-
-                {/* Sign Out Icon */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={onLogout}
-                      className={cn(
-                        'flex items-center justify-center rounded-[10px] p-1.5',
-                        'text-white/30 hover:text-red-400 hover:bg-white/[0.06]',
-                        'transition-all duration-200'
-                      )}
-                    >
-                      <LogOut className="w-4 h-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="right"
-                    sideOffset={8}
-                    className="rounded-[10px] shadow-lg shadow-black/30 bg-[#1a1a2e] text-white text-[13px] font-medium px-3 py-1.5 border border-white/10"
-                  >
-                    Sign Out
-                  </TooltipContent>
-                </Tooltip>
-              </div>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="right"
+                  sideOffset={8}
+                  className="rounded-lg shadow-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-[12px] font-medium px-3 py-1.5 border border-gray-200 dark:border-white/10"
+                >
+                  <div>
+                    <p className="font-semibold">{userName}</p>
+                    <p className="text-[11px] text-gray-400 font-normal">{userRole}</p>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
             )}
           </div>
         </div>

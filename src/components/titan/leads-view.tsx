@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useAppStore } from '@/lib/store'
-import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -69,9 +68,9 @@ const staggerCard = {
 // ─── Score Badge Color ────────────────────────────────────────────────
 
 function getScoreColor(score: number) {
-  if (score >= 70) return 'bg-emerald-50 text-emerald-700 border-emerald-200'
-  if (score >= 40) return 'bg-amber-50 text-amber-700 border-amber-200'
-  return 'bg-red-50 text-red-700 border-red-200'
+  if (score >= 70) return 'bg-emerald-50 text-emerald-700 border-emerald-200/60'
+  if (score >= 40) return 'bg-amber-50 text-amber-700 border-amber-200/60'
+  return 'bg-red-50 text-red-700 border-red-200/60'
 }
 
 // ─── Component ────────────────────────────────────────────────────────
@@ -168,35 +167,37 @@ export function LeadsView() {
       variants={container}
       initial="hidden"
       animate="show"
-      className="space-y-5"
+      className="mx-auto max-w-6xl space-y-5"
     >
       {/* ─── Header ──────────────────────────────────────────────────── */}
       <motion.div variants={fadeUp} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#0F172A] tracking-tight">Leads</h1>
-          <p className="text-sm text-[#475569] mt-1">{leads.length} leads in pipeline</p>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Leads</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            <span className="font-medium text-gray-700">{leads.length}</span> leads in pipeline
+          </p>
         </div>
         <div className="flex items-center gap-2.5 flex-wrap">
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
               placeholder="Search leads..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-10 w-full sm:w-56 h-10 rounded-xl bg-slate-50 border-0 text-sm text-[#0F172A] placeholder:text-[#94A3B8] focus-visible:ring-1 focus-visible:ring-[#2563EB]/30 shadow-none"
+              className="pl-9 w-full sm:w-52 h-9 rounded-lg bg-gray-50 border-gray-200/60 text-sm text-gray-900 placeholder:text-gray-400 focus-visible:ring-1 focus-visible:ring-blue-600/20 focus-visible:border-blue-300"
             />
           </div>
 
           {/* Stage filter pills */}
-          <div className="hidden md:flex items-center gap-1 bg-slate-100 rounded-full p-1">
+          <div className="hidden lg:flex items-center gap-1 bg-gray-100 rounded-lg p-1">
             <button
               onClick={() => setStageFilter('ALL')}
               className={cn(
-                'px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-200',
+                'px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200',
                 stageFilter === 'ALL'
-                  ? 'bg-white text-[#2563EB] shadow-sm'
-                  : 'text-[#94A3B8] hover:text-[#475569]'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-400 hover:text-gray-600'
               )}
             >
               All
@@ -206,10 +207,10 @@ export function LeadsView() {
                 key={s}
                 onClick={() => setStageFilter(s)}
                 className={cn(
-                  'px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-200 whitespace-nowrap',
+                  'px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 whitespace-nowrap',
                   stageFilter === s
-                    ? 'bg-white text-[#2563EB] shadow-sm'
-                    : 'text-[#94A3B8] hover:text-[#475569]'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-400 hover:text-gray-600'
                 )}
               >
                 {s.replace(/_/g, ' ')}
@@ -218,14 +219,14 @@ export function LeadsView() {
           </div>
 
           {/* View toggle */}
-          <div className="flex items-center bg-slate-100 rounded-full p-1">
+          <div className="flex items-center bg-gray-100 rounded-lg p-1">
             <button
               onClick={() => setViewMode('table')}
               className={cn(
-                'p-2 rounded-full transition-all duration-200',
+                'p-1.5 rounded-md transition-all duration-200',
                 viewMode === 'table'
-                  ? 'bg-white shadow-sm text-[#2563EB]'
-                  : 'text-[#94A3B8] hover:text-[#475569]'
+                  ? 'bg-white shadow-sm text-blue-600'
+                  : 'text-gray-400 hover:text-gray-600'
               )}
             >
               <List className="w-4 h-4" />
@@ -233,10 +234,10 @@ export function LeadsView() {
             <button
               onClick={() => setViewMode('board')}
               className={cn(
-                'p-2 rounded-full transition-all duration-200',
+                'p-1.5 rounded-md transition-all duration-200',
                 viewMode === 'board'
-                  ? 'bg-white shadow-sm text-[#2563EB]'
-                  : 'text-[#94A3B8] hover:text-[#475569]'
+                  ? 'bg-white shadow-sm text-blue-600'
+                  : 'text-gray-400 hover:text-gray-600'
               )}
             >
               <LayoutGrid className="w-4 h-4" />
@@ -249,36 +250,37 @@ export function LeadsView() {
 
       {/* ─── Content ──────────────────────────────────────────────────── */}
       {loading ? (
-        <Card className="bg-white rounded-2xl border-0 shadow-sm p-8">
-          <div className="h-56 bg-slate-100 rounded-2xl animate-pulse" />
-        </Card>
+        <motion.div variants={fadeUp} className="bg-white rounded-xl border border-gray-200/60 p-8">
+          <div className="h-56 bg-gray-100 rounded-lg animate-pulse" />
+        </motion.div>
       ) : viewMode === 'table' ? (
         <motion.div variants={fadeUp}>
-          <Card className="bg-white rounded-2xl border-0 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-xl border border-gray-200/60 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="sticky top-0 bg-slate-50/95 backdrop-blur-sm">
-                  <tr className="border-b border-slate-100">
-                    <th className="text-left px-5 py-3.5 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider">Business</th>
-                    <th className="text-left px-5 py-3.5 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider">Industry</th>
-                    <th className="text-left px-5 py-3.5 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider">Stage</th>
-                    <th className="text-left px-5 py-3.5 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider">Contact</th>
-                    <th className="text-left px-5 py-3.5 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider">Score</th>
-                    <th className="text-left px-5 py-3.5 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider">Actions</th>
-                    <th className="text-left px-5 py-3.5 text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider">Updated</th>
+                <thead>
+                  <tr className="border-b border-gray-200/60 bg-gray-50/60">
+                    <th className="text-left px-5 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Business</th>
+                    <th className="text-left px-5 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Industry</th>
+                    <th className="text-left px-5 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Stage</th>
+                    <th className="text-left px-5 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Contact</th>
+                    <th className="text-left px-5 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Score</th>
+                    <th className="text-left px-5 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
+                    <th className="text-left px-5 py-3 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Updated</th>
                     <th className="w-10" />
                   </tr>
                 </thead>
                 <motion.tbody variants={container} initial="hidden" animate="show">
                   {leads.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-5 py-16 text-center">
+                      <td colSpan={8} className="px-5 py-20 text-center">
                         <div className="flex flex-col items-center">
-                          <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center mb-3">
-                            <Search className="w-5 h-5 text-slate-300" />
+                          <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-200/60 flex items-center justify-center mb-4">
+                            <Search className="w-5 h-5 text-gray-300" />
                           </div>
-                          <p className="text-sm text-[#475569] font-medium">No leads yet</p>
-                          <p className="text-xs text-[#94A3B8] mt-1">Add your first lead to get started</p>
+                          <p className="text-sm font-medium text-gray-700">No leads yet</p>
+                          <p className="text-xs text-gray-400 mt-1">Add your first lead to get started</p>
+                          <AddLeadDialog open={addOpen} onOpenChange={setAddOpen} onCreated={refresh} />
                         </div>
                       </td>
                     </tr>
@@ -286,25 +288,25 @@ export function LeadsView() {
                     <motion.tr
                       key={lead.id}
                       variants={fadeUp}
-                      className="border-b border-slate-50 last:border-0 hover:bg-blue-50/40 cursor-pointer transition-colors group"
+                      className="border-b border-gray-100 last:border-0 hover:bg-gray-50/60 cursor-pointer transition-colors group"
                       onClick={() => setView('lead-detail', lead.id)}
                     >
-                      <td className="px-5 py-3.5">
-                        <div className="font-semibold text-[#0F172A] group-hover:text-[#2563EB] transition-colors">{lead.business.name}</div>
+                      <td className="px-5 py-3">
+                        <div className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors text-sm">{lead.business.name}</div>
                         {lead.business.city && (
-                          <div className="text-xs text-[#94A3B8] mt-0.5">
+                          <div className="text-xs text-gray-400 mt-0.5">
                             {lead.business.city}{lead.business.country ? `, ${lead.business.country}` : ''}
                           </div>
                         )}
                       </td>
-                      <td className="px-5 py-3.5">
-                        <span className="text-xs text-[#475569] font-medium">{lead.business.industry || '—'}</span>
+                      <td className="px-5 py-3">
+                        <span className="text-xs text-gray-500 font-medium">{lead.business.industry || '—'}</span>
                       </td>
-                      <td className="px-5 py-3.5">
+                      <td className="px-5 py-3">
                         <Badge
                           variant="outline"
                           className={cn(
-                            'text-[11px] font-semibold rounded-full border px-2.5 py-0.5',
+                            'text-[11px] font-medium rounded-md border px-2.5 py-0.5',
                             STAGE_COLORS[lead.stage]
                           )}
                         >
@@ -312,29 +314,29 @@ export function LeadsView() {
                           {lead.stage.replace(/_/g, ' ')}
                         </Badge>
                       </td>
-                      <td className="px-5 py-3.5">
+                      <td className="px-5 py-3">
                         {lead.decisionMaker ? (
                           <div>
-                            <div className="text-sm font-medium text-[#0F172A]">{lead.decisionMaker}</div>
-                            {lead.decisionMakerRole && <div className="text-xs text-[#94A3B8]">{lead.decisionMakerRole}</div>}
+                            <div className="text-sm font-medium text-gray-900">{lead.decisionMaker}</div>
+                            {lead.decisionMakerRole && <div className="text-xs text-gray-400">{lead.decisionMakerRole}</div>}
                           </div>
-                        ) : <span className="text-[#94A3B8] text-xs">—</span>}
+                        ) : <span className="text-gray-300 text-xs">—</span>}
                       </td>
-                      <td className="px-5 py-3.5">
+                      <td className="px-5 py-3">
                         {lead.score > 0 && (
                           <Badge
                             variant="outline"
-                            className={cn('text-[11px] font-bold rounded-lg px-2 py-0.5 border', getScoreColor(lead.score))}
+                            className={cn('text-[11px] font-bold rounded-md px-2 py-0.5 border', getScoreColor(lead.score))}
                           >
                             {lead.score}
                           </Badge>
                         )}
                       </td>
-                      <td className="px-5 py-3.5">
+                      <td className="px-5 py-3">
                         {processingLeads.has(lead.id) ? (
                           <div className="flex items-center gap-1.5">
-                            <Loader2 className="w-3.5 h-3.5 animate-spin text-[#2563EB]" />
-                            <span className="text-xs text-[#94A3B8]">Analyzing...</span>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
+                            <span className="text-xs text-gray-400">Analyzing...</span>
                           </div>
                         ) : completedLeads.has(lead.id) ? (
                           <div className="flex items-center gap-1.5">
@@ -346,7 +348,7 @@ export function LeadsView() {
                             <button
                               onClick={e => { e.stopPropagation(); handleAudit(lead) }}
                               disabled={!lead.business.website || processingLeads.has(lead.id)}
-                              className="inline-flex items-center gap-1.5 h-8 min-w-[44px] justify-center px-2.5 text-[11px] font-semibold rounded-lg bg-blue-50 text-[#2563EB] hover:bg-blue-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
+                              className="inline-flex items-center gap-1.5 h-7 min-w-[44px] justify-center px-2 text-[11px] font-medium rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                               title={!lead.business.website ? 'No website' : 'Audit website'}
                             >
                               <Globe2 className="w-3 h-3" />
@@ -355,7 +357,7 @@ export function LeadsView() {
                             <button
                               onClick={e => { e.stopPropagation(); handleQualify(lead) }}
                               disabled={processingLeads.has(lead.id)}
-                              className="inline-flex items-center gap-1.5 h-8 min-w-[44px] justify-center px-2.5 text-[11px] font-semibold rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
+                              className="inline-flex items-center gap-1.5 h-7 min-w-[44px] justify-center px-2 text-[11px] font-medium rounded-md bg-emerald-50 text-emerald-600 hover:bg-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                               title="Qualify lead with AI"
                             >
                               <Target className="w-3 h-3" />
@@ -364,16 +366,16 @@ export function LeadsView() {
                           </div>
                         )}
                       </td>
-                      <td className="px-5 py-3.5 text-[#94A3B8] text-xs font-medium">{format(new Date(lead.updatedAt), 'MMM d')}</td>
-                      <td className="px-3 py-3.5">
-                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-[#2563EB] transition-colors" />
+                      <td className="px-5 py-3 text-gray-400 text-xs font-medium">{format(new Date(lead.updatedAt), 'MMM d')}</td>
+                      <td className="px-3 py-3">
+                        <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-blue-600 transition-colors" />
                       </td>
                     </motion.tr>
                   ))}
                 </motion.tbody>
               </table>
             </div>
-          </Card>
+          </div>
         </motion.div>
       ) : (
         /* Kanban Board */
@@ -382,10 +384,10 @@ export function LeadsView() {
             const stageLeads = leads.filter(l => l.stage === stage)
             return (
               <div key={stage} className="min-w-[280px] flex-1">
-                <div className="flex items-center gap-2.5 mb-3 px-1">
-                  <span className={cn('w-2.5 h-2.5 rounded-full', STAGE_DOT_COLORS[stage])} />
-                  <span className="text-xs font-semibold text-[#0F172A] uppercase tracking-wider">{stage.replace(/_/g, ' ')}</span>
-                  <span className="text-xs text-[#94A3B8] bg-slate-100 rounded-full px-2 py-0.5 font-semibold tabular-nums">{stageLeads.length}</span>
+                <div className="flex items-center gap-2 mb-3 px-1">
+                  <span className={cn('w-2 h-2 rounded-full', STAGE_DOT_COLORS[stage])} />
+                  <span className="text-xs font-semibold text-gray-900 uppercase tracking-wider">{stage.replace(/_/g, ' ')}</span>
+                  <span className="text-[11px] text-gray-400 bg-gray-100 rounded-md px-1.5 py-0.5 font-medium tabular-nums">{stageLeads.length}</span>
                 </div>
                 <motion.div
                   variants={container}
@@ -397,68 +399,68 @@ export function LeadsView() {
                     <motion.div
                       key={lead.id}
                       variants={staggerCard}
-                      whileHover={{ y: -2 }}
+                      whileHover={{ y: -1 }}
                       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                     >
-                      <Card
-                        className="bg-white rounded-2xl border-0 shadow-sm hover:shadow-md transition-shadow cursor-pointer p-4"
+                      <div
+                        className="bg-white rounded-xl border border-gray-200/60 hover:border-blue-200/60 hover:shadow-sm transition-all cursor-pointer p-4"
                         onClick={() => setView('lead-detail', lead.id)}
                       >
                         <div className="flex items-start justify-between mb-2">
-                          <p className="text-sm font-semibold text-[#0F172A] truncate pr-2">{lead.business.name}</p>
+                          <p className="text-sm font-medium text-gray-900 truncate pr-2">{lead.business.name}</p>
                           {lead.score > 0 && (
                             <Badge
                               variant="outline"
-                              className={cn('text-[10px] font-bold rounded-lg px-1.5 py-0 border shrink-0', getScoreColor(lead.score))}
+                              className={cn('text-[10px] font-bold rounded-md px-1.5 py-0 border shrink-0', getScoreColor(lead.score))}
                             >
                               {lead.score}
                             </Badge>
                           )}
                         </div>
                         {lead.business.industry && (
-                          <p className="text-xs text-[#94A3B8] mb-2">{lead.business.industry}</p>
+                          <p className="text-xs text-gray-400 mb-2">{lead.business.industry}</p>
                         )}
                         {lead.decisionMaker && (
-                          <p className="text-xs text-[#475569] mb-3">{lead.decisionMaker}</p>
+                          <p className="text-xs text-gray-500 mb-3">{lead.decisionMaker}</p>
                         )}
-                        <div className="flex items-center gap-1.5 pt-3 border-t border-slate-100">
+                        <div className="flex items-center gap-1.5 pt-3 border-t border-gray-100">
                           <button
                             onClick={e => { e.stopPropagation(); handleAudit(lead) }}
-                            className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-blue-50 transition-all duration-150"
+                            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-blue-50 transition-colors"
                             title="Audit"
                             disabled={!lead.business.website || processingLeads.has(lead.id)}
                           >
                             {processingLeads.has(lead.id)
-                              ? <Loader2 className="w-3.5 h-3.5 text-[#2563EB] animate-spin" />
-                              : <Globe2 className="w-3.5 h-3.5 text-[#94A3B8] hover:text-[#2563EB] transition-colors" />}
+                              ? <Loader2 className="w-3.5 h-3.5 text-blue-600 animate-spin" />
+                              : <Globe2 className="w-3.5 h-3.5 text-gray-400 hover:text-blue-600 transition-colors" />}
                           </button>
                           <button
                             onClick={e => { e.stopPropagation(); handleQualify(lead) }}
-                            className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-emerald-50 transition-all duration-150"
+                            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg hover:bg-emerald-50 transition-colors"
                             title="Qualify"
                             disabled={processingLeads.has(lead.id)}
                           >
                             {processingLeads.has(lead.id)
                               ? <Loader2 className="w-3.5 h-3.5 text-emerald-500 animate-spin" />
-                              : <Target className="w-3.5 h-3.5 text-[#94A3B8] hover:text-emerald-600 transition-colors" />}
+                              : <Target className="w-3.5 h-3.5 text-gray-400 hover:text-emerald-600 transition-colors" />}
                           </button>
                           {completedLeads.has(lead.id) && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 ml-0.5" />}
                           <div className="flex-1" />
-                          <div className="flex items-center gap-1 text-[#94A3B8]">
+                          <div className="flex items-center gap-1 text-gray-400">
                             <Mail className="w-3 h-3" />
                             <span className="text-[11px] font-medium tabular-nums">{lead._count.outreaches}</span>
                           </div>
-                          <div className="flex items-center gap-1 text-[#94A3B8] ml-2">
+                          <div className="flex items-center gap-1 text-gray-400 ml-2">
                             <CalendarIcon className="w-3 h-3" />
                             <span className="text-[11px] font-medium tabular-nums">{lead._count.meetings}</span>
                           </div>
                         </div>
-                      </Card>
+                      </div>
                     </motion.div>
                   ))}
                   {stageLeads.length === 0 && (
-                    <div className="bg-slate-50/80 rounded-2xl p-6 text-center border border-dashed border-slate-200">
-                      <p className="text-xs text-[#94A3B8] font-medium">No leads</p>
+                    <div className="bg-gray-50/80 rounded-xl p-6 text-center border border-dashed border-gray-200/60">
+                      <p className="text-xs text-gray-400 font-medium">No leads</p>
                     </div>
                   )}
                 </motion.div>
@@ -507,78 +509,78 @@ function AddLeadDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpe
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button className="h-10 rounded-xl bg-[#2563EB] hover:bg-blue-700 text-white font-semibold shadow-sm hover:shadow-md transition-all px-4">
+        <Button className="h-9 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm px-4 text-sm">
           <Plus className="w-4 h-4 mr-1.5" />Add Lead
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg w-[95vw] sm:w-full rounded-2xl border-0 shadow-xl p-0 overflow-hidden">
-        <div className="bg-gradient-to-r from-[#2563EB] to-blue-600 px-6 py-5">
-          <DialogTitle className="text-lg font-bold text-white">Add New Lead</DialogTitle>
-          <p className="text-sm text-blue-100 mt-1">Fill in the details below to add a new lead to your pipeline</p>
+      <DialogContent className="max-w-lg w-[95vw] sm:w-full rounded-xl border-0 shadow-xl p-0 overflow-hidden">
+        <div className="bg-blue-600 px-5 py-4">
+          <DialogTitle className="text-base font-semibold text-white">Add New Lead</DialogTitle>
+          <p className="text-xs text-blue-100 mt-1">Fill in the details below to add a new lead to your pipeline</p>
         </div>
-        <div className="px-6 py-5 space-y-5">
+        <div className="px-5 py-5 space-y-5">
           {/* Business Information Section */}
           <div>
-            <p className="text-xs font-semibold text-[#94A3B8] uppercase tracking-wider mb-3">Business Information</p>
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Business Information</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="col-span-1 sm:col-span-2">
-                <Label className="text-xs font-medium text-[#475569]">Company Name *</Label>
+                <Label className="text-xs font-medium text-gray-500">Company Name *</Label>
                 <Input
-                  className="mt-1.5 h-10 rounded-xl bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-[#2563EB]/30"
+                  className="mt-1.5 h-9 rounded-lg bg-gray-50 border-gray-200/60 focus-visible:ring-1 focus-visible:ring-blue-600/20 text-sm"
                   value={form.name}
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                   placeholder="Acme Corp"
                 />
               </div>
               <div>
-                <Label className="text-xs font-medium text-[#475569]">Website</Label>
+                <Label className="text-xs font-medium text-gray-500">Website</Label>
                 <Input
-                  className="mt-1.5 h-10 rounded-xl bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-[#2563EB]/30"
+                  className="mt-1.5 h-9 rounded-lg bg-gray-50 border-gray-200/60 focus-visible:ring-1 focus-visible:ring-blue-600/20 text-sm"
                   value={form.website}
                   onChange={e => setForm(f => ({ ...f, website: e.target.value }))}
                   placeholder="https://..."
                 />
               </div>
               <div>
-                <Label className="text-xs font-medium text-[#475569]">Industry</Label>
+                <Label className="text-xs font-medium text-gray-500">Industry</Label>
                 <Input
-                  className="mt-1.5 h-10 rounded-xl bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-[#2563EB]/30"
+                  className="mt-1.5 h-9 rounded-lg bg-gray-50 border-gray-200/60 focus-visible:ring-1 focus-visible:ring-blue-600/20 text-sm"
                   value={form.industry}
                   onChange={e => setForm(f => ({ ...f, industry: e.target.value }))}
                   placeholder="Law Firm"
                 />
               </div>
               <div>
-                <Label className="text-xs font-medium text-[#475569]">City</Label>
+                <Label className="text-xs font-medium text-gray-500">City</Label>
                 <Input
-                  className="mt-1.5 h-10 rounded-xl bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-[#2563EB]/30"
+                  className="mt-1.5 h-9 rounded-lg bg-gray-50 border-gray-200/60 focus-visible:ring-1 focus-visible:ring-blue-600/20 text-sm"
                   value={form.city}
                   onChange={e => setForm(f => ({ ...f, city: e.target.value }))}
                   placeholder="New York"
                 />
               </div>
               <div>
-                <Label className="text-xs font-medium text-[#475569]">Country</Label>
+                <Label className="text-xs font-medium text-gray-500">Country</Label>
                 <Input
-                  className="mt-1.5 h-10 rounded-xl bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-[#2563EB]/30"
+                  className="mt-1.5 h-9 rounded-lg bg-gray-50 border-gray-200/60 focus-visible:ring-1 focus-visible:ring-blue-600/20 text-sm"
                   value={form.country}
                   onChange={e => setForm(f => ({ ...f, country: e.target.value }))}
                   placeholder="USA"
                 />
               </div>
               <div>
-                <Label className="text-xs font-medium text-[#475569]">Phone</Label>
+                <Label className="text-xs font-medium text-gray-500">Phone</Label>
                 <Input
-                  className="mt-1.5 h-10 rounded-xl bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-[#2563EB]/30"
+                  className="mt-1.5 h-9 rounded-lg bg-gray-50 border-gray-200/60 focus-visible:ring-1 focus-visible:ring-blue-600/20 text-sm"
                   value={form.phone}
                   onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
                   placeholder="+1 555-0123"
                 />
               </div>
               <div>
-                <Label className="text-xs font-medium text-[#475569]">Email</Label>
+                <Label className="text-xs font-medium text-gray-500">Email</Label>
                 <Input
-                  className="mt-1.5 h-10 rounded-xl bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-[#2563EB]/30"
+                  className="mt-1.5 h-9 rounded-lg bg-gray-50 border-gray-200/60 focus-visible:ring-1 focus-visible:ring-blue-600/20 text-sm"
                   type="email"
                   value={form.email}
                   onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
@@ -589,31 +591,31 @@ function AddLeadDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpe
           </div>
 
           {/* Decision Maker Section */}
-          <div className="pt-4 border-t border-slate-100">
-            <p className="text-xs font-semibold text-[#94A3B8] uppercase tracking-wider mb-3">Decision Maker</p>
+          <div className="pt-4 border-t border-gray-100">
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Decision Maker</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs font-medium text-[#475569]">Name</Label>
+                <Label className="text-xs font-medium text-gray-500">Name</Label>
                 <Input
-                  className="mt-1.5 h-10 rounded-xl bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-[#2563EB]/30"
+                  className="mt-1.5 h-9 rounded-lg bg-gray-50 border-gray-200/60 focus-visible:ring-1 focus-visible:ring-blue-600/20 text-sm"
                   value={form.decisionMaker}
                   onChange={e => setForm(f => ({ ...f, decisionMaker: e.target.value }))}
                   placeholder="John Smith"
                 />
               </div>
               <div>
-                <Label className="text-xs font-medium text-[#475569]">Role</Label>
+                <Label className="text-xs font-medium text-gray-500">Role</Label>
                 <Input
-                  className="mt-1.5 h-10 rounded-xl bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-[#2563EB]/30"
+                  className="mt-1.5 h-9 rounded-lg bg-gray-50 border-gray-200/60 focus-visible:ring-1 focus-visible:ring-blue-600/20 text-sm"
                   value={form.decisionMakerRole}
                   onChange={e => setForm(f => ({ ...f, decisionMakerRole: e.target.value }))}
                   placeholder="CEO"
                 />
               </div>
               <div className="col-span-1 sm:col-span-2">
-                <Label className="text-xs font-medium text-[#475569]">Email</Label>
+                <Label className="text-xs font-medium text-gray-500">Email</Label>
                 <Input
-                  className="mt-1.5 h-10 rounded-xl bg-slate-50 border-0 focus-visible:ring-1 focus-visible:ring-[#2563EB]/30"
+                  className="mt-1.5 h-9 rounded-lg bg-gray-50 border-gray-200/60 focus-visible:ring-1 focus-visible:ring-blue-600/20 text-sm"
                   type="email"
                   value={form.decisionMakerEmail}
                   onChange={e => setForm(f => ({ ...f, decisionMakerEmail: e.target.value }))}
@@ -625,18 +627,18 @@ function AddLeadDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpe
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-slate-50/80 border-t border-slate-100 flex justify-end gap-2.5">
+        <div className="px-5 py-4 bg-gray-50/80 border-t border-gray-100 flex justify-end gap-2.5">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="rounded-xl border-slate-200 text-[#475569] hover:bg-slate-100 font-semibold h-10 px-5"
+            className="rounded-lg border-gray-200/60 text-gray-500 hover:bg-gray-100 font-medium h-9 px-4 text-sm"
           >
             Cancel
           </Button>
           <Button
             onClick={handleSave}
             disabled={loading || !form.name}
-            className="rounded-xl bg-gradient-to-r from-[#2563EB] to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold h-10 px-6 shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+            className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium h-9 px-5 shadow-sm transition-all disabled:opacity-50 text-sm"
           >
             {loading ? (
               <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" />Saving...</>

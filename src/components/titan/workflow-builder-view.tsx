@@ -1,15 +1,50 @@
 'use client'
 
-import { useState, useCallback, useRef, useMemo, DragEvent } from 'react'
-import { ReactFlow, Controls, Background, MiniMap, addEdge, useNodesState, useEdgesState, type Node, type Edge, type Connection, type NodeTypes, type NodeProps, BackgroundVariant, Handle, Position, Panel } from '@xyflow/react'
-import '@xyflow/react/dist/style.css'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useCallback, useRef, DragEvent } from 'react'
 import {
-  Play, Save, Plus, Zap, Bot, ArrowRight, Clock, GitBranch,
-  Mail, Globe, FileText, BarChart3, ChevronRight, Loader2,
-  Settings, Trash2, Copy, Workflow, CheckCircle2, X, Search
+  ReactFlow,
+  Controls,
+  Background,
+  MiniMap,
+  addEdge,
+  useNodesState,
+  useEdgesState,
+  type Node,
+  type Edge,
+  type Connection,
+  type NodeTypes,
+  type NodeProps,
+  BackgroundVariant,
+  Handle,
+  Position,
+} from '@xyflow/react'
+import '@xyflow/react/dist/style.css'
+import { motion } from 'framer-motion'
+import {
+  Play,
+  Save,
+  Plus,
+  Zap,
+  Bot,
+  ArrowRight,
+  Clock,
+  GitBranch,
+  Mail,
+  Globe,
+  FileText,
+  BarChart3,
+  Loader2,
+  CheckCircle2,
+  X,
+  Search,
+  Workflow,
+  ArrowLeft,
+  ChevronLeft,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { useAppStore } from '@/lib/store'
 
 // ─── Custom Node Components ──────────────────────────────────
 
@@ -128,7 +163,7 @@ const NODE_TEMPLATES: NodeTemplate[] = [
   { type: 'custom', nodeType: 'delay', label: 'Wait 3 Days', description: 'Follow-up delay', icon: Clock, config: '3d' },
 ]
 
-// ─── Main Component ───────────────────────────────────────────
+// ─── Initial State ────────────────────────────────────────────
 
 const INITIAL_NODES: Node[] = [
   {
@@ -155,6 +190,40 @@ const INITIAL_EDGES: Edge[] = [
   { id: 'e1-2', source: 'node-1', target: 'node-2', animated: true, style: { stroke: '#94A3B8', strokeWidth: 2 } },
   { id: 'e2-3', source: 'node-2', target: 'node-3', animated: true, style: { stroke: '#94A3B8', strokeWidth: 2 } },
 ]
+
+// ─── Section helper for node palette ──────────────────────────
+
+const PALETTE_SECTIONS = [
+  { key: 'trigger', label: 'Triggers' },
+  { key: 'ai', label: 'AI Agents' },
+  { key: 'action', label: 'Actions' },
+  { key: 'condition', label: 'Logic' },
+  { key: 'delay', label: 'Delay' },
+] as const
+
+function getHoverColors(nodeType: string) {
+  switch (nodeType) {
+    case 'trigger': return 'hover:bg-gray-50 hover:border-emerald-200'
+    case 'ai': return 'hover:bg-blue-50/50 hover:border-blue-200'
+    case 'action': return 'hover:bg-violet-50/50 hover:border-violet-200'
+    case 'condition': return 'hover:bg-amber-50/50 hover:border-amber-200'
+    case 'delay': return 'hover:bg-gray-50 hover:border-gray-200'
+    default: return 'hover:bg-gray-50 hover:border-gray-200'
+  }
+}
+
+function getIconColors(nodeType: string) {
+  switch (nodeType) {
+    case 'trigger': return 'bg-emerald-50 text-emerald-600'
+    case 'ai': return 'bg-blue-50 text-blue-600'
+    case 'action': return 'bg-violet-50 text-violet-600'
+    case 'condition': return 'bg-amber-50 text-amber-600'
+    case 'delay': return 'bg-gray-50 text-gray-500'
+    default: return 'bg-gray-50 text-gray-500'
+  }
+}
+
+// ─── Main Component ───────────────────────────────────────────
 
 export function WorkflowBuilderView() {
   const [nodes, setNodes, onNodesChange] = useNodesState(INITIAL_NODES)
@@ -217,219 +286,262 @@ export function WorkflowBuilderView() {
     event.dataTransfer.effectAllowed = 'move'
   }
 
+  const handleBack = () => {
+    useAppStore.getState().setView('dashboard')
+  }
+
   return (
-    <div className="flex h-[calc(100vh-8rem)] gap-0">
-      {/* Mobile palette toggle */}
-      <button
-        onClick={() => setPaletteOpen(!paletteOpen)}
-        className="md:hidden fixed bottom-20 left-3 z-20 w-10 h-10 rounded-full gradient-blue text-white shadow-lg flex items-center justify-center"
-        aria-label="Toggle node palette"
-      >
-        <Workflow className="w-4 h-4" />
-      </button>
-
-      {/* Mobile palette overlay */}
-      {paletteOpen && (
-        <div className="md:hidden fixed inset-0 z-10 bg-black/30" onClick={() => setPaletteOpen(false)} />
-      )}
-
-      {/* Left Sidebar — Node Palette */}
-      <motion.div
-        initial={{ x: -20, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        className={cn(
-          "flex-shrink-0 border-r border-gray-200/60 bg-white/80 backdrop-blur-sm flex flex-col z-10",
-          "fixed md:relative inset-y-0 left-0 h-full md:h-auto",
-          "w-64 transform transition-transform duration-200 ease-in-out",
-          paletteOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        )}
-      >
-        {/* Tabs */}
-        <div className="flex border-b border-gray-200/60">
+    <div className="flex flex-col h-[calc(100vh-3rem)]">
+      {/* ─── Top Toolbar ─── */}
+      <div className="h-12 flex-shrink-0 border-b border-gray-200/60 bg-white flex items-center justify-between px-4">
+        <div className="flex items-center gap-3">
           <button
-            onClick={() => setSidebarTab('nodes')}
-            className={cn('flex-1 py-2.5 text-xs font-medium transition-colors', sidebarTab === 'nodes' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-400 hover:text-gray-600')}
+            onClick={handleBack}
+            className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors rounded-md px-2 py-1.5 hover:bg-gray-50"
           >
-            Nodes
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Back</span>
           </button>
-          <button
-            onClick={() => setSidebarTab('settings')}
-            className={cn('flex-1 py-2.5 text-xs font-medium transition-colors', sidebarTab === 'settings' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-400 hover:text-gray-600')}
-          >
-            Settings
-          </button>
-        </div>
-
-        {sidebarTab === 'nodes' ? (
-          <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
-            {/* Trigger nodes */}
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mt-1 mb-2 px-1">Triggers</p>
-            {NODE_TEMPLATES.filter(n => n.nodeType === 'trigger').map((template, i) => (
-              <div
-                key={`trigger-${i}`}
-                draggable
-                onDragStart={(e) => onDragStart(e, template)}
-                className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-gray-50 cursor-grab active:cursor-grabbing transition-colors group border border-transparent hover:border-gray-200"
-              >
-                <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center">
-                  <template.icon className="w-3.5 h-3.5 text-emerald-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-gray-700 truncate">{template.label}</p>
-                  <p className="text-[10px] text-gray-400">{template.description}</p>
-                </div>
-              </div>
-            ))}
-
-            {/* AI Agent nodes */}
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mt-4 mb-2 px-1">AI Agents</p>
-            {NODE_TEMPLATES.filter(n => n.nodeType === 'ai').map((template, i) => (
-              <div
-                key={`ai-${i}`}
-                draggable
-                onDragStart={(e) => onDragStart(e, template)}
-                className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-blue-50/50 cursor-grab active:cursor-grabbing transition-colors group border border-transparent hover:border-blue-200"
-              >
-                <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center">
-                  <template.icon className="w-3.5 h-3.5 text-blue-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-gray-700 truncate">{template.label}</p>
-                  <p className="text-[10px] text-gray-400">{template.description}</p>
-                </div>
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-            ))}
-
-            {/* Action nodes */}
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mt-4 mb-2 px-1">Actions</p>
-            {NODE_TEMPLATES.filter(n => n.nodeType === 'action').map((template, i) => (
-              <div
-                key={`action-${i}`}
-                draggable
-                onDragStart={(e) => onDragStart(e, template)}
-                className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-violet-50/50 cursor-grab active:cursor-grabbing transition-colors group border border-transparent hover:border-violet-200"
-              >
-                <div className="w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center">
-                  <template.icon className="w-3.5 h-3.5 text-violet-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-gray-700 truncate">{template.label}</p>
-                  <p className="text-[10px] text-gray-400">{template.description}</p>
-                </div>
-              </div>
-            ))}
-
-            {/* Condition nodes */}
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mt-4 mb-2 px-1">Logic</p>
-            {NODE_TEMPLATES.filter(n => n.nodeType === 'condition').map((template, i) => (
-              <div
-                key={`cond-${i}`}
-                draggable
-                onDragStart={(e) => onDragStart(e, template)}
-                className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-amber-50/50 cursor-grab active:cursor-grabbing transition-colors group border border-transparent hover:border-amber-200"
-              >
-                <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center">
-                  <template.icon className="w-3.5 h-3.5 text-amber-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-gray-700 truncate">{template.label}</p>
-                  <p className="text-[10px] text-gray-400">{template.description}</p>
-                </div>
-              </div>
-            ))}
-
-            {/* Delay nodes */}
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mt-4 mb-2 px-1">Delay</p>
-            {NODE_TEMPLATES.filter(n => n.nodeType === 'delay').map((template, i) => (
-              <div
-                key={`delay-${i}`}
-                draggable
-                onDragStart={(e) => onDragStart(e, template)}
-                className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-gray-50 cursor-grab active:cursor-grabbing transition-colors group border border-transparent hover:border-gray-200"
-              >
-                <div className="w-7 h-7 rounded-lg bg-gray-50 flex items-center justify-center">
-                  <template.icon className="w-3.5 h-3.5 text-gray-500" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-gray-700 truncate">{template.label}</p>
-                  <p className="text-[10px] text-gray-400">{template.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="flex-1 p-4 space-y-4">
-            <div>
-              <label className="text-xs font-medium text-gray-500 mb-1.5 block">Workflow Name</label>
-              <input
-                value={workflowName}
-                onChange={(e) => setWorkflowName(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400 outline-none"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500 mb-1.5 block">Status</label>
-              <select className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white">
-                <option>Draft</option>
-                <option>Active</option>
-                <option>Paused</option>
-              </select>
-            </div>
-            <div className="pt-4 border-t border-gray-200/60 space-y-2">
-              <button onClick={handleSave} disabled={isSaving} className="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-medium gradient-blue text-white rounded-lg hover:shadow-lg hover:shadow-blue-500/25 transition-all disabled:opacity-60">
-                {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                {isSaving ? 'Saving...' : 'Save Workflow'}
-              </button>
-              <button className="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-medium border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
-                <Play className="w-3.5 h-3.5" />
-                Test Run
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Node count */}
-        <div className="p-3 border-t border-gray-200/60">
-          <div className="flex items-center justify-between text-[10px] text-gray-400">
-            <span>{nodes.length} nodes</span>
-            <span>{edges.length} connections</span>
+          <div className="w-px h-5 bg-gray-200" />
+          <div className="flex items-center gap-2">
+            <input
+              value={workflowName}
+              onChange={(e) => setWorkflowName(e.target.value)}
+              className="text-sm font-semibold border-none focus:ring-0 focus:outline-none bg-transparent text-gray-900 w-48 sm:w-64 placeholder:text-gray-300"
+              placeholder="Untitled Workflow"
+            />
+            <Badge variant="secondary" className="text-[10px] font-medium text-gray-500 bg-gray-100 hover:bg-gray-100 border-0">
+              Draft
+            </Badge>
           </div>
         </div>
-      </motion.div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="h-8 text-xs font-medium text-gray-600 border-gray-200 hover:bg-gray-50 hover:text-gray-900">
+            <Play className="w-3.5 h-3.5 mr-1.5" />
+            <span className="hidden sm:inline">Test Run</span>
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={isSaving}
+            className="h-8 text-xs font-medium bg-[#2563EB] hover:bg-[#1D4ED8] text-white shadow-sm hover:shadow-md transition-all disabled:opacity-60"
+          >
+            {isSaving ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Save className="w-3.5 h-3.5 mr-1.5" />}
+            <span className="hidden sm:inline">{isSaving ? 'Saving...' : 'Save'}</span>
+          </Button>
+        </div>
+      </div>
 
-      {/* Canvas */}
-      <div ref={reactFlowWrapper} className="flex-1 bg-[#F8FAFC]">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onDragOver={onDragOver}
-          onDrop={onDrop}
-          nodeTypes={nodeTypes}
-          fitView
-          fitViewOptions={{ padding: 0.3 }}
-          defaultEdgeOptions={{ animated: true, style: { stroke: '#94A3B8', strokeWidth: 2 } }}
-          proOptions={{ hideAttribution: true }}
-          className="!bg-[#F8FAFC]"
+      {/* ─── Main Content Area ─── */}
+      <div className="flex flex-1 min-h-0">
+        {/* Mobile palette toggle */}
+        <button
+          onClick={() => setPaletteOpen(!paletteOpen)}
+          className="md:hidden fixed bottom-20 left-3 z-30 w-10 h-10 rounded-full bg-[#2563EB] text-white shadow-lg shadow-blue-500/25 flex items-center justify-center hover:bg-[#1D4ED8] transition-colors"
+          aria-label="Toggle node palette"
         >
-          <Background variant={BackgroundVariant.Dots} gap={16} size={1} color="#E2E8F0" />
-          <Controls className="!rounded-xl !border-gray-200 !shadow-lg !overflow-hidden" />
-          <MiniMap
-            nodeColor={(node) => {
-              const nt = node.data?.nodeType
-              if (nt === 'trigger') return '#10B981'
-              if (nt === 'ai') return '#2563EB'
-              if (nt === 'condition') return '#F59E0B'
-              if (nt === 'delay') return '#94A3B8'
-              return '#8B5CF6'
-            }}
-            className="!rounded-xl !border-gray-200 !shadow-lg hidden md:block"
-            maskColor="rgba(0,0,0,0.05)"
-          />
-        </ReactFlow>
+          {paletteOpen ? <X className="w-4 h-4" /> : <Workflow className="w-4 h-4" />}
+        </button>
+
+        {/* Mobile palette overlay */}
+        {paletteOpen && (
+          <div className="md:hidden fixed inset-0 z-20 bg-black/20 backdrop-blur-[2px]" onClick={() => setPaletteOpen(false)} />
+        )}
+
+        {/* ─── Left Sidebar — Node Palette ─── */}
+        <motion.div
+          initial={{ x: -12, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+          className={cn(
+            "flex-shrink-0 w-64 bg-white border-r border-gray-200/60 flex flex-col z-20",
+            "fixed md:relative inset-y-0 left-0 h-full md:h-auto",
+            "transform transition-transform duration-200 ease-in-out",
+            "top-12 md:top-0",
+            paletteOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+          )}
+        >
+          {/* Tabs */}
+          <div className="flex border-b border-gray-200/60 flex-shrink-0">
+            <button
+              onClick={() => setSidebarTab('nodes')}
+              className={cn(
+                'flex-1 py-3 text-xs font-medium transition-colors relative',
+                sidebarTab === 'nodes' ? 'text-[#2563EB]' : 'text-gray-400 hover:text-gray-600'
+              )}
+            >
+              Nodes
+              {sidebarTab === 'nodes' && (
+                <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-[#2563EB] rounded-full" />
+              )}
+            </button>
+            <button
+              onClick={() => setSidebarTab('settings')}
+              className={cn(
+                'flex-1 py-3 text-xs font-medium transition-colors relative',
+                sidebarTab === 'settings' ? 'text-[#2563EB]' : 'text-gray-400 hover:text-gray-600'
+              )}
+            >
+              Settings
+              {sidebarTab === 'settings' && (
+                <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-[#2563EB] rounded-full" />
+              )}
+            </button>
+          </div>
+
+          {/* Nodes Tab */}
+          {sidebarTab === 'nodes' ? (
+            <div className="flex-1 overflow-y-auto p-3 space-y-1">
+              {PALETTE_SECTIONS.map((section) => {
+                const sectionTemplates = NODE_TEMPLATES.filter(n => n.nodeType === section.key)
+                return (
+                  <div key={section.key} className="mb-3">
+                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mt-2 mb-2 px-1">
+                      {section.label}
+                    </p>
+                    <div className="space-y-0.5">
+                      {sectionTemplates.map((template, i) => {
+                        const iconColorClass = getIconColors(template.nodeType)
+                        const [iconBg, iconText] = iconColorClass.split(' ')
+                        return (
+                          <div
+                            key={`${section.key}-${i}`}
+                            draggable
+                            onDragStart={(e) => onDragStart(e, template)}
+                            className={cn(
+                              'flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-grab active:cursor-grabbing',
+                              'transition-colors group border border-transparent',
+                              getHoverColors(template.nodeType)
+                            )}
+                          >
+                            <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0', iconBg)}>
+                              <template.icon className={cn('w-3.5 h-3.5', iconText)} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-gray-700 truncate">{template.label}</p>
+                              <p className="text-[10px] text-gray-400 leading-tight">{template.description}</p>
+                            </div>
+                            {template.nodeType === 'ai' && (
+                              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            /* Settings Tab */
+            <div className="flex-1 p-4 space-y-5 overflow-y-auto">
+              <div>
+                <label className="text-[11px] font-semibold text-gray-500 mb-1.5 block uppercase tracking-wide">
+                  Workflow Name
+                </label>
+                <input
+                  value={workflowName}
+                  onChange={(e) => setWorkflowName(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm text-gray-900 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition-all placeholder:text-gray-300"
+                  placeholder="My Workflow"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-gray-500 mb-1.5 block uppercase tracking-wide">
+                  Status
+                </label>
+                <select className="w-full px-3 py-2.5 text-sm text-gray-900 border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition-all appearance-none cursor-pointer">
+                  <option>Draft</option>
+                  <option>Active</option>
+                  <option>Paused</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-gray-500 mb-1.5 block uppercase tracking-wide">
+                  Description
+                </label>
+                <textarea
+                  rows={3}
+                  className="w-full px-3 py-2.5 text-sm text-gray-900 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition-all resize-none placeholder:text-gray-300"
+                  placeholder="Describe what this workflow does..."
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-gray-500 mb-1.5 block uppercase tracking-wide">
+                  Tags
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2.5 text-sm text-gray-900 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 outline-none transition-all placeholder:text-gray-300"
+                  placeholder="outreach, leads, cold-email"
+                />
+              </div>
+              <div className="pt-4 border-t border-gray-100 space-y-2.5">
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-medium bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-lg hover:shadow-lg hover:shadow-blue-500/20 transition-all disabled:opacity-60"
+                >
+                  {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                  {isSaving ? 'Saving...' : 'Save Workflow'}
+                </button>
+                <button className="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-medium border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors">
+                  <Play className="w-3.5 h-3.5" />
+                  Test Run
+                </button>
+                <button className="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-xs font-medium border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors">
+                  Delete Workflow
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Node count footer */}
+          <div className="p-3 border-t border-gray-100 bg-white flex-shrink-0">
+            <div className="flex items-center justify-between text-[10px] text-gray-400">
+              <span>{nodes.length} nodes</span>
+              <span className="text-gray-300">|</span>
+              <span>{edges.length} connections</span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ─── Canvas ─── */}
+        <div ref={reactFlowWrapper} className="flex-1 bg-[#F8FAFC] relative">
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onDragOver={onDragOver}
+            onDrop={onDrop}
+            nodeTypes={nodeTypes}
+            fitView
+            fitViewOptions={{ padding: 0.3 }}
+            defaultEdgeOptions={{ animated: true, style: { stroke: '#94A3B8', strokeWidth: 2 } }}
+            proOptions={{ hideAttribution: true }}
+            className="!bg-[#F8FAFC]"
+          >
+            <Background variant={BackgroundVariant.Dots} gap={16} size={1} color="#E2E8F0" />
+            <Controls
+              className="!rounded-xl !border-gray-200/80 !shadow-sm !overflow-hidden !bg-white"
+              showInteractive={false}
+            />
+            <MiniMap
+              nodeColor={(node) => {
+                const nt = node.data?.nodeType
+                if (nt === 'trigger') return '#10B981'
+                if (nt === 'ai') return '#2563EB'
+                if (nt === 'condition') return '#F59E0B'
+                if (nt === 'delay') return '#94A3B8'
+                return '#8B5CF6'
+              }}
+              className="!rounded-xl !border-gray-200/80 !shadow-sm hidden md:block !bg-white"
+              maskColor="rgba(0,0,0,0.04)"
+            />
+          </ReactFlow>
+        </div>
       </div>
     </div>
   )

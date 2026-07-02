@@ -189,10 +189,10 @@ export function NotificationCenter({ open, onOpenChange }: NotificationCenterPro
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
-        <button className="relative p-2 rounded-xl hover:bg-white/[0.08] transition-colors duration-150 text-white/60 hover:text-white">
+        <button className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors duration-150 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
           <Bell className="w-4 h-4" />
           {unreadCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-500 px-1 text-[10px] font-bold text-white ring-2 ring-[#1a1a2e]">
+            <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-500 px-1 text-[10px] font-bold text-white ring-2 ring-white">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
@@ -202,7 +202,7 @@ export function NotificationCenter({ open, onOpenChange }: NotificationCenterPro
       <PopoverContent
         align="end"
         sideOffset={12}
-        className="w-[380px] rounded-[18px] bg-white dark:bg-[#1a1a2e] p-0 shadow-xl shadow-black/[0.08] border border-gray-200/50 dark:border-white/[0.06] overflow-hidden"
+        className="w-[380px] rounded-xl bg-white dark:bg-gray-900 p-0 shadow-xl shadow-black/[0.08] border border-gray-200/60 dark:border-white/[0.08] overflow-hidden"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
