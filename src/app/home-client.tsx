@@ -1,19 +1,19 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useTheme } from 'next-themes'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useAppStore } from '@/lib/store'
 import { Sidebar } from '@/components/titan/sidebar'
 import { SetupView } from '@/components/titan/setup-view'
 import { LoginView } from '@/components/titan/login-view'
+import { CommandPalette } from '@/components/titan/command-palette'
+import { NotificationCenter } from '@/components/titan/notification-center'
 import { Toaster } from 'sonner'
 import { cn } from '@/lib/utils'
-import { Zap, Search, Command, Menu, Brain, Target, Settings } from 'lucide-react'
-import { useTheme } from 'next-themes'
-import { Moon, Sun } from 'lucide-react'
-import { CommandPalette } from '@/components/titan/command-palette'
-import { NotificationBell } from '@/components/titan/notification-bell'
-import { motion, AnimatePresence } from 'framer-motion'
+import { Search, Sun, Moon, Zap, Menu, Brain, Target, Settings } from 'lucide-react'
 import type { PermissionMap } from '@/lib/types'
 
 const DashboardView = dynamic(() => import('@/components/titan/dashboard-view').then(m => ({ default: m.DashboardView })), { loading: () => <PageSkeleton /> })
@@ -39,15 +39,20 @@ const PersonalizationView = dynamic(() => import('@/components/titan/personaliza
 
 function PageSkeleton() {
   return (
-    <div className="space-y-5 animate-pulse" aria-busy="true" aria-label="Loading page content">
-      <div className="h-7 w-48 bg-[#F1F5F9] dark:bg-white/[0.04] rounded-xl" />
-      <div className="h-4 w-72 bg-[#F1F5F9]/70 dark:bg-white/[0.03] rounded-xl" />
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-5">
+    <div className="space-y-6 p-6">
+      <div className="flex items-center gap-3">
+        <div className="h-7 w-48 skeleton-shimmer rounded-[10px]" />
+        <div className="h-7 w-32 skeleton-shimmer rounded-[10px]" />
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-28 bg-[#F1F5F9] dark:bg-white/[0.03] rounded-2xl" style={{ animationDelay: `${i * 100}ms` }} />
+          <div key={i} className="h-28 skeleton-shimmer rounded-[18px]" />
         ))}
       </div>
-      <div className="h-72 bg-[#F1F5F9] dark:bg-white/[0.03] rounded-2xl mt-3" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="h-72 skeleton-shimmer rounded-[18px]" />
+        <div className="h-72 skeleton-shimmer rounded-[18px]" />
+      </div>
     </div>
   )
 }
@@ -56,12 +61,31 @@ export interface UserData {
   id: string; email: string; name: string; role: string; avatar?: string; permissions: PermissionMap
 }
 
+const pageVariants = {
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] as const } },
+  exit: { opacity: 0, y: -8, transition: { duration: 0.15, ease: [0.22, 1, 0.36, 1] as const } },
+}
+
 export default function HomeClient() {
   const { currentView, sidebarOpen, setSidebarOpen } = useAppStore()
+  const { theme, setTheme } = useTheme()
   const [state, setState] = useState<'loading' | 'setup' | 'login' | 'app'>('loading')
   const [user, setUser] = useState<UserData | null>(null)
   const [commandOpen, setCommandOpen] = useState(false)
-  const { theme, setTheme } = useTheme()
+  const [notifOpen, setNotifOpen] = useState(false)
+
+  // Keyboard shortcut: Cmd/Ctrl + K for command palette
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setCommandOpen(prev => !prev)
+      }
+    }
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -85,18 +109,6 @@ export default function HomeClient() {
     }
     init()
     return () => { cancelled = true }
-  }, [])
-
-  // Keyboard shortcut: Cmd/Ctrl + K for command palette
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault()
-        setCommandOpen(prev => !prev)
-      }
-    }
-    document.addEventListener('keydown', handleKey)
-    return () => document.removeEventListener('keydown', handleKey)
   }, [])
 
   const handleLogout = async () => {
@@ -154,7 +166,7 @@ export default function HomeClient() {
     if (!hasPermission(currentView, 'canView') && currentView !== 'dashboard' && currentView !== 'ai-assistant') {
       return (
         <div className="flex items-center justify-center py-24" role="alert">
-          <p className="text-[#94A3B8]">You don&apos;t have access to this section</p>
+          <p className="text-muted-foreground">You don&apos;t have access to this section</p>
         </div>
       )
     }
@@ -184,112 +196,112 @@ export default function HomeClient() {
   }
 
   const viewLabel = currentView.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+  const isWorkflow = currentView === 'workflows' || currentView === 'workflow-builder'
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#070A13] text-[#0F172A] dark:text-gray-100 font-sans antialiased">
-      <Sidebar userName={user.name} userRole={user.role} onLogout={handleLogout} />
-      <motion.main
-        animate={{ marginLeft: sidebarOpen ? 256 : 64 }}
-        transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-        className="min-h-screen lg:block hidden"
-        role="main"
-      >
-        {/* Premium Header */}
-        <header className="h-14 bg-white/80 dark:bg-[#0B0F1A]/80 backdrop-blur-xl border-b border-[#E8ECF1]/60 dark:border-white/[0.04] flex items-center justify-between px-6 sticky top-0 z-30">
-          <div className="flex items-center gap-3">
-            <h1 className="text-[13px] font-semibold text-[#0F172A] dark:text-white">{viewLabel}</h1>
-            {currentView === 'dashboard' && (
-              <span className="text-[13px] text-[#94A3B8] hidden sm:inline">Welcome back, {user.name.split(' ')[0]}</span>
-            )}
-          </div>
-          <div className="flex items-center gap-1">
-            {/* Cmd+K hint */}
-            <button
-              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-[8px] border border-[#E2E8F0] dark:border-white/[0.08] text-[#94A3B8] dark:text-white/30 text-[12px] hover:border-[#CBD5E1] hover:text-[#475569] dark:hover:text-white/50 transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/30"
-              onClick={() => setCommandOpen(true)}
-              aria-label="Open command palette (Ctrl+K)"
-            >
-              <Command className="w-3 h-3" />
-              <span>K</span>
-            </button>
-            <button onClick={() => setCommandOpen(true)} className="p-2 rounded-[8px] hover:bg-[#F1F5F9] dark:hover:bg-white/[0.04] transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/30" aria-label="Search">
-              <Search className="w-[18px] h-[18px] text-[#475569] dark:text-white/50" />
-            </button>
-            <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="p-2 rounded-[8px] hover:bg-[#F1F5F9] dark:hover:bg-white/[0.04] transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/30"
-              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-            >
-              <Sun className="w-[18px] h-[18px] text-[#475569] dark:text-white/50 hidden dark:block" />
-              <Moon className="w-[18px] h-[18px] text-[#475569] dark:text-white/50 block dark:hidden" />
-            </button>
-            <NotificationBell />
-          </div>
-        </header>
-
-        {/* Page content */}
-        <div className="p-6 max-w-[1400px] mx-auto">
+    <div className="min-h-screen bg-[var(--background)] text-foreground font-sans antialiased">
+      {/* Desktop Layout */}
+      <div className="hidden lg:block">
+        {!isWorkflow && <Sidebar userName={user.name} userRole={user.role} onLogout={handleLogout} />}
+        <main
+          className={cn(
+            'min-h-screen transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+            isWorkflow ? 'ml-0' : sidebarOpen ? 'ml-[284px]' : 'ml-[96px]',
+          )}
+        >
+          {!isWorkflow && (
+            <header className="sticky top-0 z-30 glass-header h-14 px-6 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <h1 className="text-[13px] font-semibold text-foreground">{viewLabel}</h1>
+                {currentView === 'dashboard' && (
+                  <span className="text-[13px] text-muted-foreground">Welcome back, {user.name.split(' ')[0]}</span>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setCommandOpen(true)}
+                  className="h-8 px-3 rounded-[10px] bg-muted/50 hover:bg-muted text-muted-foreground text-[12px] font-medium flex items-center gap-2 transition-colors"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Search</span>
+                  <kbd className="hidden sm:inline-flex h-5 px-1.5 rounded-[6px] bg-background border border-border text-[10px] font-medium text-muted-foreground">
+                    ⌘K
+                  </kbd>
+                </button>
+                <NotificationCenter open={notifOpen} onOpenChange={setNotifOpen} />
+                <button
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="h-8 w-8 rounded-[10px] hover:bg-muted/50 flex items-center justify-center transition-colors"
+                  aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                >
+                  {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </button>
+                <Avatar className="h-8 w-8 ring-2 ring-border">
+                  <AvatarFallback className="bg-primary/10 text-primary text-[11px] font-bold">
+                    {user.name.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+            </header>
+          )}
           <AnimatePresence mode="wait">
             <motion.div
               key={currentView}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className={isWorkflow ? '' : 'p-6'}
             >
               {renderView()}
             </motion.div>
           </AnimatePresence>
-        </div>
-      </motion.main>
+        </main>
+      </div>
 
-      {/* Mobile Layout — sidebar overlay + bottom header */}
+      {/* Mobile Layout */}
       <div className="lg:hidden" role="main">
-        {/* Mobile header bar */}
-        <header className="h-14 bg-white/80 dark:bg-[#0B0F1A]/80 backdrop-blur-xl border-b border-[#E8ECF1]/60 dark:border-white/[0.04] flex items-center justify-between px-4 sticky top-0 z-30">
+        <Sidebar userName={user.name} userRole={user.role} onLogout={handleLogout} />
+        <header className="h-14 glass-header flex items-center justify-between px-4 sticky top-0 z-30">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="p-2 rounded-[8px] hover:bg-[#F1F5F9] dark:hover:bg-white/[0.04] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/30"
+              className="p-2 rounded-[10px] hover:bg-muted/50 transition-colors"
               aria-label="Open navigation menu"
             >
-              <Menu className="w-5 h-5 text-[#0F172A] dark:text-white" />
+              <Menu className="w-5 h-5" />
             </button>
-            <h1 className="text-[13px] font-semibold text-[#0F172A] dark:text-white">{viewLabel}</h1>
+            <h1 className="text-[13px] font-semibold">{viewLabel}</h1>
           </div>
           <div className="flex items-center gap-1">
-            <button onClick={() => setCommandOpen(true)} className="p-2 rounded-[8px] hover:bg-[#F1F5F9] dark:hover:bg-white/[0.04] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/30" aria-label="Search">
-              <Search className="w-[18px] h-[18px] text-[#475569] dark:text-white/50" />
+            <button onClick={() => setCommandOpen(true)} className="p-2 rounded-[10px] hover:bg-muted/50 transition-colors" aria-label="Search">
+              <Search className="w-[18px] h-[18px] text-muted-foreground" />
             </button>
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="p-2 rounded-[8px] hover:bg-[#F1F5F9] dark:hover:bg-white/[0.04] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/30"
+              className="p-2 rounded-[10px] hover:bg-muted/50 transition-colors"
               aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
             >
-              <Sun className="w-[18px] h-[18px] text-[#475569] dark:text-white/50 hidden dark:block" />
-              <Moon className="w-[18px] h-[18px] text-[#475569] dark:text-white/50 block dark:hidden" />
+              <Sun className="w-[18px] h-[18px] hidden dark:block" />
+              <Moon className="w-[18px] h-[18px] block dark:hidden" />
             </button>
-            <NotificationBell />
+            <NotificationCenter open={notifOpen} onOpenChange={setNotifOpen} />
           </div>
         </header>
-
-        {/* Mobile page content */}
         <div className="p-4 pb-24">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentView}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.15, ease: [0.25, 0.1, 0.25, 1] }}
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
             >
               {renderView()}
             </motion.div>
           </AnimatePresence>
         </div>
-
-        {/* Mobile bottom nav */}
-        <nav className="fixed bottom-0 left-0 right-0 h-16 bg-white/90 dark:bg-[#0B0F1A]/90 backdrop-blur-xl border-t border-[#E8ECF1]/60 dark:border-white/[0.04] z-30 flex items-center justify-around px-2" aria-label="Mobile navigation">
+        <nav className="fixed bottom-0 left-0 right-0 h-16 glass-header border-t border-border/50 z-30 flex items-center justify-around px-2" aria-label="Mobile navigation">
           {[
             { view: 'dashboard' as const, icon: Zap, label: 'Home' },
             { view: 'discovery' as const, icon: Search, label: 'Leads' },
@@ -304,7 +316,7 @@ export default function HomeClient() {
                 onClick={() => { useAppStore.getState().setView(item.view) }}
                 className={cn(
                   'flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors min-w-[48px]',
-                  active ? 'text-[#0F172A] dark:text-white' : 'text-[#94A3B8] dark:text-white/30'
+                  active ? 'text-foreground' : 'text-muted-foreground'
                 )}
                 aria-label={item.label}
                 aria-current={active ? 'page' : undefined}

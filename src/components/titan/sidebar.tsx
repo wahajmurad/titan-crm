@@ -1,26 +1,24 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useAppStore, type AppView } from '@/lib/store'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard, Search, Globe2, Users, Target, Mail, Inbox,
   Calendar, Brain, BookOpen, UserCog, Settings, LogOut,
-  ChevronLeft, Zap, GraduationCap, Plug, Lightbulb,
-  Terminal, Workflow, Sparkles, Heart
+  ChevronLeft, ChevronRight, Zap, GraduationCap, Plug, Lightbulb,
+  Sparkles, Package, Workflow
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger
 } from '@/components/ui/tooltip'
-import { motion, AnimatePresence } from 'framer-motion'
 
 const NAV_SECTIONS = [
   {
     label: 'Main',
     items: [
       { view: 'dashboard' as AppView, label: 'Dashboard', icon: LayoutDashboard },
-      { view: 'command-center' as AppView, label: 'AI Command', icon: Terminal },
       { view: 'discovery' as AppView, label: 'Lead Discovery', icon: Search },
       { view: 'audit' as AppView, label: 'Website Audit', icon: Globe2 },
       { view: 'leads' as AppView, label: 'Leads', icon: Users },
@@ -30,15 +28,22 @@ const NAV_SECTIONS = [
     label: 'Campaigns',
     items: [
       { view: 'campaigns' as AppView, label: 'Campaigns', icon: Target },
+      { view: 'workflow-builder' as AppView, label: 'Workflow Builder', icon: Workflow },
       { view: 'email-center' as AppView, label: 'Email Center', icon: Mail },
       { view: 'inbox' as AppView, label: 'Inbox', icon: Inbox },
+    ],
+  },
+  {
+    label: 'Personalization',
+    items: [
+      { view: 'personalization' as AppView, label: 'AI Pipeline', icon: Sparkles },
+      { view: 'outreach-packages' as AppView, label: 'Outreach Packages', icon: Package },
     ],
   },
   {
     label: 'Intelligence',
     items: [
       { view: 'ai-assistant' as AppView, label: 'AI Assistant', icon: Brain },
-      { view: 'ai-agents' as AppView, label: 'AI Agents', icon: Sparkles },
       { view: 'industry-expert' as AppView, label: 'Industry Expert', icon: GraduationCap },
       { view: 'strategy-assistant' as AppView, label: 'Strategy AI', icon: Lightbulb },
       { view: 'prompts' as AppView, label: 'Prompt Library', icon: BookOpen },
@@ -47,8 +52,6 @@ const NAV_SECTIONS = [
   {
     label: 'Operations',
     items: [
-      { view: 'personalization' as AppView, label: 'Personalization', icon: Heart },
-      { view: 'workflows' as AppView, label: 'Workflows', icon: Workflow },
       { view: 'meetings' as AppView, label: 'Meetings', icon: Calendar },
       { view: 'lead-providers' as AppView, label: 'Lead Providers', icon: Plug },
       { view: 'team' as AppView, label: 'Team', icon: UserCog },
@@ -63,224 +66,336 @@ interface SidebarProps {
   onLogout: () => void
 }
 
+const textVariants = {
+  show: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.2, ease: [0.25, 0.1, 0.25, 1] as const },
+  },
+  hide: {
+    opacity: 0,
+    x: -8,
+    transition: { duration: 0.15, ease: [0.25, 0.1, 0.25, 1] as const },
+  },
+}
+
+const sectionLabelVariants = {
+  show: {
+    opacity: 1,
+    transition: { duration: 0.2, delay: 0.05, ease: [0.25, 0.1, 0.25, 1] as const },
+  },
+  hide: {
+    opacity: 0,
+    transition: { duration: 0.1, ease: [0.25, 0.1, 0.25, 1] as const },
+  },
+}
+
 export function Sidebar({ userName, userRole, onLogout }: SidebarProps) {
   const { currentView, setView, sidebarOpen, setSidebarOpen } = useAppStore()
 
-  // Keyboard: Escape to close sidebar on mobile
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && sidebarOpen && window.innerWidth < 1024) {
-        setSidebarOpen(false)
-      }
-    }
-    document.addEventListener('keydown', handleKey)
-    return () => document.removeEventListener('keydown', handleKey)
-  }, [sidebarOpen, setSidebarOpen])
-
-  // Close sidebar on mobile when navigating
-  const handleNav = (view: AppView) => {
-    setView(view)
-    if (window.innerWidth < 1024) setSidebarOpen(false)
-  }
+  const initials = userName.slice(0, 2).toUpperCase()
 
   return (
     <TooltipProvider delayDuration={0}>
       <motion.aside
-        animate={{ width: sidebarOpen ? 256 : 64 }}
-        transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+        animate={{ width: sidebarOpen ? 260 : 72 }}
+        transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] as const }}
         className={cn(
-          'fixed left-0 top-0 h-screen bg-white dark:bg-[#0B0F1A] border-r border-[#E8ECF1]/80 dark:border-white/[0.06] z-40 flex flex-col overflow-hidden',
-          'lg:relative lg:z-auto', // responsive: fixed on mobile, relative on desktop
+          'glass-sidebar fixed left-0 top-0 z-40 flex flex-col overflow-hidden',
+          'ml-3 mt-3 mb-3 rounded-[22px]',
+          'shadow-lg shadow-black/[0.04]',
+          'h-[calc(100vh-24px)]'
         )}
-        role="navigation"
-        aria-label="Main navigation"
       >
-        {/* Logo */}
-        <div className="h-14 flex items-center px-3.5 shrink-0">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <motion.div
-              className="w-8 h-8 bg-[#0F172A] dark:bg-white rounded-[10px] flex items-center justify-center shrink-0"
-              whileHover={{ scale: 1.05 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-            >
-              <Zap className="w-4 h-4 text-white dark:text-[#0F172A]" fill="currentColor" />
-            </motion.div>
-            <AnimatePresence mode="wait">
-              {sidebarOpen && (
+        {/* ── Logo Section ── */}
+        <div className="flex items-center shrink-0 h-14 px-4">
+          {sidebarOpen ? (
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-[12px] gradient-blue flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
+                <Zap className="w-4 h-4 text-white" />
+              </div>
+              <AnimatePresence mode="wait">
                 <motion.div
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -8 }}
-                  transition={{ duration: 0.15, ease: 'easeOut' }}
-                  className="flex items-center gap-1.5 whitespace-nowrap"
+                  key="logo-text"
+                  initial="hide"
+                  animate="show"
+                  exit="hide"
+                  variants={textVariants}
+                  className="flex items-center gap-1.5 overflow-hidden"
                 >
-                  <span className="font-semibold text-[#0F172A] dark:text-white text-[13px] tracking-tight">TITAN</span>
-                  <span className="text-[9px] bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] font-bold rounded-[5px] px-1.5 py-[2px] leading-none">AI</span>
+                  <span className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-100">
+                    TITAN
+                  </span>
+                  <span className="text-[9px] bg-blue-500 text-white font-bold rounded-md px-1.5 py-0.5 leading-none tracking-wide">
+                    AI
+                  </span>
                 </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+              </AnimatePresence>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center w-full">
+              <div className="w-8 h-8 rounded-[12px] gradient-blue flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
+                <Zap className="w-4 h-4 text-white" />
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 py-3 px-2.5 space-y-5 overflow-y-auto overflow-x-hidden" role="menubar">
-          {NAV_SECTIONS.map(section => (
-            <div key={section.label} role="none">
-              <AnimatePresence mode="wait">
+        {/* ── Navigation ── */}
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-2.5 space-y-5 scrollbar-none">
+          {NAV_SECTIONS.map((section) => (
+            <div key={section.label}>
+              {/* Section Label */}
+              <AnimatePresence>
                 {sidebarOpen && (
                   <motion.p
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.12, ease: 'easeOut' }}
-                    className="text-[10px] font-semibold text-[#94A3B8] dark:text-white/30 uppercase tracking-[0.08em] px-2.5 mb-1.5 overflow-hidden"
-                    role="none"
+                    initial="hide"
+                    animate="show"
+                    exit="hide"
+                    variants={sectionLabelVariants}
+                    className="text-[10px] font-semibold uppercase tracking-[0.1em] text-gray-400 dark:text-gray-500 px-2.5 mb-1.5 select-none"
                   >
                     {section.label}
                   </motion.p>
                 )}
               </AnimatePresence>
-              <div className="space-y-0.5" role="group" aria-label={section.label}>
-                {section.items.map(item => {
+
+              {/* Nav Items */}
+              <div className="space-y-0.5">
+                {section.items.map((item) => {
                   const Icon = item.icon
-                  const active = currentView === item.view ||
+                  const active =
+                    currentView === item.view ||
                     (item.view === 'leads' && currentView === 'lead-detail')
 
-                  const btn = (
+                  const button = (
                     <button
                       key={item.view}
-                      onClick={() => handleNav(item.view)}
-                      role="menuitem"
-                      aria-current={active ? 'page' : undefined}
+                      onClick={() => setView(item.view)}
                       className={cn(
-                        'w-full flex items-center gap-2.5 px-2.5 py-[9px] rounded-[10px] text-[13px] font-medium transition-all duration-150 relative outline-none',
-                        'focus-visible:ring-2 focus-visible:ring-[#2563EB]/30 focus-visible:ring-offset-1',
+                        'w-full flex items-center gap-2.5 rounded-[12px] text-[13px] font-medium',
+                        'transition-all duration-200 relative',
+                        'px-2.5 py-[9px]',
                         active
-                          ? 'bg-[#EFF6FF] dark:bg-white/[0.08] text-[#0F172A] dark:text-white'
-                          : 'text-[#475569] dark:text-white/50 hover:text-[#0F172A] dark:hover:text-white/80 hover:bg-[#F1F5F9] dark:hover:bg-white/[0.04]'
+                          ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400'
+                          : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/80 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-white/5'
                       )}
                     >
+                      {/* Active indicator — Linear-style left bar */}
                       {active && (
                         <motion.div
-                          layoutId="nav-active"
-                          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[#0F172A] dark:bg-white rounded-r-full"
-                          transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                          layoutId="sidebar-active-indicator"
+                          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full bg-blue-500 dark:bg-blue-400"
+                          transition={{ type: 'spring', stiffness: 350, damping: 30 }}
                         />
                       )}
-                      <Icon className={cn(
-                        'w-[18px] h-[18px] shrink-0 transition-colors duration-150',
-                        active ? 'text-[#0F172A] dark:text-white' : ''
-                      )} />
+
+                      <Icon
+                        className={cn(
+                          'w-[18px] h-[18px] shrink-0 transition-colors duration-200',
+                          active
+                            ? 'text-blue-600 dark:text-blue-400'
+                            : 'text-gray-400 dark:text-gray-500'
+                        )}
+                      />
+
                       <AnimatePresence mode="wait">
                         {sidebarOpen && (
                           <motion.span
-                            initial={{ opacity: 0, x: -6 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -6 }}
-                            transition={{ duration: 0.12 }}
+                            key={`label-${item.view}`}
+                            initial="hide"
+                            animate="show"
+                            exit="hide"
+                            variants={textVariants}
                             className="truncate"
                           >
                             {item.label}
                           </motion.span>
                         )}
                       </AnimatePresence>
+
+                      {active && sidebarOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400 shrink-0"
+                        />
+                      )}
                     </button>
                   )
 
                   if (!sidebarOpen) {
                     return (
                       <Tooltip key={item.view}>
-                        <TooltipTrigger asChild>{btn}</TooltipTrigger>
-                        <TooltipContent side="right" className="font-medium text-sm">{item.label}</TooltipContent>
+                        <TooltipTrigger asChild>{button}</TooltipTrigger>
+                        <TooltipContent
+                          side="right"
+                          sideOffset={8}
+                          className="rounded-[10px] shadow-lg shadow-black/[0.08] bg-gray-900 dark:bg-gray-800 text-white text-[13px] font-medium px-3 py-1.5 border-0"
+                        >
+                          {item.label}
+                        </TooltipContent>
                       </Tooltip>
                     )
                   }
-                  return btn
+
+                  return button
                 })}
               </div>
             </div>
           ))}
         </nav>
 
-        {/* User section */}
-        <div className="border-t border-[#E8ECF1]/80 dark:border-white/[0.06] p-2.5 shrink-0">
-          <AnimatePresence mode="wait">
-            {sidebarOpen && (
-              <motion.button
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -8 }}
-                transition={{ duration: 0.12 }}
-                onClick={onLogout}
-                className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-[10px] text-[13px] text-[#475569] dark:text-white/50 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors duration-150 mb-1 outline-none focus-visible:ring-2 focus-visible:ring-red-500/30"
-                aria-label="Sign out"
+        {/* ── Bottom Section: Collapse Toggle + User ── */}
+        <div className="shrink-0 mt-auto">
+          {/* Collapse Toggle */}
+          <div className="px-2.5 mb-1">
+            {sidebarOpen ? (
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className={cn(
+                  'w-full flex items-center gap-2.5 rounded-[12px] px-2.5 py-[9px]',
+                  'text-gray-400 hover:text-gray-600 hover:bg-gray-100/80',
+                  'dark:text-gray-500 dark:hover:text-gray-300 dark:hover:bg-white/5',
+                  'transition-all duration-200 text-[13px] font-medium'
+                )}
               >
-                <LogOut className="w-4 h-4 shrink-0" />
-                <span>Sign Out</span>
-              </motion.button>
-            )}
-          </AnimatePresence>
-          <div className={cn('flex items-center gap-2.5 px-2 py-2', !sidebarOpen && 'justify-center')}>
-            <Avatar className="h-8 w-8 shrink-0 bg-[#0F172A] dark:bg-white p-[2px]">
-              <AvatarFallback className="bg-white dark:bg-[#0F172A] text-[#0F172A] dark:text-white text-[11px] font-bold rounded-full">
-                {userName.slice(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <AnimatePresence mode="wait">
-              {sidebarOpen && (
-                <motion.div
-                  initial={{ opacity: 0, x: -6 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -6 }}
-                  transition={{ duration: 0.12 }}
-                  className="flex-1 min-w-0"
+                <ChevronLeft className="w-[18px] h-[18px] shrink-0" />
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key="collapse-label"
+                    initial="hide"
+                    animate="show"
+                    exit="hide"
+                    variants={textVariants}
+                  >
+                    Collapse
+                  </motion.span>
+                </AnimatePresence>
+              </button>
+            ) : (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setSidebarOpen(true)}
+                    className={cn(
+                      'w-full flex items-center justify-center rounded-[12px] py-[9px]',
+                      'text-gray-400 hover:text-gray-600 hover:bg-gray-100/80',
+                      'dark:text-gray-500 dark:hover:text-gray-300 dark:hover:bg-white/5',
+                      'transition-all duration-200'
+                    )}
+                  >
+                    <ChevronRight className="w-[18px] h-[18px]" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="right"
+                  sideOffset={8}
+                  className="rounded-[10px] shadow-lg shadow-black/[0.08] bg-gray-900 dark:bg-gray-800 text-white text-[13px] font-medium px-3 py-1.5 border-0"
                 >
-                  <p className="text-[13px] font-medium text-[#0F172A] dark:text-white truncate">{userName}</p>
-                  <p className="text-[11px] text-[#94A3B8] dark:text-white/30 truncate">{userRole}</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  Expand
+                </TooltipContent>
+              </Tooltip>
+            )}
           </div>
-          {!sidebarOpen && (
-            <Tooltip>
-              <TooltipTrigger asChild>
+
+          {/* Divider */}
+          <div className="mx-3 border-t border-gray-200/60 dark:border-gray-700/40" />
+
+          {/* User Section */}
+          <div className="p-2.5">
+            {sidebarOpen ? (
+              <>
+                {/* Sign Out (above avatar when expanded) */}
                 <button
                   onClick={onLogout}
-                  className="w-full flex items-center justify-center px-2 py-1.5 rounded-[10px] text-[#94A3B8] hover:text-red-600 hover:bg-red-50/80 transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-red-500/30"
-                  aria-label="Sign out"
+                  className={cn(
+                    'w-full flex items-center gap-2.5 rounded-[12px] px-2.5 py-[7px] mb-1',
+                    'text-[13px] font-medium text-gray-400',
+                    'hover:text-red-600 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-red-500/10',
+                    'transition-all duration-200'
+                  )}
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-[16px] h-[16px] shrink-0" />
+                  <span>Sign Out</span>
                 </button>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="font-medium text-sm">Sign Out</TooltipContent>
-            </Tooltip>
-          )}
+
+                {/* User Info */}
+                <div className="flex items-center gap-2.5 px-2 py-2">
+                  <Avatar className="h-8 w-8 shrink-0 ring-2 ring-blue-500/20">
+                    <AvatarFallback className="bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key="user-info"
+                      initial="hide"
+                      animate="show"
+                      exit="hide"
+                      variants={textVariants}
+                      className="flex-1 min-w-0"
+                    >
+                      <p className="text-[13px] font-medium text-gray-900 dark:text-gray-100 truncate leading-tight">
+                        {userName}
+                      </p>
+                      <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate leading-tight">
+                        {userRole}
+                      </p>
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-2">
+                {/* Avatar */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Avatar className="h-8 w-8 ring-2 ring-blue-500/20 cursor-default">
+                      <AvatarFallback className="bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    sideOffset={8}
+                    className="rounded-[10px] shadow-lg shadow-black/[0.08] bg-gray-900 dark:bg-gray-800 text-white text-[13px] font-medium px-3 py-1.5 border-0"
+                  >
+                    <div>
+                      <p className="font-semibold">{userName}</p>
+                      <p className="text-[11px] text-gray-400 dark:text-gray-400 font-normal">{userRole}</p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+
+                {/* Sign Out Icon */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={onLogout}
+                      className={cn(
+                        'flex items-center justify-center rounded-[10px] p-1.5',
+                        'text-gray-400 hover:text-red-600 hover:bg-red-50',
+                        'dark:text-gray-500 dark:hover:text-red-400 dark:hover:bg-red-500/10',
+                        'transition-all duration-200'
+                      )}
+                    >
+                      <LogOut className="w-4 h-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    sideOffset={8}
+                    className="rounded-[10px] shadow-lg shadow-black/[0.08] bg-gray-900 dark:bg-gray-800 text-white text-[13px] font-medium px-3 py-1.5 border-0"
+                  >
+                    Sign Out
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            )}
+          </div>
         </div>
-
-        {/* Collapse toggle — desktop only */}
-        <motion.button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="absolute -right-3.5 top-16 w-7 h-7 bg-white dark:bg-[#0B0F1A] border border-[#E8ECF1] dark:border-white/[0.06] rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow duration-200 hidden lg:flex outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/30"
-          aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-        >
-          <motion.div
-            animate={{ rotate: sidebarOpen ? 0 : 180 }}
-            transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-          >
-            <ChevronLeft className="w-3.5 h-3.5 text-[#475569] dark:text-white/50" />
-          </motion.div>
-        </motion.button>
-
-        {/* Mobile overlay */}
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-[-1] lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-            aria-hidden="true"
-          />
-        )}
       </motion.aside>
     </TooltipProvider>
   )
