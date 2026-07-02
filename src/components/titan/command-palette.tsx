@@ -25,7 +25,7 @@ const VIEW_ITEMS = [
   { id: 'audit', label: 'Website Audit', icon: Globe, shortcut: 'A' },
   { id: 'leads', label: 'Leads', icon: Users, shortcut: '' },
   { id: 'campaigns', label: 'Campaigns', icon: Target, shortcut: 'C' },
-  { id: 'workflow-builder', label: 'Workflow Builder', icon: Workflow, shortcut: 'W' },
+  { id: 'workflows', label: 'Workflow Builder', icon: Workflow, shortcut: 'W' },
   { id: 'email-center', label: 'Email Center', icon: Mail, shortcut: 'E' },
   { id: 'outreach', label: 'Outreach', icon: Send, shortcut: 'O' },
   { id: 'inbox', label: 'Inbox', icon: Inbox, shortcut: 'I' },

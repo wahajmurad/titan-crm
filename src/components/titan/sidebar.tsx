@@ -29,7 +29,7 @@ const NAV_SECTIONS = [
     label: 'Campaigns',
     items: [
       { view: 'campaigns' as AppView, label: 'Campaigns', icon: Target },
-      { view: 'workflow-builder' as AppView, label: 'Workflow Builder', icon: Workflow },
+      { view: 'workflows' as AppView, label: 'Workflow Builder', icon: Workflow },
       { view: 'email-center' as AppView, label: 'Email Center', icon: Mail },
       { view: 'outreach' as AppView, label: 'Outreach', icon: Send },
       { view: 'inbox' as AppView, label: 'Inbox', icon: Inbox },

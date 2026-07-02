@@ -271,7 +271,7 @@ export default function HomeClient() {
       <div className="lg:hidden" role="main">
         {/* Mobile Sidebar Overlay */}
         <AnimatePresence>
-          {sidebarOpen && (
+          {sidebarOpen && !isWorkflow && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -284,42 +284,46 @@ export default function HomeClient() {
           )}
         </AnimatePresence>
         {/* Mobile Sidebar Drawer */}
-        <div
-          className={cn(
-            'fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] lg:hidden',
-            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          )}
-        >
-          <Sidebar userName={user.name} userRole={user.role} onLogout={handleLogout} />
-        </div>
+        {!isWorkflow && (
+          <div
+            className={cn(
+              'fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] lg:hidden',
+              sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            )}
+          >
+            <Sidebar userName={user.name} userRole={user.role} onLogout={handleLogout} />
+          </div>
+        )}
 
-        <header className="h-14 glass-header flex items-center justify-between px-4 sticky top-0 z-30">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="p-2 rounded-[10px] hover:bg-white/[0.08] transition-colors -ml-2 text-white/60 hover:text-white"
-              aria-label="Open navigation menu"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            <h1 className="text-[13px] font-semibold text-white">{viewLabel}</h1>
-          </div>
-          <div className="flex items-center gap-1">
-            <button onClick={() => setCommandOpen(true)} className="p-2 rounded-[10px] hover:bg-white/[0.08] transition-colors text-white/60 hover:text-white" aria-label="Search">
-              <Search className="w-[18px] h-[18px]" />
-            </button>
-            <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="p-2 rounded-[10px] hover:bg-white/[0.08] transition-colors text-white/60 hover:text-white"
-              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-            >
-              <Sun className="w-[18px] h-[18px] hidden dark:block" />
-              <Moon className="w-[18px] h-[18px] block dark:hidden" />
-            </button>
-            <NotificationCenter open={notifOpen} onOpenChange={setNotifOpen} />
-          </div>
-        </header>
-        <div className="p-4 pb-20">
+        {!isWorkflow && (
+          <header className="h-14 glass-header flex items-center justify-between px-4 sticky top-0 z-30">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="p-2 rounded-[10px] hover:bg-white/[0.08] transition-colors -ml-2 text-white/60 hover:text-white"
+                aria-label="Open navigation menu"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+              <h1 className="text-[13px] font-semibold text-white">{viewLabel}</h1>
+            </div>
+            <div className="flex items-center gap-1">
+              <button onClick={() => setCommandOpen(true)} className="p-2 rounded-[10px] hover:bg-white/[0.08] transition-colors text-white/60 hover:text-white" aria-label="Search">
+                <Search className="w-[18px] h-[18px]" />
+              </button>
+              <button
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className="p-2 rounded-[10px] hover:bg-white/[0.08] transition-colors text-white/60 hover:text-white"
+                aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              >
+                <Sun className="w-[18px] h-[18px] hidden dark:block" />
+                <Moon className="w-[18px] h-[18px] block dark:hidden" />
+              </button>
+              <NotificationCenter open={notifOpen} onOpenChange={setNotifOpen} />
+            </div>
+          </header>
+        )}
+        <div className={isWorkflow ? '' : 'p-4 pb-20'}>
           <AnimatePresence mode="wait">
             <motion.div
               key={currentView}
@@ -332,32 +336,34 @@ export default function HomeClient() {
             </motion.div>
           </AnimatePresence>
         </div>
-        <nav className="fixed bottom-0 left-0 right-0 h-16 bg-[#1a1a2e]/95 backdrop-blur-lg border-t border-white/[0.06] z-30 flex items-center justify-around px-2 safe-area-bottom" aria-label="Mobile navigation">
-          {[
-            { view: 'dashboard' as const, icon: Zap, label: 'Home' },
-            { view: 'discovery' as const, icon: Search, label: 'Leads' },
-            { view: 'ai-assistant' as const, icon: Brain, label: 'AI' },
-            { view: 'campaigns' as const, icon: Target, label: 'Campaigns' },
-            { view: 'settings' as const, icon: Settings, label: 'More' },
-          ].map(item => {
-            const active = currentView === item.view
-            return (
-              <button
-                key={item.view}
-                onClick={() => { useAppStore.getState().setView(item.view); setSidebarOpen(false) }}
-                className={cn(
-                  'flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors min-w-[48px]',
-                  active ? 'text-blue-400' : 'text-white/40'
-                )}
-                aria-label={item.label}
-                aria-current={active ? 'page' : undefined}
-              >
-                <item.icon className="w-5 h-5" />
-                <span className="text-[10px] font-medium">{item.label}</span>
-              </button>
-            )
-          })}
-        </nav>
+        {!isWorkflow && (
+          <nav className="fixed bottom-0 left-0 right-0 h-16 bg-[#1a1a2e]/95 backdrop-blur-lg border-t border-white/[0.06] z-30 flex items-center justify-around px-2 safe-area-bottom" aria-label="Mobile navigation">
+            {[
+              { view: 'dashboard' as const, icon: Zap, label: 'Home' },
+              { view: 'discovery' as const, icon: Search, label: 'Leads' },
+              { view: 'ai-assistant' as const, icon: Brain, label: 'AI' },
+              { view: 'campaigns' as const, icon: Target, label: 'Campaigns' },
+              { view: 'settings' as const, icon: Settings, label: 'More' },
+            ].map(item => {
+              const active = currentView === item.view
+              return (
+                <button
+                  key={item.view}
+                  onClick={() => { useAppStore.getState().setView(item.view); setSidebarOpen(false) }}
+                  className={cn(
+                    'flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors min-w-[48px]',
+                    active ? 'text-blue-400' : 'text-white/40'
+                  )}
+                  aria-label={item.label}
+                  aria-current={active ? 'page' : undefined}
+                >
+                  <item.icon className="w-5 h-5" />
+                  <span className="text-[10px] font-medium">{item.label}</span>
+                </button>
+              )
+            })}
+          </nav>
+        )}
       </div>
 
       <Toaster position="top-right" />
